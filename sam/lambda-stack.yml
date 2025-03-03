@@ -459,9 +459,9 @@ Resources:
           BANK_TABLE_NAME: !Ref BankTableName
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:711387130962:secret:plaid/sandbox/credentials-i0gDyP" # TODO dont hardcode
+            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:plaid/sandbox/credentials-cRPbpD" # TODO dont hardcode
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:711387130962:secret:orum/sandbox/credentials-WyxcUb" # TODO dont hardcode
+            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:orum/sandbox/credentials-VS6HFc" # TODO dont hardcode
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref BankTableName
@@ -516,9 +516,9 @@ Resources:
           COGNITO_USER_POOL_ARN: !Ref UserPoolArn
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:711387130962:secret:plaid/sandbox/credentials-i0gDyP" # TODO dont hardcode
+            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:plaid/sandbox/credentials-cRPbpD" # TODO dont hardcode
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:711387130962:secret:orum/sandbox/credentials-WyxcUb" # TODO dont hardcode, also why is it trigggered by create request?
+            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:orum/sandbox/credentials-VS6HFc" # TODO dont hardcode
         - AWSLambdaVPCAccessExecutionRole
         - Statement:
           - Effect: Allow
@@ -631,7 +631,7 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref UserTableName
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:711387130962:secret:orum/sandbox/credentials-WyxcUb" # TODO dont hardcode
+            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:orum/sandbox/credentials-VS6HFc" # TODO dont hardcode
         - Statement:
             - Effect: Allow
               Action:
