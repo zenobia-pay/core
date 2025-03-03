@@ -15,8 +15,8 @@ data class ListBankItem(
     companion object {
         fun from(item: BankItem): ListBankItem {
             return ListBankItem(
-                accountId = item.data.accountId,
-                accountName = item.data.accountName,
+                accountId = item.data.bankAccountId,
+                accountName = item.data.bankAccountName,
             )
         }
     }

@@ -22,9 +22,9 @@ data class BankItem(
 
 @DynamoDbBean
 data class BankData(
-    var accountId: String = "",
-    var accountName: String = "",
-    var accountType: String = "",
+    var bankAccountId: String = "",
+    var bankAccountName: String = "",
+    var bankAccountType: String = "",
     var orumId: String = "",
-    var itemId: String = "",
+    var plaidItemId: String = "",
 )

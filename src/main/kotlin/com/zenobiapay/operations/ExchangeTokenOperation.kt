@@ -53,13 +53,13 @@ class ExchangeTokenOperation @Inject constructor(
                 accountHolderName = "John Doe" // TODO: pass real user name
             )).externalAccount.id
 
-            bankDao.putBankItem(
+            bankDao.putBankAccount(
                 userId = userId,
-                itemId = exchangeResponse.itemId,
-                accountId = account.accountId,
-                accountName = account.name,
+                plaidItemId = exchangeResponse.itemId,
+                bankAccountId = account.accountId,
+                bankAccountName = account.name,
                 token = exchangeResponse.accessToken,
-                accountType = account.subtype!!.value,
+                bankAccountType = account.subtype!!.value,
                 orumId = orumId,
             )
             context.logger.log("Successfully wrote to ddb bank item ${account.accountId}, orum id $orumId")

@@ -19,29 +19,29 @@ class BankDao @Inject constructor(
     private val enhancedClient: DynamoDbEnhancedClient,
     @Named(BANK_TABLE_NAME) private val bankTableName: String
 ) {
-    fun putBankItem(
+    fun putBankAccount(
         userId: String,
-        itemId: String,
-        accountId: String,
-        accountName: String,
+        plaidItemId: String,
+        bankAccountId: String,
+        bankAccountName: String,
         token: String,
-        accountType: String,
+        bankAccountType: String,
         orumId: String,
     ) {
         val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankItem::class.java))
         val pk = BankItem.generatePk(userId)
-        val sk = BankItem.generateSk(accountId)
+        val sk = BankItem.generateSk(bankAccountId)
         table.putItem(
             BankItem(
                 pk = pk,
                 sk = sk,
                 publicToken = token,
                 data = BankData(
-                    accountId = accountId,
-                    accountName = accountName,
-                    accountType = accountType,
+                    bankAccountId = bankAccountId,
+                    bankAccountName = bankAccountName,
+                    bankAccountType = bankAccountType,
                     orumId = orumId,
-                    itemId = itemId,
+                    plaidItemId = plaidItemId,
                 )
             )
         )
@@ -62,11 +62,11 @@ class BankDao @Inject constructor(
         return table.query(queryRequest).items().toList()
     }
 
-    fun getBankItem(userId: String, accountId: String): BankItem {
-        logger.info { "Fetch bank item from userId $userId, accountId $accountId" }
+    fun getBankItem(userId: String, bankAccountId: String): BankItem {
+        logger.info { "Fetch bank item from userId $userId, bankAccountId $bankAccountId" }
         val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankItem::class.java))
         val pk = BankItem.generatePk(userId)
-        val sk = BankItem.generateSk(accountId)
+        val sk = BankItem.generateSk(bankAccountId)
 
         try {
             return table.getItem {
@@ -75,7 +75,7 @@ class BankDao @Inject constructor(
                 }
             }
         } catch (e: ResourceNotFoundException) {
-            logger.error(e) { "Failed to fetch bank item from userId $userId, accountId $accountId" }
+            logger.error(e) { "Failed to fetch bank item from userId $userId, accountId $bankAccountId" }
             throw com.zenobiapay.model.exception.ResourceNotFoundException("ACCOUNT")
         }
     }
