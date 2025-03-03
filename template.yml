@@ -2,6 +2,15 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: ZenobiaPay Backend
 
+Parameters:
+  Stage:
+    Type: String
+    Description: Stage this code is being deployed to (dev, beta, gamma, prod)
+  UniqueIdentifier:
+    Type: String
+    Default: ""
+    Description: Unique identifier to avoid resource naming conflicts. Should only be needed for dev sandbox accounts
+
 Resources:
   VpcStack:
     Type: AWS::CloudFormation::Stack
@@ -19,6 +28,8 @@ Resources:
       TemplateURL: ./sam/storage-stack.yml
       Parameters:
         IdentityPoolId: !GetAtt AuthStack.Outputs.IdentityPoolId
+        Stage: !Ref Stage
+        UniqueIdentifier: !Ref UniqueIdentifier
 
   LambdaStack:
     Type: AWS::CloudFormation::Stack

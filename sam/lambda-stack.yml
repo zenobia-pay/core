@@ -354,16 +354,21 @@ Resources:
         DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
         Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","responseLatency":"$context.responseLatency","userAgent":"$context.identity.userAgent","requestTime":"$context.requestTime"}'
       MethodSettings:
-        - LoggingLevel: INFO         
-          DataTraceEnabled: true     
-          MetricsEnabled: true       
-          HttpMethod: "*"           
-          ResourcePath: "/*"       
+        - LoggingLevel: INFO
+          DataTraceEnabled: true
+          MetricsEnabled: true
+          HttpMethod: "*"
+          ResourcePath: "/*"
 
   ApiGatewayLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: /aws/api-gateway/zenobia-access-logs
+
+  ApiGatewayAccount:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt ApiGatewayCloudWatchRole.Arn
 
   ApiGatewayCloudWatchRole:
     Type: AWS::IAM::Role

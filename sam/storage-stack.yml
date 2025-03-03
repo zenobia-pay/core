@@ -5,6 +5,12 @@ Description: Stack to store DDB tables
 Parameters:
   IdentityPoolId:
     Type: String
+  Stage:
+    Type: String
+    Description: Stage this code is being deployed to (dev, beta, gamma, prod)
+  UniqueIdentifier:
+    Type: String
+    Description: Unique identifier to avoid resource naming conflicts. Should only be needed for dev sandbox accounts
 
 Resources:
   BankKmsKey:
@@ -126,37 +132,37 @@ Resources:
         KMSMasterKeyId: !Ref UserKmsKey
         SSEType: KMS
 
-  # TODO: increase security. Only allow authenticated users to access.
-  ProfilePictureBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub zenobia-profile-picture-bucket-${AWS::Region}-dev
-
-  ProfilePictureBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref ProfilePictureBucket
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-#          - Effect: Allow
+#  # TODO: increase security. Only allow authenticated users to access.
+#  ProfilePictureBucket:
+#    Type: AWS::S3::Bucket
+#    Properties:
+#      BucketName: !Sub zenobia-profile-picture-bucket-${AWS::Region}-${Stage}${UniqueIdentifier}
+#
+#  ProfilePictureBucketPolicy:
+#    Type: AWS::S3::BucketPolicy
+#    Properties:
+#      Bucket: !Ref ProfilePictureBucket
+#      PolicyDocument:
+#        Version: 2012-10-17
+#        Statement:
+##          - Effect: Allow
+##            Principal: "*"
+##            Action:
+##              - s3:GetObject
+##            Resource:
+##              - !Sub arn:aws:s3:::zenobia-profile-picture-bucket-${AWS::Region}-dev/*
+##            Condition:
+##              StringEquals:
+##                cognito-identity.amazonaws.com:aud: !Ref IdentityPoolId
+#          - Effect: Deny
 #            Principal: "*"
 #            Action:
-#              - s3:GetObject
+#              - s3:ListBucket
+#              - s3:PutObject
+#              - s3:DeleteObject
 #            Resource:
-#              - !Sub arn:aws:s3:::zenobia-profile-picture-bucket-${AWS::Region}-dev/*
-#            Condition:
-#              StringEquals:
-#                cognito-identity.amazonaws.com:aud: !Ref IdentityPoolId
-          - Effect: Deny
-            Principal: "*"
-            Action:
-              - s3:ListBucket
-              - s3:PutObject
-              - s3:DeleteObject
-            Resource:
-              - !Sub arn:aws:s3:::zenobia-profile-picture-bucket-${AWS::Region}-dev/*
-              - !Sub arn:aws:s3:::zenobia-profile-picture-bucket-${AWS::Region}-dev
+#              - !Sub zenobia-profile-picture-bucket-${AWS::Region}-${Stage}${UniqueIdentifier}
+#              - !Sub zenobia-profile-picture-bucket-${AWS::Region}-${Stage}${UniqueIdentifier}/*
 
 Outputs:
   BankKeyId:
