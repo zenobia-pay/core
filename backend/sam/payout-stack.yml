@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Merchant payout distributor stack.
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: java17
+    Architectures:
+      - x86_64
+
+Parameters:
+  TransferTableName:
+    Type: String
+  UserPoolArn:
+    Type: String
+
+Resources:
+  DailyPayoutRule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: "cron(0 16 * * ? *)"  # Trigger at 4 PM UTC daily (8 AM PST)
+      Targets:
+        - Arn: !GetAtt PayoutDispatcherFunction.Arn
+          Id: PayoutDispatcherFunction
+
+  PayoutQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: PayoutQueue
+
+  PayoutDispatcherFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: PayoutDispatcher
+      CodeUri: ..
+      Handler: com.zenobiapay.handlers.PayoutDispatcher::handleRequest
+      Environment:
+        Variables:
+           COGNITO_USER_POOL_ARN: !Ref UserPoolArn
+           PAYOUT_QUEUE_URL: !Ref PayoutQueue
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:ListUsersInGroup
+              Resource: !Ref UserPoolArn
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt PayoutQueue.QueueName
+
+  PayoutProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: PayoutProcessor
+      CodeUri: ..
+      Handler: com.zenobiapay.handlers.PayoutProcessor::handleRequest
+      Environment:
+        Variables:
+          COGNITO_USER_POOL_ARN: !Ref UserPoolArn
+          TRANSFER_TABLE_NAME: !Ref TransferTableName
+      Policies:
+        - SQSPollerPolicy:
+            QueueName: !GetAtt PayoutQueue.QueueName
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: "arn:aws:secretsmanager:us-east-1:711387130962:secret:orum/sandbox/credentials-WyxcUb" # TODO dont hardcode
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TransferTableName
+      Events:
+        SQSTrigger:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt PayoutQueue.Arn
+            BatchSize: 1

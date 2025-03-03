@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: ZenobiaPay Backend
+
+Resources:
+  VpcStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./sam/vpc-stack.yml
+
+  AuthStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./sam/auth-stack.yml
+
+  TableStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./sam/storage-stack.yml
+      Parameters:
+        IdentityPoolId: !GetAtt AuthStack.Outputs.IdentityPoolId
+
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./sam/lambda-stack.yml
+      Parameters:
+        SecurityGroupId: !GetAtt VpcStack.Outputs.SecurityGroupId
+        SubnetId1: !GetAtt VpcStack.Outputs.PrivateSubnetId1
+        SubnetId2: !GetAtt VpcStack.Outputs.PrivateSubnetId2
+        UserPoolArn: !GetAtt AuthStack.Outputs.UserPoolArn
+        IdentityPoolId: !GetAtt AuthStack.Outputs.IdentityPoolId
+        BankTableName: !GetAtt TableStack.Outputs.BankTableName
+        UserTableName: !GetAtt TableStack.Outputs.UserTableName
+        TransferTableName: !GetAtt TableStack.Outputs.TransferTableName
+        BankKeyId: !GetAtt TableStack.Outputs.BankKeyId
+        TransferKeyId: !GetAtt TableStack.Outputs.TransferKeyId
+        UserKeyId: !GetAtt TableStack.Outputs.UserKeyId
+
+  PayoutStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./sam/payout-stack.yml
+      Parameters:
+        UserPoolArn: !GetAtt AuthStack.Outputs.UserPoolArn
+        TransferTableName: !GetAtt TableStack.Outputs.TransferTableName
+
+Outputs:
+  WebEndpoint:
+    Description: "API Gateway endpoint URL"
+    Value: !GetAtt LambdaStack.Outputs.WebEndpoint

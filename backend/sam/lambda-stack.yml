@@ -1,0 +1,648 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: Stack to store Lambda handlers
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: java17
+    Architectures:
+      - x86_64
+    VpcConfig:
+      SecurityGroupIds:
+        - !Ref SecurityGroupId
+      SubnetIds:
+        - !Ref SubnetId1
+        - !Ref SubnetId2
+
+Parameters:
+  BankKeyId:
+    Type: String
+  TransferKeyId:
+    Type: String
+  UserKeyId:
+    Type: String
+  BankTableName:
+    Type: String
+  TransferTableName:
+    Type: String
+  UserTableName:
+    Type: String
+  SecurityGroupId:
+    Type: String
+  SubnetId1:
+    Type: String
+  SubnetId2:
+    Type: String
+  UserPoolArn:
+    Type: String
+  IdentityPoolId: 
+    Type: String
+
+Resources:
+  ZenobiaApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      DefinitionBody:
+        openapi: 3.0.1
+        info:
+          title: Zenobia API
+          version: 1.0
+        paths:
+          /create-link-token:
+            get:
+              summary: "Creates a plaid link token"
+              operationId: "CreateLinkToken"
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          linkToken:
+                            type: string
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /exchange-token:
+            post:
+              summary: "Exchanges plaid token"
+              operationId: "ExchangeToken"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        linkToken:
+                          type: string
+
+              responses:
+                '200':
+                  description: "Successful response"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /list-banks:
+            get:
+              summary: "Lists all bank accounts associated with account"
+              operationId: "ListBanks"
+              requestBody:
+                required: false
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        continuationToken:
+                          type: string
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          continuationToken:
+                            type: string
+                          items:
+                            type: array
+                            items:
+                              type: object
+                              accountId:
+                                type: string
+                              accountName:
+                                type: string
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /create-transfer-request:
+            post:
+              summary: "Creates a request for payment (merchant side)"
+              operationId: "CreateTransferRequest"
+              requestBody:
+                required: false
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        amount:
+                          type: number
+                        bankAccountId:
+                          type: string
+                        statementDisplayName:
+                          type: string
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          transferRequestId:
+                            type: string
+                          debtorId:
+                            type: string
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /fulfill-transfer:
+            post:
+              summary: "Fulfill transfer request (customer side)"
+              operationId: "FulfillTransfer"
+              requestBody:
+                required: false
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        transferRequestId:
+                          type: string
+                        debtorId:
+                          type: string
+                        accountId:
+                          type: string
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          amount:
+                            type: number
+                          debtor:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              name:
+                                type: string
+                          items:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                name:
+                                  type: string
+                                amount:
+                                  type: number
+
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /get-transfer:
+            get:
+              summary: "Fetches metadata associated with a transfer request"
+              operationId: "GetTransfer"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          transferRequestId:
+                            type: string
+                          transferStatus:
+                            type: string
+                          creditor:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              name:
+                                type: string
+                          debtor:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              name:
+                                type: string
+                          statementDisplayName:
+                            type: string
+                          status:
+                            type: string
+                          statusMessage:
+                            type: string
+
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /list-transfers:
+            get:
+              summary: "Lists all transfers made with account"
+              operationId: "ListTransfers"
+              requestBody:
+                required: false
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        continuationToken:
+                          type: string
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          continuationToken:
+                            type: string
+                          items:
+                            type: array
+                            items:
+                              type: object
+                              amount:
+                                type: string
+                              status:
+                                type: string
+                              debtor:
+                                type: object
+                                properties:
+                                  id:
+                                    type: string
+                                  name:
+                                    type: string
+                              statementDisplayName:
+                                type: string
+
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /update-merchant:
+            post:
+              summary: "Update merchant"
+              operationId: "UpdateMerchant"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        bankAccountId:
+                          type: string
+                        merchantDisplayName:
+                          type: string
+                        merchantDescription:
+                          type: string
+                        merchantLocation:
+                          type: object
+                          properties:
+                            address: string
+                            latitude: number
+                            longitude: number
+              responses:
+                '200':
+                  description: "Successful response"
+
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        AddDefaultAuthorizerToCorsPreflight: false
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !Ref UserPoolArn
+      Cors:
+        AllowCredentials: true
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'https://www.zenobiapay.com'"
+      StageName: Prod
+      AccessLogSetting:
+        DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
+        Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","responseLatency":"$context.responseLatency","userAgent":"$context.identity.userAgent","requestTime":"$context.requestTime"}'
+      MethodSettings:
+        - LoggingLevel: INFO         
+          DataTraceEnabled: true     
+          MetricsEnabled: true       
+          HttpMethod: "*"           
+          ResourcePath: "/*"       
+
+  ApiGatewayLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/api-gateway/zenobia-access-logs
+
+  ApiGatewayCloudWatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ApiGatewayPushToCloudWatchLogs
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                  - logs:GetLogEvents
+                  - logs:FilterLogEvents
+                Resource: "*"
+
+  UnauthenticatedRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Federated: 'cognito-identity.amazonaws.com'
+            Action: 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals:
+                cognito-identity.amazonaws.com:aud: !Ref IdentityPoolId
+
+  AuthenticatedRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Federated: 'cognito-identity.amazonaws.com'
+            Action: 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals:
+                cognito-identity.amazonaws.com:aud: !Ref IdentityPoolId
+      Policies:
+        - PolicyName: 'AuthenticatedPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action: 'lambda:InvokeFunction'
+                Resource: 
+                  - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${BankHandlerFunction}'
+                  - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${TransferHandlerFunction}'
+
+
+  CognitoIdentityPoolRoleAttachment:
+    Type: 'AWS::Cognito::IdentityPoolRoleAttachment'
+    Properties:
+      IdentityPoolId: !Ref IdentityPoolId
+      Roles:
+        authenticated: !GetAtt AuthenticatedRole.Arn
+        unauthenticated: !GetAtt UnauthenticatedRole.Arn
+
+  BankHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: BankHandler
+      CodeUri: ..
+      Handler: com.zenobiapay.handlers.BankHandler::handleRequest
+      MemorySize: 2048
+      AutoPublishAlias: prod
+      AutoPublishAliasAllProperties: true
+#      ProvisionedConcurrencyConfig:
+#        ProvisionedConcurrentExecutions: 5
+      Environment:
+        Variables:
+          BANK_TABLE_NAME: !Ref BankTableName
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: "arn:aws:secretsmanager:us-east-1:711387130962:secret:plaid/sandbox/credentials-i0gDyP" # TODO dont hardcode
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: "arn:aws:secretsmanager:us-east-1:711387130962:secret:orum/sandbox/credentials-WyxcUb" # TODO dont hardcode
+        - AWSLambdaVPCAccessExecutionRole
+        - DynamoDBCrudPolicy:
+            TableName: !Ref BankTableName
+        - KMSEncryptPolicy:
+            KeyId: !Ref BankKeyId
+        - KMSDecryptPolicy:
+            KeyId: !Ref BankKeyId
+      Events:
+        GetCreateLinkToken:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /create-link-token
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        GetExchangeToken:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /exchange-token
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        ListBanks:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /list-banks
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  TransferHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: TransferHandler
+      CodeUri: ..
+      Handler: com.zenobiapay.handlers.TransferHandler::handleRequest
+      MemorySize: 2048
+      AutoPublishAlias: prod
+      AutoPublishAliasAllProperties: true
+#      ProvisionedConcurrencyConfig:
+#        ProvisionedConcurrentExecutions: 3
+#      AutoPublishAlias: live
+#      AutoPublishAliasAllProperties: true
+      Environment:
+        Variables:
+          TRANSFER_TABLE_NAME: !Ref TransferTableName
+          BANK_TABLE_NAME: !Ref BankTableName
+          USER_TABLE_NAME: !Ref UserTableName
+          COGNITO_USER_POOL_ARN: !Ref UserPoolArn
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: "arn:aws:secretsmanager:us-east-1:711387130962:secret:plaid/sandbox/credentials-i0gDyP" # TODO dont hardcode
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: "arn:aws:secretsmanager:us-east-1:711387130962:secret:orum/sandbox/credentials-WyxcUb" # TODO dont hardcode, also why is it trigggered by create request?
+        - AWSLambdaVPCAccessExecutionRole
+        - Statement:
+          - Effect: Allow
+            Action:
+              - cognito-idp:AdminGetUser  # This grants access to get user details
+            Resource: !Ref UserPoolArn
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TransferTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref BankTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserTableName
+        - KMSEncryptPolicy:
+            KeyId: !Ref TransferKeyId
+        - KMSDecryptPolicy:
+            KeyId: !Ref TransferKeyId
+        - KMSDecryptPolicy:
+            KeyId: !Ref BankKeyId
+        - KMSDecryptPolicy:
+            KeyId: !Ref UserKeyId
+      Events:
+        CreateTransferRequest:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /create-transfer-request
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        FulfillTransfer:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /fulfill-transfer
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        GetTransfer:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /get-transfer
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        ListTransfers:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /list-transfers
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  UserHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: UserHandler
+      CodeUri: ..
+      Handler: com.zenobiapay.handlers.UserHandler::handleRequest
+      MemorySize: 2048
+#      ProvisionedConcurrencyConfig:
+#        ProvisionedConcurrentExecutions: 5
+      AutoPublishAlias: prod
+      AutoPublishAliasAllProperties: true
+      Environment:
+        Variables:
+          USER_TABLE_NAME: !Ref UserTableName
+          BANK_TABLE_NAME: !Ref BankTableName
+          COGNITO_USER_POOL_ARN: !Ref UserPoolArn
+      Policies:
+        - AWSLambdaVPCAccessExecutionRole
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref BankTableName
+        - Statement: # TODO: remove after switching away cognito util
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminGetUser  # This grants access to get user details
+              Resource: !Ref UserPoolArn
+        - KMSEncryptPolicy:
+            KeyId: !Ref UserKeyId
+        - KMSDecryptPolicy:
+            KeyId: !Ref UserKeyId
+        - KMSDecryptPolicy:
+            KeyId: !Ref BankKeyId
+      Events:
+        UpdateMerchant:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /update-merchant
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  CognitoEventHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: CognitoEventHandler
+      CodeUri: ..
+      Handler: com.zenobiapay.handlers.CognitoEventHandler::handleRequest
+      Environment:
+        Variables:
+          USER_TABLE_NAME: !Ref UserTableName
+          COGNITO_USER_POOL_ARN: !Ref UserPoolArn
+      Policies:
+        - AWSLambdaVPCAccessExecutionRole
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserTableName
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: "arn:aws:secretsmanager:us-east-1:711387130962:secret:orum/sandbox/credentials-WyxcUb" # TODO dont hardcode
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminAddUserToGroup
+              Resource: !Ref UserPoolArn
+
+  CognitoEventHandlerInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CognitoEventHandlerFunction
+      Action: lambda:InvokeFunction
+      Principal: "cognito-idp.amazonaws.com"
+      SourceAccount: !Sub "${AWS::AccountId}"
+      SourceArn: !Ref UserPoolArn
+
+Outputs:
+  WebEndpoint:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ZenobiaApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"

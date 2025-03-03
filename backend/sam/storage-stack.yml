@@ -1,0 +1,180 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Stack to store DDB tables
+
+Parameters:
+  IdentityPoolId:
+    Type: String
+
+Resources:
+  BankKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Key to encrypt Bank DynamoDB table
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowRootAccount
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: "kms:*"
+            Resource: "*"
+
+  BankTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: BankTable
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+        KMSMasterKeyId: !Ref BankKmsKey
+        SSEType: KMS
+
+  TransferKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Key to encrypt Bank DynamoDB table
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowRootAccount
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: "kms:*"
+            Resource: "*"
+
+  TransferTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: TransferTable
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: gsi1Pk
+              KeyType: HASH
+            - AttributeName: gsi1Sk
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+        - AttributeName: gsi1Pk
+          AttributeType: S
+        - AttributeName: gsi1Sk
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+        KMSMasterKeyId: !Ref TransferKmsKey
+        SSEType: KMS
+
+  UserKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Key to encrypt Bank DynamoDB table
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowRootAccount
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: "kms:*"
+            Resource: "*"
+
+  UserTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: UserTable
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+        KMSMasterKeyId: !Ref UserKmsKey
+        SSEType: KMS
+
+  # TODO: increase security. Only allow authenticated users to access.
+  ProfilePictureBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub zenobia-profile-picture-bucket-${AWS::Region}-dev
+
+  ProfilePictureBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ProfilePictureBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+#          - Effect: Allow
+#            Principal: "*"
+#            Action:
+#              - s3:GetObject
+#            Resource:
+#              - !Sub arn:aws:s3:::zenobia-profile-picture-bucket-${AWS::Region}-dev/*
+#            Condition:
+#              StringEquals:
+#                cognito-identity.amazonaws.com:aud: !Ref IdentityPoolId
+          - Effect: Deny
+            Principal: "*"
+            Action:
+              - s3:ListBucket
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource:
+              - !Sub arn:aws:s3:::zenobia-profile-picture-bucket-${AWS::Region}-dev/*
+              - !Sub arn:aws:s3:::zenobia-profile-picture-bucket-${AWS::Region}-dev
+
+Outputs:
+  BankKeyId:
+    Value: !Ref BankKmsKey
+    Description: Bank table that stores plaid credentials
+  TransferKeyId:
+    Value: !Ref TransferKmsKey
+    Description: Bank table that stores plaid credentials
+  UserKeyId:
+    Value: !Ref UserKmsKey
+    Description: Bank table that stores plaid credentials
+  BankTableName:
+    Value: !Ref BankTable
+    Description: Bank table that stores plaid credentials
+  TransferTableName:
+    Value: !Ref TransferTable
+    Description: Transfer table that stores transfer requests and transfer details
+  UserTableName:
+    Value: !Ref UserTable
+    Description: User table that stores additional user metadata
+

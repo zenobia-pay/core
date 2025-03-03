@@ -1,0 +1,20 @@
+schema {
+  query: Query
+}
+
+type Query {
+  getItems(limit: Int, cursor: String): PaginatedItems!
+}
+
+type Item {
+  id: ID!
+  createdAt: String
+  description: String
+  name: String
+  price: Int
+}
+
+type PaginatedItems {
+  cursor: String
+  items: [Item!]!
+}

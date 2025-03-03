@@ -1,0 +1,36 @@
+package com.zenobiapay.model.ddb.user
+
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
+
+@DynamoDbBean
+data class MerchantItem(
+    @get:DynamoDbPartitionKey
+    var pk: String = "",
+    @get:DynamoDbSortKey
+    var sk: String = "",
+    @get:DynamoDbAttribute("data")
+    var data: MerchantItemData = MerchantItemData()
+) {
+    companion object {
+        fun generatePk(sub: String) = "MERCHANT#sub_$sub"
+        fun generateSk() = "DETAILS"
+    }
+}
+
+@DynamoDbBean
+data class MerchantItemData(
+    var displayName: String? = null,
+    var description: String? = null,
+    var location: Location? = null,
+    var bankAccountId: String? = null,
+)
+
+@DynamoDbBean
+data class Location(
+    var address: String? = null,
+    var latitude: Double? = null,
+    var longitude: Double? = null,
+)

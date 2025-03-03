@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Authentication stack.
+
+Resources:
+  # Cognito Resources
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub ${AWS::StackName}-user-pool
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      MfaConfiguration: "OFF"
+      UserPoolAddOns:
+        AdvancedSecurityMode: "OFF"
+      LambdaConfig:
+        PostConfirmation: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:CognitoEventHandler
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+        InviteMessageTemplate:
+          EmailMessage: Your username is {username} and your temporary password is {####}
+          EmailSubject: Welcome to Zenobia
+          SMSMessage: Your username for Zenobia is {username} and your temporary password is {####}.
+
+  MerchantGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: MerchantGroup
+      UserPoolId: !Ref UserPool
+      Description: Merchant group with abilities to request transfers, set promos, etc.
+
+  CustomerGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: CustomerGroup
+      UserPoolId: !Ref UserPool
+      Description: Customer group with abilities to make payments
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      ClientName: !Sub ${AWS::StackName}-client
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_USER_AUTH
+      SupportedIdentityProviders:
+        - COGNITO
+      CallbackURLs:
+        - https://d84l1y8p4kdic.cloudfront.net
+      AllowedOAuthFlows:
+        - implicit
+        - code
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - phone
+      AllowedOAuthFlowsUserPoolClient: true
+      # Enable the hosted UI for the managed login page
+      GenerateSecret: false # Set to true if a client secret is required for the app client
+      PreventUserExistenceErrors: ENABLED
+      EnableTokenRevocation: true
+      AuthSessionValidity: 15
+      RefreshTokenValidity: 30
+
+  CognitoIdentityPool:
+    Type: 'AWS::Cognito::IdentityPool'
+    Properties:
+      IdentityPoolName: 'ZenobiaIdentityPool'
+      AllowUnauthenticatedIdentities: true
+      CognitoIdentityProviders:
+        - ClientId: !Ref UserPoolClient
+          ProviderName: !Sub 'cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}'
+
+Outputs:
+  UserPoolArn:
+    Value: !GetAtt UserPool.Arn
+    Description: Cognito user pool arn.
+  IdentityPoolId:
+    Value: !Ref CognitoIdentityPool
+    Description: Cognito identity pool.
