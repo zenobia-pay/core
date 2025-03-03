@@ -6,7 +6,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
 
 @DynamoDbBean
-data class BankItem(
+data class BankAccountItem(
     @get:DynamoDbPartitionKey var pk: String = "",
     @get:DynamoDbSortKey var sk: String = "",
     var publicToken: String = "",
@@ -14,9 +14,9 @@ data class BankItem(
     var data: BankData = BankData(),
 ) {
     companion object {
-        fun generatePk(userId: String) = "BANK_ITEM#c_$userId"
+        fun generatePk(userId: String) = "BANK_ACCOUNT#c_$userId"
 
-        fun generateSk(accountId: String) = "ACCOUNT#$accountId"
+        fun generateSk(accountId: String) = "ID#$accountId"
     }
 }
 

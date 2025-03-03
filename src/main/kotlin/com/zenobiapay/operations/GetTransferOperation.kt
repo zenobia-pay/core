@@ -21,8 +21,8 @@ class GetTransferOperation @Inject constructor(private val objectMapper: ObjectM
         return GetTransferResponse(
             transferRequestId = request.id,
             transferStatus = transferItem.status.toApiTransferStatus(),
-            creditor = transferItem.data?.creditor?.toApiParticipantIdentity(),
-            debtor = transferItem.data?.debtor?.toApiParticipantIdentity(),
+            creditor = transferItem.data?.customer?.toApiParticipantIdentity(),
+            debtor = transferItem.data?.merchant?.toApiParticipantIdentity(),
             statementItems = transferItem.data?.statementItems?.map { it.toApiStatementItem() } ?: listOf(),
             status = transferItem.status.toApiTransferStatus(),
             statusMessage = transferItem.data?.statusMessage

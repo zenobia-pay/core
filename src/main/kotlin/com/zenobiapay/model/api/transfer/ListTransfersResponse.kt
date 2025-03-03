@@ -20,7 +20,7 @@ data class ListTransferItem(
             return ListTransferItem(
                 amount = item.amount,
                 status = item.status.toApiTransferStatus(),
-                debtor = item.data!!.debtor!!.toApiParticipantIdentity(),
+                debtor = item.data!!.merchant!!.toApiParticipantIdentity(),
                 statementItems = item.data?.statementItems?.map { it.toApiStatementItem() } ?: listOf(),
                 creationTime = item.data!!.creationTime
             )

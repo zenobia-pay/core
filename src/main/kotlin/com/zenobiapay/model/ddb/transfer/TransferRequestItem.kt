@@ -34,8 +34,8 @@ data class TransferRequestItem(
 
 @DynamoDbBean
 data class TransferData(
-    var creditor: PaymentParticipantIdentity? = null,
-    var debtor: PaymentParticipantIdentity? = null,
+    var customer: PaymentParticipantIdentity? = null,
+    var merchant: PaymentParticipantIdentity? = null,
     var statementItems: List<StatementItem> = listOf(),
     var statusMessage: String? = null,
     var creationTime: String = "",

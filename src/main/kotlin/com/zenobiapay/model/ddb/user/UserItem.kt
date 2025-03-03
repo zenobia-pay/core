@@ -15,7 +15,7 @@ data class UserItem(
     var data: UserItemData = UserItemData()
 ) {
     companion object {
-        fun generatePk(sub: String) = "CUSTOMER#sub_$sub"
+        fun generatePk(sub: String) = "USER#id_$sub"
         fun generateSk() = "DETAILS"
     }
 }
@@ -23,5 +23,4 @@ data class UserItem(
 @DynamoDbBean
 data class UserItemData(
     var orumPersonId: String = "",
-    var destinationAccount: String? = null
 )

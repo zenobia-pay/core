@@ -2,7 +2,7 @@ package com.zenobiapay.dao
 
 import com.zenobiapay.di.BANK_TABLE_NAME
 import com.zenobiapay.model.ddb.bank.BankData
-import com.zenobiapay.model.ddb.bank.BankItem
+import com.zenobiapay.model.ddb.bank.BankAccountItem
 import com.zenobiapay.util.MAX_BANK_ITEMS
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
@@ -28,11 +28,11 @@ class BankDao @Inject constructor(
         bankAccountType: String,
         orumId: String,
     ) {
-        val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankItem::class.java))
-        val pk = BankItem.generatePk(userId)
-        val sk = BankItem.generateSk(bankAccountId)
+        val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankAccountItem::class.java))
+        val pk = BankAccountItem.generatePk(userId)
+        val sk = BankAccountItem.generateSk(bankAccountId)
         table.putItem(
-            BankItem(
+            BankAccountItem(
                 pk = pk,
                 sk = sk,
                 publicToken = token,
@@ -48,9 +48,9 @@ class BankDao @Inject constructor(
     }
 
     // TODO: handle paging using continuation token
-    fun listBankAccounts(userId: String, continuationToken: String?): List<BankItem> {
+    fun listBankAccounts(userId: String, continuationToken: String?): List<BankAccountItem> {
         val queryConditional = QueryConditional.keyEqualTo {
-            it.partitionValue(BankItem.generatePk(userId))
+            it.partitionValue(BankAccountItem.generatePk(userId))
         }
         val queryRequest = QueryEnhancedRequest.builder()
             .attributesToProject("pk", "sk", "data")
@@ -58,15 +58,15 @@ class BankDao @Inject constructor(
             .limit(MAX_BANK_ITEMS)
             .build()
 
-        val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankItem::class.java))
+        val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankAccountItem::class.java))
         return table.query(queryRequest).items().toList()
     }
 
-    fun getBankAccount(userId: String, bankAccountId: String): BankItem {
+    fun getBankAccount(userId: String, bankAccountId: String): BankAccountItem {
         logger.info { "Fetch bank account from userId $userId, bankAccountId $bankAccountId" }
-        val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankItem::class.java))
-        val pk = BankItem.generatePk(userId)
-        val sk = BankItem.generateSk(bankAccountId)
+        val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankAccountItem::class.java))
+        val pk = BankAccountItem.generatePk(userId)
+        val sk = BankAccountItem.generateSk(bankAccountId)
 
         try {
             return table.getItem {

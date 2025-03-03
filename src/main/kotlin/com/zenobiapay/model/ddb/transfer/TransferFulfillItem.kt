@@ -18,7 +18,7 @@ data class TransferFulfillItem(
     var data: TransferData? = null,
     var version: Int = 0,
 ) {
-    companion object {
+    companion object { // TODO: combine fulfill and request items
         const val GSI_1 = "GSI1"
         fun generatePk(creditorId: String) = "FULFILL#c_$creditorId"
         fun generateSk(requestId: String) = requestId

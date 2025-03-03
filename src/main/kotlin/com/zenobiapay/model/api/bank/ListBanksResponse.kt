@@ -1,7 +1,7 @@
 package com.zenobiapay.model.api.bank
 
 import com.zenobiapay.model.api.ApiResponse
-import com.zenobiapay.model.ddb.bank.BankItem
+import com.zenobiapay.model.ddb.bank.BankAccountItem
 
 data class ListBanksResponse(
     val continuationToken: String? = null,
@@ -13,7 +13,7 @@ data class ListBankItem(
     val accountName: String?,
 ) {
     companion object {
-        fun from(item: BankItem): ListBankItem {
+        fun from(item: BankAccountItem): ListBankItem {
             return ListBankItem(
                 accountId = item.data.bankAccountId,
                 accountName = item.data.bankAccountName,

@@ -41,7 +41,7 @@ class FulfillTransferOperation @Inject constructor(
         val bankItem = bankDao.getBankAccount(userId, request.accountId)
         val transferAmount = transferRequestItem.amount!!
         val transferRequestData = transferRequestItem.data!!
-        val debtorId = transferRequestData.debtor!!
+        val debtorId = transferRequestData.merchant!!
         val creditorId = PaymentParticipantIdentity(
             id = userId,
             name = cognitoUtil.getUserFullName(userId),

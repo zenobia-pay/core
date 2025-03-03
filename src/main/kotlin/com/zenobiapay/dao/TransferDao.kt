@@ -46,7 +46,7 @@ class TransferDao @Inject constructor(
                 amount = amountInCents,
                 data = TransferData(
                     statementItems = statementItems.map { it.toDdbStatementItem() },
-                    debtor = PaymentParticipantIdentity(
+                    merchant = PaymentParticipantIdentity(
                         id = merchantId,
                         name = merchantName
                     ),
@@ -65,7 +65,7 @@ class TransferDao @Inject constructor(
             status = TransferStatus.IN_FLIGHT,
             transferFulfillId = fulfillRequestId,
             data = transferRequestItem.data?.copy(
-                creditor = customerIdentity,
+                customer = customerIdentity,
             )
         )
 
@@ -101,8 +101,8 @@ class TransferDao @Inject constructor(
                 amount = amountInCents,
                 data = TransferData(
                     statementItems = statementItems.map { it.toDdbStatementItem() },
-                    creditor = customerIdentity,
-                    debtor = merchantIdentity,
+                    customer = customerIdentity,
+                    merchant = merchantIdentity,
                     creationTime = fulfillTime.toString(),
                 ),
                 transferRequestId = transferRequestId,
