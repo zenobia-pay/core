@@ -15,7 +15,7 @@ class GetTransferOperation @Inject constructor(private val objectMapper: ObjectM
         val request = GetTransferRequest.from(input.queryStringParameters, objectMapper)
 
         val transferItem = transferDao.getTransferRequest(
-            debtorId = userId,
+            merchantId = userId,
             transferRequestId = request.id
         )
         return GetTransferResponse(

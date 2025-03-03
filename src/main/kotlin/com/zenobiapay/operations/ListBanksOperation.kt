@@ -17,7 +17,7 @@ class ListBanksOperation @Inject constructor(private val objectMapper: ObjectMap
         val request = ListBanksRequest.from(input.pathParameters, objectMapper)
         context.logger.log("Got request $request")
 
-        val bankItems = bankDao.listBankItems(userId, request.continuationToken)
+        val bankItems = bankDao.listBankAccounts(userId, request.continuationToken)
         context.logger.log("Got bank items $bankItems")
         return ListBanksResponse(
             items = bankItems.map {

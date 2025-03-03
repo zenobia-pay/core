@@ -15,7 +15,7 @@ data class UserItem(
     var data: UserItemData = UserItemData()
 ) {
     companion object {
-        fun generatePk(sub: String) = "USER#sub_$sub"
+        fun generatePk(sub: String) = "CUSTOMER#sub_$sub"
         fun generateSk() = "DETAILS"
     }
 }

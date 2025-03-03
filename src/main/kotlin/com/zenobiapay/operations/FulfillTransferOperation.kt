@@ -5,7 +5,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.dao.BankDao
 import com.zenobiapay.dao.TransferDao
-import com.zenobiapay.dao.UserDao
 import com.zenobiapay.model.api.ApiResponse
 import com.zenobiapay.model.api.transfer.FulfillTransferRequest
 import com.zenobiapay.model.api.transfer.FulfillTransferResponse
@@ -34,12 +33,12 @@ class FulfillTransferOperation @Inject constructor(
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): ApiResponse {
         val request = FulfillTransferRequest.from(input.body, objectMapper)
         val date = getUtcDate().also { logger.info { "Using date $it" } }
-        val transferRequestItem = transferDao.getTransferRequest(debtorId = request.debtorId, transferRequestId = request.transferRequestId)
+        val transferRequestItem = transferDao.getTransferRequest(merchantId = request.debtorId, transferRequestId = request.transferRequestId)
         if (transferRequestItem.status != TransferStatus.NOT_STARTED) {
             throw TransferStatusException("Transfer status is no longer in NOT_STARTED state.")
         }
         logger.info { "Fetching bank item from userId $userId, accountId ${request.accountId}" }
-        val bankItem = bankDao.getBankItem(userId, request.accountId)
+        val bankItem = bankDao.getBankAccount(userId, request.accountId)
         val transferAmount = transferRequestItem.amount!!
         val transferRequestData = transferRequestItem.data!!
         val debtorId = transferRequestData.debtor!!
@@ -124,8 +123,8 @@ class FulfillTransferOperation @Inject constructor(
 
         logger.info { "Writing to ddb" }
         transferDao.putTransferFulfill(
-            creditorIdentity = creditorId,
-            debitorIdentity = debtorId,
+            customerIdentity = creditorId,
+            merchantIdentity = debtorId,
             requestId = fulfillRequestId,
             transferRequestId = transferRequestId,
             amountInCents = transferAmount,
@@ -136,7 +135,7 @@ class FulfillTransferOperation @Inject constructor(
         transferDao.updateTransferRequest(
             transferRequestItem = transferRequestItem,
             fulfillRequestId = fulfillRequestId,
-            creditorIdentity = creditorId,
+            customerIdentity = creditorId,
         )
     }
 }

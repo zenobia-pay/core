@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 class ListTransfersOperation @Inject constructor(private val transferDao: TransferDao): Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): ApiResponse {
-        val transfers = transferDao.listTransfers(userId)
+        val transfers = transferDao.listCustomerTransfers(userId)
         return ListTransfersResponse(
             transfers.map { ListTransferItem.fromTransferFulfillItem(it) }
         )

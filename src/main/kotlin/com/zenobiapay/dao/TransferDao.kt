@@ -31,10 +31,10 @@ class TransferDao @Inject constructor(
     private val transferFulfillTable = client.table(transferTableName, TableSchema.fromBean(TransferFulfillItem::class.java))
     private val payoutTable = client.table(transferTableName, TableSchema.fromBean(PayoutItem::class.java))
 
-    fun putTransferRequest(userId: String, requestId: String, amountInCents: Int, debtorName: String, statementItems: List<StatementItem>) {
-        val pk = TransferRequestItem.generatePk(userId)
+    fun putTransferRequest(merchantId: String, requestId: String, amountInCents: Int, merchantName: String, statementItems: List<StatementItem>) {
+        val pk = TransferRequestItem.generatePk(merchantId)
         val sk = TransferRequestItem.generateSk(requestId)
-        val gsi1Pk = TransferRequestItem.generateGsi1Pk(userId)
+        val gsi1Pk = TransferRequestItem.generateGsi1Pk(merchantId)
         val gsi1Sk = TransferRequestItem.generateGsi1Sk(requestId, Instant.now())
         val creationTime = Instant.now()
         transferRequestTable.putItem(
@@ -47,8 +47,8 @@ class TransferDao @Inject constructor(
                 data = TransferData(
                     statementItems = statementItems.map { it.toDdbStatementItem() },
                     debtor = PaymentParticipantIdentity(
-                        id = userId,
-                        name = debtorName
+                        id = merchantId,
+                        name = merchantName
                     ),
                     creationTime = creationTime.toString()
                 )
@@ -59,13 +59,13 @@ class TransferDao @Inject constructor(
     fun updateTransferRequest(
         transferRequestItem: TransferRequestItem,
         fulfillRequestId: String,
-        creditorIdentity: PaymentParticipantIdentity,
+        customerIdentity: PaymentParticipantIdentity,
     ) {
         val updatedItem = transferRequestItem.copy(
             status = TransferStatus.IN_FLIGHT,
             transferFulfillId = fulfillRequestId,
             data = transferRequestItem.data?.copy(
-                creditor = creditorIdentity,
+                creditor = customerIdentity,
             )
         )
 
@@ -78,8 +78,8 @@ class TransferDao @Inject constructor(
     }
 
     fun putTransferFulfill(
-        creditorIdentity: PaymentParticipantIdentity,
-        debitorIdentity: PaymentParticipantIdentity,
+        customerIdentity: PaymentParticipantIdentity,
+        merchantIdentity: PaymentParticipantIdentity,
         requestId: String,
         transferRequestId: String,
         amountInCents: Int,
@@ -87,9 +87,9 @@ class TransferDao @Inject constructor(
     ) {
         val table = client.table(transferTableName, TableSchema.fromBean(TransferFulfillItem::class.java))
         val fulfillTime = Instant.now()
-        val pk = TransferFulfillItem.generatePk(creditorIdentity.id)
+        val pk = TransferFulfillItem.generatePk(customerIdentity.id)
         val sk = TransferFulfillItem.generateSk(requestId)
-        val gsi1Pk = TransferFulfillItem.generateGsi1Pk(creditorIdentity.id)
+        val gsi1Pk = TransferFulfillItem.generateGsi1Pk(customerIdentity.id)
         val gsi1Sk = TransferFulfillItem.generateGsi1Sk(requestId, fulfillTime)
         table.putItem(
             TransferFulfillItem(
@@ -101,8 +101,8 @@ class TransferDao @Inject constructor(
                 amount = amountInCents,
                 data = TransferData(
                     statementItems = statementItems.map { it.toDdbStatementItem() },
-                    creditor = creditorIdentity,
-                    debtor = debitorIdentity,
+                    creditor = customerIdentity,
+                    debtor = merchantIdentity,
                     creationTime = fulfillTime.toString(),
                 ),
                 transferRequestId = transferRequestId,
@@ -110,9 +110,9 @@ class TransferDao @Inject constructor(
         )
     }
 
-    fun getTransferRequest(debtorId: String, transferRequestId: String): TransferRequestItem {
+    fun getTransferRequest(merchantId: String, transferRequestId: String): TransferRequestItem {
         val table = client.table(transferTableName, TableSchema.fromBean(TransferRequestItem::class.java))
-        val pk = TransferRequestItem.generatePk(debtorId)
+        val pk = TransferRequestItem.generatePk(merchantId)
         val sk = TransferRequestItem.generateSk(transferRequestId)
         return table.getItem {
             it.key {
@@ -121,9 +121,9 @@ class TransferDao @Inject constructor(
         }
     }
 
-    fun listTransfers(creditorId: String): List<TransferFulfillItem> {
+    fun listCustomerTransfers(customerId: String): List<TransferFulfillItem> {
         val queryConditional = QueryConditional.keyEqualTo {
-            it.partitionValue(TransferFulfillItem.generateGsi1Pk(creditorId))
+            it.partitionValue(TransferFulfillItem.generateGsi1Pk(customerId))
         }
         val queryRequest = QueryEnhancedRequest.builder()
             .queryConditional(queryConditional)

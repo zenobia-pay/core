@@ -48,7 +48,7 @@ class BankDao @Inject constructor(
     }
 
     // TODO: handle paging using continuation token
-    fun listBankItems(userId: String, continuationToken: String?): List<BankItem> {
+    fun listBankAccounts(userId: String, continuationToken: String?): List<BankItem> {
         val queryConditional = QueryConditional.keyEqualTo {
             it.partitionValue(BankItem.generatePk(userId))
         }
@@ -62,8 +62,8 @@ class BankDao @Inject constructor(
         return table.query(queryRequest).items().toList()
     }
 
-    fun getBankItem(userId: String, bankAccountId: String): BankItem {
-        logger.info { "Fetch bank item from userId $userId, bankAccountId $bankAccountId" }
+    fun getBankAccount(userId: String, bankAccountId: String): BankItem {
+        logger.info { "Fetch bank account from userId $userId, bankAccountId $bankAccountId" }
         val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankItem::class.java))
         val pk = BankItem.generatePk(userId)
         val sk = BankItem.generateSk(bankAccountId)

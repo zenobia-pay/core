@@ -26,7 +26,7 @@ class UpdateMerchantOperation @Inject constructor(
         if (request.bankAccountId != null) {
             // Validate bank id exists
             logger.info { "Fetching bank account ${request.bankAccountId}" }
-            bankDao.getBankItem(userId, request.bankAccountId)
+            bankDao.getBankAccount(userId, request.bankAccountId)
         }
         // TODO: do in one ddb call
         val merchantItem = userDao.getMerchant(userId)
