@@ -47,6 +47,7 @@ Resources:
         BankKeyId: !GetAtt TableStack.Outputs.BankKeyId
         TransferKeyId: !GetAtt TableStack.Outputs.TransferKeyId
         UserKeyId: !GetAtt TableStack.Outputs.UserKeyId
+        TransferTableStreamArn: !GetAtt TableStack.Outputs.TransferTableStreamArn
 
   PayoutStack:
     Type: AWS::CloudFormation::Stack

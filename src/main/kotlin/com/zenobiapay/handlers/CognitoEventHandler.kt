@@ -17,6 +17,7 @@ import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
+// TODO: use cognito event object
 class CognitoEventHandler : RequestHandler<Map<String, Any>, Map<String, Any>> {
     @Inject
     lateinit var objectMapper: ObjectMapper

@@ -29,6 +29,8 @@ Parameters:
     Type: String
   UserTableName:
     Type: String
+  TransferTableStreamArn:
+    Type: String
   SecurityGroupId:
     Type: String
   SubnetId1:
@@ -650,6 +652,27 @@ Resources:
       Principal: "cognito-idp.amazonaws.com"
       SourceAccount: !Sub "${AWS::AccountId}"
       SourceArn: !Ref UserPoolArn
+
+  TransferTableEventHandler:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: TransferTableEventHandler
+      Handler: com.zenobiapay.handlers.TransferTableEventHandler::handleRequest
+      Runtime: java17
+      CodeUri: ..
+      Policies:
+        - DynamoDBStreamReadPolicy:
+            TableName: !Ref TransferTableName
+            StreamName: !Select [3, !Split ["/", !Ref TransferTableStreamArn]]
+        - KMSDecryptPolicy:
+            KeyId: !Ref TransferKeyId
+      Events:
+        DynamoDBStreamEvent:
+          Type: DynamoDB
+          Properties:
+            Stream: !Ref TransferTableStreamArn
+            StartingPosition: TRIM_HORIZON
+            BatchSize: 5
 
 Outputs:
   WebEndpoint:

@@ -96,6 +96,8 @@ Resources:
         SSEEnabled: true
         KMSMasterKeyId: !Ref TransferKmsKey
         SSEType: KMS
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
 
   UserKmsKey:
     Type: AWS::KMS::Key
@@ -183,4 +185,6 @@ Outputs:
   UserTableName:
     Value: !Ref UserTable
     Description: User table that stores additional user metadata
+  TransferTableStreamArn:
+    Value: !GetAtt TransferTable.StreamArn
 

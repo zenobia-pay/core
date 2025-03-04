@@ -11,4 +11,5 @@ interface AppComponent {
     fun inject(handler: CognitoEventHandler)
     fun inject(handler: PayoutDispatcher)
     fun inject(handler: PayoutProcessor)
+    fun inject(handler: TransferTableEventHandler)
 }
