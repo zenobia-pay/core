@@ -52,6 +52,7 @@ data class TransferData(
     var statementItems: List<StatementItem> = listOf(),
     var statusMessage: String? = null,
     var creationTime: String = "",
+    var webhookUrl: String? = null,
 )
 
 @DynamoDbBean

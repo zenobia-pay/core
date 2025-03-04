@@ -17,7 +17,7 @@ class CreateTransferRequestOperation @Inject constructor(private val transferDao
         val request = CreateTransferRequestRequest.from(input.body, objectMapper)
         val requestId = input.requestContext.requestId
         val userFullName = cognitoUtil.getUserFullName(userId)
-        transferDao.putTransferRequest(userId, requestId, request.amount, userFullName, request.statementItems)
+        transferDao.putTransferRequest(userId, requestId, request.amount, userFullName, request.statementItems, request.webhookUrl)
 
         return CreateTransferRequestResponse(transferRequestId = requestId, debtorId = userId)
     }
