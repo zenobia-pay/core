@@ -9,7 +9,6 @@ import com.zenobiapay.model.api.ApiResponse
 import com.zenobiapay.model.api.transfer.FulfillTransferRequest
 import com.zenobiapay.model.api.transfer.FulfillTransferResponse
 import com.zenobiapay.model.api.transfer.Debtor
-import com.zenobiapay.model.api.transfer.StatementItem
 import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.model.ddb.transfer.*
 import com.zenobiapay.model.exception.TransferFailedException
@@ -19,6 +18,7 @@ import com.zenobiapay.model.orum.OrumCreateTransferResponse
 import com.zenobiapay.model.orum.TransferParticipant
 import com.zenobiapay.util.*
 import io.github.oshai.kotlinlogging.KotlinLogging
+import java.time.Instant
 import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
@@ -45,11 +45,12 @@ class FulfillTransferOperation @Inject constructor(
         val creditorId = PaymentParticipantIdentity(
             id = userId,
             name = cognitoUtil.getUserFullName(userId),
-            accountId = request.accountId,
+            bankAccountId = request.accountId,
         )
         val transferRequestId = request.transferRequestId
         val fulfillRequestId = input.requestContext.requestId
 
+        val fulfillTimestamp = Instant.now()
         transferFunds(
             transferRequestId,
             transferAmount,
@@ -59,13 +60,10 @@ class FulfillTransferOperation @Inject constructor(
         transferDao.addPayoutItemAmount(debtorId.id, transferAmount, date)
         val statementItems = transferRequestData.statementItems.map { it.toApiStatementItem() }
         updateTransferTableStatusSuccess(
-            transferAmount = transferAmount,
             creditorId = creditorId,
-            debtorId = debtorId,
-            transferRequestId = transferRequestId,
             fulfillRequestId = fulfillRequestId,
-            statementItems = statementItems,
-            transferRequestItem = transferRequestItem,
+            transferItem = transferRequestItem,
+            timestamp = fulfillTimestamp,
         )
 
         return FulfillTransferResponse(
@@ -98,7 +96,7 @@ class FulfillTransferOperation @Inject constructor(
                     amount = transferAmount,
                     source = TransferParticipant(
                         customerReferenceId = creditorId.id,
-                        accountReferenceId = creditorId.accountId,
+                        accountReferenceId = creditorId.bankAccountId,
                         statementDisplayName = creditorId.name
                     ),
                     destination = null,
@@ -111,31 +109,17 @@ class FulfillTransferOperation @Inject constructor(
     }
 
     private fun updateTransferTableStatusSuccess(
-        transferAmount: Int,
         creditorId: PaymentParticipantIdentity,
-        debtorId: PaymentParticipantIdentity,
-        transferRequestId: String,
         fulfillRequestId: String,
-        statementItems: List<StatementItem>,
-        transferRequestItem: TransferRequestItem,
+        transferItem: TransferItem,
+        timestamp: Instant,
     ) {
-        // TODO: combine into one ddb call
-
-        logger.info { "Writing to ddb" }
-        transferDao.putTransferFulfill(
-            customerIdentity = creditorId,
-            merchantIdentity = debtorId,
-            requestId = fulfillRequestId,
-            transferRequestId = transferRequestId,
-            amountInCents = transferAmount,
-            statementItems = statementItems
-        )
-
-        logger.info { "Updating request status" }
+        logger.info { "Updating DDB with transfer fulfill details" }
         transferDao.updateTransferRequest(
-            transferRequestItem = transferRequestItem,
+            transferItem = transferItem,
             fulfillRequestId = fulfillRequestId,
             customerIdentity = creditorId,
+            timestamp = timestamp,
         )
     }
 }

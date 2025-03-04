@@ -1,7 +1,7 @@
 package com.zenobiapay.model.api.transfer
 
 import com.zenobiapay.model.api.ApiResponse
-import com.zenobiapay.model.ddb.transfer.TransferFulfillItem
+import com.zenobiapay.model.ddb.transfer.TransferItem
 
 data class ListTransfersResponse(
     val items: List<ListTransferItem>,
@@ -16,9 +16,9 @@ data class ListTransferItem(
     val creationTime: String,
 ) {
     companion object {
-        fun fromTransferFulfillItem(item: TransferFulfillItem): ListTransferItem {
+        fun fromTransferRequestItem(item: TransferItem): ListTransferItem {
             return ListTransferItem(
-                amount = item.amount,
+                amount = item.amount!!,
                 status = item.status.toApiTransferStatus(),
                 debtor = item.data!!.merchant!!.toApiParticipantIdentity(),
                 statementItems = item.data?.statementItems?.map { it.toApiStatementItem() } ?: listOf(),

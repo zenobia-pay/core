@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 data class CreateTransferRequestRequest(
     val amount: Int = 0,
-    val bankAccountId: String = "",
-    val statementItems: List<StatementItem> = listOf()
+    val statementItems: List<StatementItem> = listOf(),
+    val webhookUrl: String? = null,
 ) {
     companion object {
         fun from(request: String, objectMapper: ObjectMapper): CreateTransferRequestRequest {

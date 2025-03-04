@@ -9,11 +9,15 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortK
 import java.time.Instant
 
 @DynamoDbBean
-data class TransferRequestItem(
+data class TransferItem(
     @get:DynamoDbPartitionKey var pk: String = "",
     @get:DynamoDbSortKey var sk: String = "",
-    @get:DynamoDbSecondaryPartitionKey(indexNames = ["GSI1"]) var gsi1Pk: String? = null,
-    @get:DynamoDbSecondarySortKey(indexNames = ["GSI1"]) var gsi1Sk: String? = null,
+    @get:DynamoDbSecondaryPartitionKey(indexNames = [GSI_1]) var gsi1Pk: String? = null,
+    @get:DynamoDbSecondarySortKey(indexNames = [GSI_1]) var gsi1Sk: String? = null,
+    @get:DynamoDbSecondaryPartitionKey(indexNames = [GSI_2]) var gsi2Pk: String? = null,
+    @get:DynamoDbSecondarySortKey(indexNames = [GSI_2]) var gsi2Sk: String? = null,
+    @get:DynamoDbSecondaryPartitionKey(indexNames = [GSI_3]) var gsi3Pk: String? = null,
+    @get:DynamoDbSecondarySortKey(indexNames = [GSI_3]) var gsi3Sk: String? = null,
     var amount: Int? = null,
     var status: TransferStatus = TransferStatus.NOT_STARTED,
     var transferFulfillId: String? = null,
@@ -25,10 +29,19 @@ data class TransferRequestItem(
     val requestId: String
         get() = sk
     companion object {
-        fun generatePk(storeId: String) = "REQUEST#s_$storeId"
+        const val GSI_1 = "GSI1"
+        const val GSI_2 = "GSI2"
+        const val GSI_3 = "GSI3"
+        fun generatePk(merchantId: String) = "REQUEST#m_$merchantId"
         fun generateSk(requestId: String) = requestId
-        fun generateGsi1Pk(storeId: String) = "REQUEST#s_$storeId"
-        fun generateGsi1Sk(requestId: String, timestamp: Instant) = "CREATED#t_$timestamp#id_$requestId"
+        fun generateGsi1Pk(merchantId: String) = "REQUEST#s_$merchantId"
+        fun generateGsi1Sk(transferRequestId: String, timestamp: Instant) = "CREATED#t_$timestamp#id_$transferRequestId"
+
+        // Queries for customer
+        fun generateGsi2Pk(customerId: String) = "FULFILL#c_$customerId"
+        fun generateGsi2Sk(fulfillRequestId: String) = fulfillRequestId
+        fun generateGsi3Pk(customerId: String) = "FULFILL#c_$customerId"
+        fun generateGsi3Sk(fulfillRequestId: String, timestamp: Instant) = "CREATED#t_$timestamp#id_$fulfillRequestId"
     }
 }
 
@@ -45,7 +58,7 @@ data class TransferData(
 data class PaymentParticipantIdentity(
     var id: String = "",
     var name: String = "",
-    var accountId: String = "",
+    var bankAccountId: String = "",
 ) {
     fun toApiParticipantIdentity(): com.zenobiapay.model.api.transfer.PaymentParticipantIdentity {
         return com.zenobiapay.model.api.transfer.PaymentParticipantIdentity(

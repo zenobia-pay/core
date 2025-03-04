@@ -82,6 +82,22 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
+        - IndexName: GSI2
+          KeySchema:
+            - AttributeName: gsi2Pk
+              KeyType: HASH
+            - AttributeName: gsi2Sk
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: GSI3
+          KeySchema:
+            - AttributeName: gsi3Pk
+              KeyType: HASH
+            - AttributeName: gsi3Sk
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
       AttributeDefinitions:
         - AttributeName: pk
           AttributeType: S
@@ -90,6 +106,14 @@ Resources:
         - AttributeName: gsi1Pk
           AttributeType: S
         - AttributeName: gsi1Sk
+          AttributeType: S
+        - AttributeName: gsi2Pk
+          AttributeType: S
+        - AttributeName: gsi2Sk
+          AttributeType: S
+        - AttributeName: gsi3Pk
+          AttributeType: S
+        - AttributeName: gsi3Sk
           AttributeType: S
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
