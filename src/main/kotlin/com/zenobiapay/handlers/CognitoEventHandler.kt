@@ -10,6 +10,7 @@ import com.zenobiapay.model.event.CognitoNewUserEvent
 import com.zenobiapay.model.orum.Contact
 import com.zenobiapay.model.orum.OrumCreatePersonRequest
 import com.zenobiapay.util.CognitoUtil
+import com.zenobiapay.util.OrumException
 import com.zenobiapay.util.OrumUtil
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
@@ -42,17 +43,29 @@ class CognitoEventHandler : RequestHandler<Map<String, Any>, Map<String, Any>> {
 
             cognitoUtil.addUserToGroup(sub, UserPoolGroup.CUSTOMER)
 
-            val person = orumUtil.createPerson(
-                OrumCreatePersonRequest(
-                    customerReferenceId = sub,
-                    firstName = userEvent.request.userAttributes.givenName,
-                    lastName = userEvent.request.userAttributes.familyName,
-                    socialSecurityNumber = null,
-                    contacts = listOf(Contact("email", userEvent.request.userAttributes.email))
-                )
+            val createPersonRequest = OrumCreatePersonRequest(
+                customerReferenceId = sub,
+                firstName = userEvent.request.userAttributes.givenName,
+                lastName = userEvent.request.userAttributes.familyName,
+                socialSecurityNumber = null,
+                contacts = listOf(Contact("email", userEvent.request.userAttributes.email))
             )
+
+            val person = try {
+                orumUtil.createPerson(createPersonRequest).person.also {
+                    logger.info { "Created Orum person with customer reference id $sub" }
+                }
+            } catch (e: OrumException) {
+                if (e.isCreatePersonAlreadyExistsException()) {
+                    logger.info { "Person $sub already exists. Updating pre-existing person with new info" }
+                    orumUtil.updatePerson(createPersonRequest).person
+                } else {
+                    throw e
+                }
+            }
+
             logger.info { "Got person $person" }
-            userDao.putUser(sub, person.person.id)
+            userDao.putUser(sub, person.id)
             logger.info { "Successfully put person into table" }
         } catch (e: Exception) {
             logger.error(e) { "Error when processing cognito event" }

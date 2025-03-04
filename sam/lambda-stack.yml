@@ -630,6 +630,10 @@ Resources:
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref UserTableName
+        - KMSEncryptPolicy:
+            KeyId: !Ref UserKeyId
+        - KMSDecryptPolicy:
+            KeyId: !Ref UserKeyId
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:orum/sandbox/credentials-VS6HFc" # TODO dont hardcode
         - Statement:

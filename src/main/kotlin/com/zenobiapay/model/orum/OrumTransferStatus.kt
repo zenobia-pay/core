@@ -16,7 +16,7 @@ enum class OrumTransferStatus(@JsonValue private val value: String) {
         @JvmStatic
         fun fromValue(value: String): OrumTransferStatus {
             return entries.find { it.value == value }
-                ?: throw OrumException("Could not find matching transfer status for value: $value")
+                ?: throw OrumException(404, "Could not find matching transfer status for value: $value")
         }
     }
 }

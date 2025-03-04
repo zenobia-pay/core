@@ -45,7 +45,7 @@ class ExchangeTokenOperation @Inject constructor(
 
             val orumId = orumUtil.createExternalOrganization(OrumCreateExternalAccountRequest(
                 accountReferenceId = ach.accountId,
-                customerReferenceId = OrumUtil.CUSTOMER_REFERENCE_PREFIX + userId,
+                customerReferenceId = userId,
                 customerResourceType = "person", // TODO: use enum
                 accountType = account.subtype!!.value,
                 accountNumber = ach.account,

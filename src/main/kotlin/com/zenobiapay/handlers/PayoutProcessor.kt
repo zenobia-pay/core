@@ -12,7 +12,6 @@ import com.zenobiapay.model.orum.OrumCreateTransferRequest
 import com.zenobiapay.model.orum.TransferParticipant
 import com.zenobiapay.model.sqs.PayoutMessage
 import com.zenobiapay.util.OrumUtil
-import com.zenobiapay.util.OrumUtil.Companion.CUSTOMER_REFERENCE_PREFIX
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 
@@ -64,7 +63,7 @@ class PayoutProcessor : RequestHandler<SQSEvent, Unit> {
                 transferReferenceId = "${payoutItem.pk}#${payoutItem.sk}",
                 amount = merchantPayout,
                 destination = TransferParticipant(
-                    customerReferenceId = CUSTOMER_REFERENCE_PREFIX + message.merchantId,
+                    customerReferenceId = message.merchantId,
                     accountReferenceId = "K8EBv4d93qirXZwZjzwmH9bPoyLEWvtRKvXa9", // TODO: fetch merchants preferred account
                     statementDisplayName = "ZP_${message.date}"
                 )

@@ -1,6 +1,5 @@
 package com.zenobiapay.util
 
-import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.model.orum.*
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -10,13 +9,15 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import javax.inject.Inject
-import kotlin.math.log
-import kotlin.reflect.KClass
 import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}
 
-class OrumException(message: String): Exception(message)
+class OrumException(val errorCode: Int, override val message: String): Exception(message) {
+    fun isCreatePersonAlreadyExistsException(): Boolean {
+        return errorCode == 400 && message.contains("duplicate_customer_reference_id")
+    }
+}
 
 class OrumUtil @Inject constructor(
     private val client: OkHttpClient,
@@ -26,7 +27,6 @@ class OrumUtil @Inject constructor(
 
     companion object {
         val JSON_MEDIA_TYPE = "application/json".toMediaTypeOrNull()
-        val CUSTOMER_REFERENCE_PREFIX = "sub_"
     }
 
     fun getAccessToken(orumCredentials: OrumCredentials): OrumTokenResponse {
@@ -44,8 +44,6 @@ class OrumUtil @Inject constructor(
 
         return getResponseOrThrowException(OrumTokenResponse::class.java) {
             client.newCall(request).execute()
-        }.also {
-            logger.info { "Got access token ${it.accessToken}" } // TODO: DEFINITELY REMOVE FROM PROD
         }
     }
 
@@ -71,7 +69,7 @@ class OrumUtil @Inject constructor(
             createTransferRequest.copy(
                 source = if (createTransferRequest.source != null) {
                     createTransferRequest.source.copy(
-                        customerReferenceId = CUSTOMER_REFERENCE_PREFIX + createTransferRequest.source.customerReferenceId
+                        customerReferenceId = createTransferRequest.source.customerReferenceId
                     )
                 } else {
                     null
@@ -127,16 +125,26 @@ class OrumUtil @Inject constructor(
 
     fun createPerson(createPersonRequest: OrumCreatePersonRequest): OrumCreatePersonResponse {
         val accessToken = getAccessToken(orumCredentials)
-        val body = objectMapper.writeValueAsString(
-            createPersonRequest.copy(
-                customerReferenceId = CUSTOMER_REFERENCE_PREFIX + createPersonRequest.customerReferenceId
-            )
-        ).toRequestBody(JSON_MEDIA_TYPE)
+        val body = objectMapper.writeValueAsString(createPersonRequest).toRequestBody(JSON_MEDIA_TYPE)
         logger.info { "Creating person with request $createPersonRequest" }
         val request = Request.Builder()
             .addOrumHeaders(accessToken.accessToken)
             .url("https://api-sandbox.orum.io/deliver/persons")
             .post(body)
+            .build()
+
+        return getResponseOrThrowException(OrumCreatePersonResponse::class.java) {
+            client.newCall(request).execute()
+        }
+    }
+
+    fun updatePerson(createPersonRequest: OrumCreatePersonRequest): OrumCreatePersonResponse {
+        val accessToken = getAccessToken(orumCredentials)
+        val body = objectMapper.writeValueAsString(createPersonRequest).toRequestBody(JSON_MEDIA_TYPE)
+        val request = Request.Builder()
+            .addOrumHeaders(accessToken.accessToken)
+            .url("https://api-sandbox.orum.io/deliver/persons")
+            .put(body)
             .build()
 
         return getResponseOrThrowException(OrumCreatePersonResponse::class.java) {
@@ -151,7 +159,7 @@ class OrumUtil @Inject constructor(
             logger.info { "Got Orum response $body" } // TODO: maybe remove? Make debug?
             return objectMapper.readValue(body, responseClass)
         }
-        throw OrumException("Failed to get response ${responseClass.simpleName}. Error code ${response.code}, body ${response.body?.string()}")
+        throw OrumException(response.code, "Failed to get response ${responseClass.simpleName}. Error code ${response.code}, body ${response.body?.string()}")
     }
 }
 

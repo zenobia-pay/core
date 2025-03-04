@@ -15,7 +15,7 @@ data class MerchantItem(
     var data: MerchantItemData = MerchantItemData()
 ) {
     companion object {
-        fun generatePk(sub: String) = "MERCHANT#sub_$sub"
+        fun generatePk(sub: String) = "MERCHANT#m_$sub"
         fun generateSk() = "DETAILS"
     }
 }
