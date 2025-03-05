@@ -38,7 +38,8 @@ class UpdateMerchantOperation @Inject constructor(
             request.bankAccountId,
             request.merchantDisplayName,
             request.merchantDescription,
-            request.merchantLocation
+            request.merchantLocation,
+            request.webhookUrl
         )
         return EmptyApiResponse()
     }

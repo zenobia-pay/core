@@ -5,6 +5,7 @@ data class UpdateMerchantRequest(
     val merchantDisplayName: String? = null,
     val merchantDescription: String? = null,
     val merchantLocation: Location? = null,
+    val webhookUrl: String? = null,
 )
 
 data class Location(

@@ -39,7 +39,8 @@ class UserDao @Inject constructor(
         bankAccountId: String?,
         merchantDisplayName: String?,
         merchantDescription: String?,
-        merchantLocation: Location?
+        merchantLocation: Location?,
+        webhookUrl: String?,
     ) {
         // TODO: use ddb instead to handle null values
         val currentMerchantItem = merchantItem ?: MerchantItem(pk = MerchantItem.generatePk(merchantId), sk = MerchantItem.generateSk())
@@ -50,6 +51,7 @@ class UserDao @Inject constructor(
                 description = merchantDescription ?: merchantData.description,
                 location = merchantLocation?.toDdbLocation() ?: merchantData.location,
                 bankAccountId = bankAccountId ?: merchantData.bankAccountId,
+                webhookUrl = webhookUrl ?: merchantData.webhookUrl
             )
         )
         logger.info { "Updating merchant data with new values $updatedMerchantItem" }
