@@ -26,6 +26,7 @@ data class MerchantItemData(
     var description: String? = null,
     var location: Location? = null,
     var bankAccountId: String? = null,
+    var webhookUrl: String? = null,
 )
 
 @DynamoDbBean

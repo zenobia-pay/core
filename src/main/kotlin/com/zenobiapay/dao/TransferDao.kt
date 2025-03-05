@@ -30,7 +30,7 @@ class TransferDao @Inject constructor(
     private val transferTable = client.table(transferTableName, TableSchema.fromBean(TransferItem::class.java))
     private val payoutTable = client.table(transferTableName, TableSchema.fromBean(PayoutItem::class.java))
 
-    fun putTransferRequest(merchantId: String, requestId: String, amountInCents: Int, merchantName: String, statementItems: List<StatementItem>, webhookUrl: String?) {
+    fun putTransferRequest(merchantId: String, requestId: String, amountInCents: Int, merchantName: String, statementItems: List<StatementItem>) {
         val pk = TransferItem.generatePk(merchantId)
         val sk = TransferItem.generateSk(requestId)
         val gsi1Pk = TransferItem.generateGsi1Pk(merchantId)
@@ -50,7 +50,6 @@ class TransferDao @Inject constructor(
                         name = merchantName
                     ),
                     creationTime = creationTime.toString(),
-                    webhookUrl = webhookUrl,
                 )
             )
         )
@@ -61,12 +60,14 @@ class TransferDao @Inject constructor(
         fulfillRequestId: String,
         customerIdentity: PaymentParticipantIdentity,
         timestamp: Instant,
+        webhookUrl: String?,
     ) {
         val updatedItem = transferItem.copy(
             status = TransferStatus.IN_FLIGHT,
             transferFulfillId = fulfillRequestId,
             data = transferItem.data?.copy(
                 customer = customerIdentity,
+                webhookUrl = webhookUrl,
             ),
             gsi2Pk = TransferItem.generateGsi2Pk(customerIdentity.id),
             gsi2Sk = TransferItem.generateGsi2Sk(fulfillRequestId),

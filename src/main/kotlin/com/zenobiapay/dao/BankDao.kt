@@ -62,21 +62,20 @@ class BankDao @Inject constructor(
         return table.query(queryRequest).items().toList()
     }
 
-    fun getBankAccount(userId: String, bankAccountId: String): BankAccountItem {
+    fun getBankAccount(userId: String, bankAccountId: String): BankAccountItem? {
         logger.info { "Fetch bank account from userId $userId, bankAccountId $bankAccountId" }
         val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankAccountItem::class.java))
         val pk = BankAccountItem.generatePk(userId)
         val sk = BankAccountItem.generateSk(bankAccountId)
 
-        try {
-            return table.getItem {
+        return try {
+            table.getItem {
                 it.key {
                     it.partitionValue(pk).sortValue(sk)
                 }
             }
         } catch (e: ResourceNotFoundException) {
-            logger.error(e) { "Failed to fetch bank item from userId $userId, accountId $bankAccountId" }
-            throw com.zenobiapay.model.exception.ResourceNotFoundException("ACCOUNT")
+            null
         }
     }
 }

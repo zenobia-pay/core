@@ -9,6 +9,7 @@ import com.zenobiapay.model.api.ApiResponse
 import com.zenobiapay.model.api.EmptyApiResponse
 import com.zenobiapay.model.api.account.UpdateMerchantRequest
 import com.zenobiapay.model.cognito.UserPoolGroup
+import com.zenobiapay.model.exception.ResourceNotFoundException
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 
@@ -26,7 +27,7 @@ class UpdateMerchantOperation @Inject constructor(
         if (request.bankAccountId != null) {
             // Validate bank id exists
             logger.info { "Fetching bank account ${request.bankAccountId}" }
-            bankDao.getBankAccount(userId, request.bankAccountId)
+            bankDao.getBankAccount(userId, request.bankAccountId) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
         }
         // TODO: do in one ddb call
         val merchantItem = userDao.getMerchant(userId)

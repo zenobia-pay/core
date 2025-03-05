@@ -5,12 +5,14 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.dao.BankDao
 import com.zenobiapay.dao.TransferDao
+import com.zenobiapay.dao.UserDao
 import com.zenobiapay.model.api.ApiResponse
 import com.zenobiapay.model.api.transfer.FulfillTransferRequest
 import com.zenobiapay.model.api.transfer.FulfillTransferResponse
 import com.zenobiapay.model.api.transfer.Debtor
 import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.model.ddb.transfer.*
+import com.zenobiapay.model.exception.ResourceNotFoundException
 import com.zenobiapay.model.exception.TransferFailedException
 import com.zenobiapay.model.exception.TransferStatusException
 import com.zenobiapay.model.orum.OrumCreateTransferRequest
@@ -27,6 +29,7 @@ class FulfillTransferOperation @Inject constructor(
     private val orumUtil: OrumUtil,
     private val transferDao: TransferDao,
     private val bankDao: BankDao,
+    private val userDao: UserDao,
     private val objectMapper: ObjectMapper,
     private val cognitoUtil: CognitoUtil,
 ): Operation() {
@@ -38,7 +41,9 @@ class FulfillTransferOperation @Inject constructor(
             throw TransferStatusException("Transfer status is no longer in NOT_STARTED state.")
         }
         logger.info { "Fetching bank item from userId $userId, accountId ${request.accountId}" }
-        val bankItem = bankDao.getBankAccount(userId, request.accountId)
+        bankDao.getBankAccount(userId, request.accountId) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
+        val merchantItem = userDao.getMerchant(request.debtorId) ?: throw ResourceNotFoundException("MERCHANT")
+
         val transferAmount = transferRequestItem.amount!!
         val transferRequestData = transferRequestItem.data!!
         val debtorId = transferRequestData.merchant!!
@@ -64,6 +69,7 @@ class FulfillTransferOperation @Inject constructor(
             fulfillRequestId = fulfillRequestId,
             transferItem = transferRequestItem,
             timestamp = fulfillTimestamp,
+            webhookUrl = merchantItem.data.webhookUrl
         )
 
         return FulfillTransferResponse(
@@ -113,6 +119,7 @@ class FulfillTransferOperation @Inject constructor(
         fulfillRequestId: String,
         transferItem: TransferItem,
         timestamp: Instant,
+        webhookUrl: String?,
     ) {
         logger.info { "Updating DDB with transfer fulfill details" }
         transferDao.updateTransferRequest(
@@ -120,6 +127,7 @@ class FulfillTransferOperation @Inject constructor(
             fulfillRequestId = fulfillRequestId,
             customerIdentity = creditorId,
             timestamp = timestamp,
+            webhookUrl = webhookUrl
         )
     }
 }

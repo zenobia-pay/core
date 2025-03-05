@@ -1,18 +1,10 @@
 package com.zenobiapay.model.api.transfer
 
-import com.fasterxml.jackson.databind.ObjectMapper
-
 data class CreateTransferRequestRequest(
     val amount: Int = 0,
     val statementItems: List<StatementItem> = listOf(),
-    val webhookUrl: String? = null,
-) {
-    companion object {
-        fun from(request: String, objectMapper: ObjectMapper): CreateTransferRequestRequest {
-            return objectMapper.readValue(request, CreateTransferRequestRequest::class.java)
-        }
-    }
-}
+    val bankAccountId: String? = null,
+)
 
 data class StatementItem(
     val name: String,

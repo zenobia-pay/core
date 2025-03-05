@@ -10,32 +10,29 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
-import software.amazon.awssdk.enhanced.dynamodb.mapper.BeanTableSchema
+import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest
 import java.time.Instant
+import kotlin.test.Test
 
 class TransferDaoTest {
     private val mockLowLevelClient = mockk<DynamoDbClient>()
     private val mockEnhancedClient = mockk<DynamoDbEnhancedClient>()
     private val mockTransferRequestTable = mockk<DynamoDbTable<TransferItem>>()
-    private val mockTransferPayoutTable = mockk<DynamoDbTable<PayoutItem>>(relaxed = true)
+    private val mockTransferPayoutTable = mockk<DynamoDbTable<PayoutItem>>()
     private val tableName = "tableName"
-    private val dao = TransferDao(mockEnhancedClient, mockLowLevelClient, tableName)
 
     @BeforeEach
     fun setup() {
-        val requestSchema = BeanTableSchema.create(TransferItem::class.java)
-        val payoutSchema = BeanTableSchema.create(PayoutItem::class.java)
-    }
-
-    // @Test TODO: enable once mocking is working
-    fun `test updateTransferRequest updates secondary indices`() {
         every {
-            mockEnhancedClient.table(tableName, any<TableSchema<TransferItem>>())
+            mockEnhancedClient.table(tableName, TableSchema.fromBean(TransferItem::class.java))
         } returns mockTransferRequestTable
         every {
-            mockEnhancedClient.table(tableName, any<TableSchema<PayoutItem>>())
+            mockEnhancedClient.table(tableName, TableSchema.fromBean(PayoutItem::class.java))
         } returns mockTransferPayoutTable
+    }
 
+    @Test
+    fun `test updateTransferRequest updates secondary indices`() {
         val oldItem = TransferItem(
             pk = "pk",
             sk = "sk",
@@ -63,11 +60,12 @@ class TransferDaoTest {
         val customerName = "customerName"
         val timestamp = Instant.now()
 
-        val newDdbItemSlot = slot<TransferItem>()
+        val newDdbItemSlot = slot<UpdateItemEnhancedRequest<TransferItem>>()
         every {
             mockTransferRequestTable.updateItem(capture(newDdbItemSlot))
         } returns oldItem
 
+        val dao = TransferDao(mockEnhancedClient, mockLowLevelClient, tableName)
         dao.updateTransferRequest(
             oldItem,
             fulfillRequestId = fulfillRequestId,
@@ -76,13 +74,14 @@ class TransferDaoTest {
                 customerName
             ),
             timestamp,
+            null,
         )
 
         assertTrue(newDdbItemSlot.isCaptured)
-        val newItem = newDdbItemSlot.captured
-        assertEquals(newItem.gsi2Pk, "FULFILL#c_$customerId")
-        assertEquals(newItem.gsi2Sk, fulfillRequestId)
-        assertEquals(newItem.gsi3Pk, "FULFILL#c_$customerId")
-        assertEquals(newItem.gsi3Sk, "CREATED#t_$timestamp#id_$fulfillRequestId")
+        val newItem = newDdbItemSlot.captured.item()
+        assertEquals("TRANSFER#c_$customerId", newItem.gsi2Pk)
+        assertEquals(fulfillRequestId, newItem.gsi2Sk)
+        assertEquals(newItem.gsi3Pk, "TRANSFER#c_$customerId")
+        assertEquals("CREATED#t_$timestamp#id_$fulfillRequestId", newItem.gsi3Sk)
     }
 }
