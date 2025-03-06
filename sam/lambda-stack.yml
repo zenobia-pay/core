@@ -352,7 +352,7 @@ Resources:
         AllowCredentials: true
         AllowMethods: "'GET,POST,OPTIONS'"
         AllowHeaders: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-        AllowOrigin: "'https://www.zenobiapay.com'"
+        AllowOrigin: "'https://zenobiapay.com'"
       StageName: Prod
       AccessLogSetting:
         DestinationArn: !GetAtt ApiGatewayLogGroup.Arn

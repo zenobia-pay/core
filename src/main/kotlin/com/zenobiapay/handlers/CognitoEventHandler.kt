@@ -37,6 +37,7 @@ class CognitoEventHandler : RequestHandler<Map<String, Any>, Map<String, Any>> {
 
     override fun handleRequest(event: Map<String, Any>, context: Context?): Map<String, Any> {
         try {
+            // TODO: refactor to use AWS cognito event object
             logger.info { "Got event $event" }
             val userEvent = CognitoNewUserEvent.from(event, objectMapper)
             logger.info { "Got event $userEvent" }
