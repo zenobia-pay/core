@@ -326,6 +326,8 @@ Resources:
                           type: string
                         merchantDescription:
                           type: string
+                        webhookUrl:
+                          type: string
                         merchantLocation:
                           type: object
                           properties:

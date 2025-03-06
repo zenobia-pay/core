@@ -33,6 +33,7 @@ class WebhookHandler @Inject constructor(private val okHttpClient: OkHttpClient,
             expiry = expiryTime.toString()
         )
         val body = objectMapper.writeValueAsString(webhookBody)
+        logger.info { "Sending webhook to url $webhookUrl with body $body" }
         val request = Request.Builder() // TODO: add authentication headers
             .url(webhookUrl)
             .post(body.toRequestBody())
