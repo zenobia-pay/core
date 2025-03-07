@@ -33,7 +33,7 @@ class UserHandler: RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyRe
         val operation = when (input?.path) {
             "/update-merchant" -> updateMerchantOperation
             "/get-merchant" -> getMerchantOperation
-            else -> throw UnknownPathException()
+            else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
         }
         return responseHandler.returnApiGwResponse(operation, input, context!!)
     }

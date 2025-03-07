@@ -51,6 +51,40 @@ Resources:
         info:
           title: Zenobia API
           version: 1.0
+        components:
+          responses:
+            BadRequest:
+              description: Bad request
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/ErrorResponse"
+            Forbidden:
+              description: Forbidden
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/ErrorResponse"
+            NotFound:
+              description: Resource not found
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/ErrorResponse"
+            InternalServerError:
+              description: Internal server error
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/ErrorResponse"
+          schemas:
+            ErrorResponse:
+              type: object
+              properties:
+                error:
+                  type: string
+                message:
+                  type: string
         paths:
           /create-link-token:
             get:
@@ -88,6 +122,14 @@ Resources:
               responses:
                 '200':
                   description: "Successful response"
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
@@ -116,6 +158,14 @@ Resources:
                                   type: string
                                 accountName:
                                   type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
@@ -136,8 +186,15 @@ Resources:
                           type: integer
                         bankAccountId:
                           type: string
-                        statementDisplayName:
-                          type: string
+                        statementItems:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                              amount:
+                                type: integer
               responses:
                 '200':
                   description: "Successful response"
@@ -150,6 +207,14 @@ Resources:
                             type: string
                           debtorId:
                             type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
@@ -198,6 +263,14 @@ Resources:
                                   type: string
                                 amount:
                                   type: integer
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
 
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
@@ -240,6 +313,14 @@ Resources:
                             type: string
                           statusMessage:
                             type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
 
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
@@ -278,6 +359,14 @@ Resources:
                                       type: string
                                 statementDisplayName:
                                   type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
 
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
@@ -315,6 +404,14 @@ Resources:
                                   type: string
                                 transferRequestId:
                                   type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
 
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
@@ -350,6 +447,14 @@ Resources:
                                 type: number
                               longitude:
                                 type: number
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
                 httpMethod: GET
@@ -386,6 +491,14 @@ Resources:
               responses:
                 '200':
                   description: "Successful response"
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
 
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations

@@ -41,7 +41,7 @@ class BankHandler: RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyRe
             "/create-link-token" -> createLinkTokenOperation
             "/exchange-token" -> exchangeTokenOperation
             "/list-banks" -> listBanksOperation
-            else -> throw UnknownPathException()
+            else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
         }
         return responseHandler.returnApiGwResponse(operation, input, context!!)
     }

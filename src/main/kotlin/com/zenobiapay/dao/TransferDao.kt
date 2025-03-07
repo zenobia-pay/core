@@ -1,7 +1,6 @@
 package com.zenobiapay.dao
 
 import com.zenobiapay.di.TRANSFER_TABLE_NAME
-import com.zenobiapay.model.api.transfer.StatementItem
 import com.zenobiapay.model.ddb.transfer.*
 import com.zenobiapay.util.MAX_LIST_ITEMS
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -44,7 +43,7 @@ class TransferDao @Inject constructor(
                 gsi1Sk = gsi1Sk,
                 amount = amountInCents,
                 data = TransferData(
-                    statementItems = statementItems.map { it.toDdbStatementItem() },
+                    statementItems = statementItems,
                     merchant = PaymentParticipantIdentity(
                         id = merchantId,
                         name = merchantName

@@ -1,6 +1,9 @@
 package com.zenobiapay.model.ddb.transfer
 
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue
+import com.zenobiapay.generated.models.CreateTransferRequestRequestStatementItemsInner
+import com.zenobiapay.model.exception.InvalidRequestException
+import dagger.internal.codegen.base.DaggerSuperficialValidation.ValidationException
 import software.amazon.awssdk.enhanced.dynamodb.extensions.annotations.DynamoDbVersionAttribute
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
@@ -135,7 +138,14 @@ data class StatementItem(
                 amount = map["amount"]!!.n.toInt(),
             )
         }
+
+        fun fromApiRequestStatementItem(item: CreateTransferRequestRequestStatementItemsInner) =
+            StatementItem(
+                name = item.name ?: throw InvalidRequestException("name not specified in statementItems"),
+                amount = item.amount ?: throw InvalidRequestException("item amount not specified in statementItems")
+            )
     }
+
     fun toApiStatementItem(): com.zenobiapay.model.api.transfer.StatementItem {
         return com.zenobiapay.model.api.transfer.StatementItem(
             name = name,

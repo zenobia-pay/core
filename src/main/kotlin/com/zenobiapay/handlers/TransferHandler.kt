@@ -40,7 +40,7 @@ class TransferHandler: RequestHandler<APIGatewayProxyRequestEvent, APIGatewayPro
             "/fulfill-transfer" -> fulfillTransferOperation
             "/get-transfer" -> getTransferOperation
             "/list-transfers" -> listTransfersOperation
-            else -> throw UnknownPathException()
+            else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
         }
         return responseHandler.returnApiGwResponse(operation, input, context!!)
     }
