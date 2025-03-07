@@ -3,7 +3,7 @@ package com.zenobiapay.dao
 import com.zenobiapay.di.TRANSFER_TABLE_NAME
 import com.zenobiapay.model.api.transfer.StatementItem
 import com.zenobiapay.model.ddb.transfer.*
-import com.zenobiapay.util.MAX_BANK_ITEMS
+import com.zenobiapay.util.MAX_LIST_ITEMS
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
@@ -100,13 +100,35 @@ class TransferDao @Inject constructor(
         val queryRequest = QueryEnhancedRequest.builder()
             .queryConditional(queryConditional)
             .scanIndexForward(false)
-            .limit(MAX_BANK_ITEMS)
+            .limit(MAX_LIST_ITEMS)
             .build()
 
         // TODO: handle pagination
         val toReturn = mutableListOf<TransferItem>()
         transferTable.index(TransferItem.GSI_3)
             .query(queryRequest)
+            .stream().forEach {
+                logger.info { "Got list response page ${it.items()}" }
+                toReturn += it.items()
+            }
+
+        logger.info { "Returning accumulated list $toReturn" }
+        return toReturn
+    }
+
+    fun listMerchantTransfers(merchantId: String): List<TransferItem> {
+        val queryConditional = QueryConditional.keyEqualTo {
+            it.partitionValue(TransferItem.generatePk(merchantId))
+        }
+        val queryRequest = QueryEnhancedRequest.builder()
+            .queryConditional(queryConditional)
+            .scanIndexForward(false)
+            .limit(MAX_LIST_ITEMS)
+            .build()
+
+        // TODO: handle pagination
+        val toReturn = mutableListOf<TransferItem>()
+        transferTable.query(queryRequest)
             .stream().forEach {
                 logger.info { "Got list response page ${it.items()}" }
                 toReturn += it.items()

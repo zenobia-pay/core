@@ -3,7 +3,7 @@ package com.zenobiapay.dao
 import com.zenobiapay.di.BANK_TABLE_NAME
 import com.zenobiapay.model.ddb.bank.BankData
 import com.zenobiapay.model.ddb.bank.BankAccountItem
-import com.zenobiapay.util.MAX_BANK_ITEMS
+import com.zenobiapay.util.MAX_LIST_ITEMS
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
@@ -55,7 +55,7 @@ class BankDao @Inject constructor(
         val queryRequest = QueryEnhancedRequest.builder()
             .attributesToProject("pk", "sk", "data")
             .queryConditional(queryConditional)
-            .limit(MAX_BANK_ITEMS)
+            .limit(MAX_LIST_ITEMS)
             .build()
 
         val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankAccountItem::class.java))

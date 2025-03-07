@@ -97,15 +97,6 @@ Resources:
             get:
               summary: "Lists all bank accounts associated with account"
               operationId: "ListBanks"
-              requestBody:
-                required: false
-                content:
-                  application/json:
-                    schema:
-                      type: object
-                      properties:
-                        continuationToken:
-                          type: string
               responses:
                 '200':
                   description: "Successful response"
@@ -142,7 +133,7 @@ Resources:
                       type: object
                       properties:
                         amount:
-                          type: number
+                          type: integer
                         bankAccountId:
                           type: string
                         statementDisplayName:
@@ -206,7 +197,7 @@ Resources:
                                 name:
                                   type: string
                                 amount:
-                                  type: number
+                                  type: integer
 
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
@@ -217,15 +208,6 @@ Resources:
             get:
               summary: "Fetches metadata associated with a transfer request"
               operationId: "GetTransfer"
-              requestBody:
-                required: true
-                content:
-                  application/json:
-                    schema:
-                      type: object
-                      properties:
-                        id:
-                          type: string
               responses:
                 '200':
                   description: "Successful response"
@@ -266,17 +248,8 @@ Resources:
 
           /list-transfers:
             get:
-              summary: "Lists all transfers made with account"
+              summary: "Lists all transfers made with customer account"
               operationId: "ListTransfers"
-              requestBody:
-                required: false
-                content:
-                  application/json:
-                    schema:
-                      type: object
-                      properties:
-                        continuationToken:
-                          type: string
               responses:
                 '200':
                   description: "Successful response"
@@ -293,7 +266,7 @@ Resources:
                               type: object
                               properties:
                                 amount:
-                                  type: string
+                                  type: integer
                                 status:
                                   type: string
                                 debtor:
@@ -309,6 +282,77 @@ Resources:
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
+                type: aws_proxy
+
+          /list-merchant-transfers:
+            get:
+              summary: "Lists all transfers made to a merchant account"
+              operationId: "ListMerchantTransfers"
+              parameters:
+                - name: continuationToken
+                  in: query
+                  required: false
+                  schema:
+                    type: string
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          continuationToken:
+                            type: string
+                          items:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                amount:
+                                  type: integer
+                                status:
+                                  type: string
+                                transferRequestId:
+                                  type: string
+
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /get-merchant:
+            get:
+              summary: "Fetches metadata associated with a merchant"
+              operationId: "GetMerchant"
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          bankAccountId:
+                            type: string
+                          merchantDisplayName:
+                            type: string
+                          merchantDescription:
+                            type: string
+                          webhookUrl:
+                            type: string
+                          merchantLocation:
+                            type: object
+                            properties:
+                              address:
+                                type: string
+                              latitude:
+                                type: number
+                              longitude:
+                                type: number
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
+                httpMethod: GET
                 type: aws_proxy
 
           /update-merchant:
