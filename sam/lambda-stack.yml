@@ -176,7 +176,7 @@ Resources:
               summary: "Creates a request for payment (merchant side)"
               operationId: "CreateTransferRequest"
               requestBody:
-                required: false
+                required: true
                 content:
                   application/json:
                     schema:
@@ -205,7 +205,7 @@ Resources:
                         properties:
                           transferRequestId:
                             type: string
-                          debtorId:
+                          merchantId:
                             type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -233,9 +233,9 @@ Resources:
                       properties:
                         transferRequestId:
                           type: string
-                        debtorId:
+                        merchantId:
                           type: string
-                        accountId:
+                        bankAccountId:
                           type: string
               responses:
                 '200':
@@ -247,7 +247,7 @@ Resources:
                         properties:
                           amount:
                             type: number
-                          debtor:
+                          merchant:
                             type: object
                             properties:
                               id:

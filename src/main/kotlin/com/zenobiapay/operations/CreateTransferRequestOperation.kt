@@ -34,7 +34,7 @@ class CreateTransferRequestOperation @Inject constructor(private val transferDao
 
         return CreateTransferRequest200Response(
             transferRequestId = requestId,
-            debtorId = userId
+            merchantId = userId
         )
     }
 
