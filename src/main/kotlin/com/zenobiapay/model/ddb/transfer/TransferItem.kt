@@ -39,7 +39,7 @@ data class TransferItem(
         const val PK_PREFIX = "TRANSFER"
         fun generatePk(merchantId: String) = "$PK_PREFIX#m_$merchantId"
         fun generateSk(requestId: String) = requestId
-        fun generateGsi1Pk(merchantId: String) = "$PK_PREFIX#s_$merchantId"
+        fun generateGsi1Pk(merchantId: String) = "$PK_PREFIX#m_$merchantId"
         fun generateGsi1Sk(transferRequestId: String, timestamp: Instant) = "CREATED#t_$timestamp#id_$transferRequestId"
 
         // Queries for customer

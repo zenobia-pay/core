@@ -457,7 +457,7 @@ Resources:
                   $ref: "#/components/responses/InternalServerError"
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
-                httpMethod: GET
+                httpMethod: POST
                 type: aws_proxy
 
           /update-merchant:
@@ -738,6 +738,14 @@ Resources:
             Method: GET
             Auth:
               Authorizer: CognitoAuthorizer
+        ListMerchantTransfers:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /list-merchant-transfers
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   UserHandlerFunction:
     Type: AWS::Serverless::Function
@@ -779,6 +787,14 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /update-merchant
             Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        GetMerchant:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /get-merchant
+            Method: GET
             Auth:
               Authorizer: CognitoAuthorizer
 

@@ -30,6 +30,9 @@ class TransferHandler: RequestHandler<APIGatewayProxyRequestEvent, APIGatewayPro
     @Inject
     lateinit var listTransfersOperation: ListTransfersOperation
 
+    @Inject
+    lateinit var listMerchantTransfersOperation: ListMerchantTransfersOperation
+
     init {
         DaggerAppComponent.create().inject(this)
     }
@@ -40,6 +43,7 @@ class TransferHandler: RequestHandler<APIGatewayProxyRequestEvent, APIGatewayPro
             "/fulfill-transfer" -> fulfillTransferOperation
             "/get-transfer" -> getTransferOperation
             "/list-transfers" -> listTransfersOperation
+            "/list-merchant-transfers" -> listMerchantTransfersOperation
             else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
         }
         return responseHandler.returnApiGwResponse(operation, input, context!!)

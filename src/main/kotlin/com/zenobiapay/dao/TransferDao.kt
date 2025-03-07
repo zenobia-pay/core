@@ -2,6 +2,7 @@ package com.zenobiapay.dao
 
 import com.zenobiapay.di.TRANSFER_TABLE_NAME
 import com.zenobiapay.model.ddb.transfer.*
+import com.zenobiapay.model.ddb.transfer.TransferItem.Companion.GSI_1
 import com.zenobiapay.util.MAX_LIST_ITEMS
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
@@ -117,7 +118,7 @@ class TransferDao @Inject constructor(
 
     fun listMerchantTransfers(merchantId: String): List<TransferItem> {
         val queryConditional = QueryConditional.keyEqualTo {
-            it.partitionValue(TransferItem.generatePk(merchantId))
+            it.partitionValue(TransferItem.generateGsi1Pk(merchantId))
         }
         val queryRequest = QueryEnhancedRequest.builder()
             .queryConditional(queryConditional)
@@ -127,7 +128,8 @@ class TransferDao @Inject constructor(
 
         // TODO: handle pagination
         val toReturn = mutableListOf<TransferItem>()
-        transferTable.query(queryRequest)
+        transferTable.index(GSI_1)
+            .query(queryRequest)
             .stream().forEach {
                 logger.info { "Got list response page ${it.items()}" }
                 toReturn += it.items()

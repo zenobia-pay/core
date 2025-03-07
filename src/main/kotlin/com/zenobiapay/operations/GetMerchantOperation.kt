@@ -6,12 +6,21 @@ import com.zenobiapay.dao.UserDao
 import com.zenobiapay.generated.models.GetMerchant200Response
 import com.zenobiapay.generated.models.GetMerchant200ResponseMerchantLocation
 import com.zenobiapay.model.cognito.UserPoolGroup
-import com.zenobiapay.model.exception.ResourceNotFoundException
 import javax.inject.Inject
 
 class GetMerchantOperation @Inject constructor(private val userDao: UserDao): Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
-        val merchantItem = userDao.getMerchant(userId) ?: throw ResourceNotFoundException("MERCHANT CONFIGURATION")
+        val merchantItem = userDao.getMerchant(userId)
+
+        if (merchantItem == null) {
+            return GetMerchant200Response(
+                bankAccountId = null,
+                merchantDisplayName = null,
+                merchantDescription = null,
+                webhookUrl = null,
+                merchantLocation = null
+            )
+        }
 
         return GetMerchant200Response(
             bankAccountId = merchantItem.data.bankAccountId,
