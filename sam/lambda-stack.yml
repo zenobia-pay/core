@@ -120,10 +120,11 @@ Resources:
                             type: array
                             items:
                               type: object
-                              accountId:
-                                type: string
-                              accountName:
-                                type: string
+                              properties:
+                                accountId:
+                                  type: string
+                                accountName:
+                                  type: string
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
@@ -290,19 +291,20 @@ Resources:
                             type: array
                             items:
                               type: object
-                              amount:
-                                type: string
-                              status:
-                                type: string
-                              debtor:
-                                type: object
-                                properties:
-                                  id:
-                                    type: string
-                                  name:
-                                    type: string
-                              statementDisplayName:
-                                type: string
+                              properties:
+                                amount:
+                                  type: string
+                                status:
+                                  type: string
+                                debtor:
+                                  type: object
+                                  properties:
+                                    id:
+                                      type: string
+                                    name:
+                                      type: string
+                                statementDisplayName:
+                                  type: string
 
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
@@ -331,9 +333,12 @@ Resources:
                         merchantLocation:
                           type: object
                           properties:
-                            address: string
-                            latitude: number
-                            longitude: number
+                            address:
+                              type: string
+                            latitude:
+                              type: number
+                            longitude:
+                              type: number
               responses:
                 '200':
                   description: "Successful response"
