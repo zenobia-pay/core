@@ -36,18 +36,18 @@ class FulfillTransferOperation @Inject constructor(
 ): Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): ApiResponse {
         val request = objectMapper.readValue(input.body, FulfillTransferRequest::class.java)
-        request.transferRequestId ?: throw InvalidRequestException("Parameter transferRequestId not passed")
-        request.merchantId ?: throw InvalidRequestException("Parameter merchantId not passed")
-        request.bankAccountId ?: throw InvalidRequestException("Parameter bankAccountId not passed")
+        val transferRequestId = request.transferRequestId ?: throw InvalidRequestException("Parameter transferRequestId not passed")
+        val merchantId = request.merchantId ?: throw InvalidRequestException("Parameter merchantId not passed")
+        val bankAccountId = request.bankAccountId ?: throw InvalidRequestException("Parameter bankAccountId not passed")
 
         val date = getUtcDate().also { logger.info { "Using date $it" } }
-        val transferRequestItem = transferDao.getTransferRequest(merchantId = request.merchantId, transferRequestId = request.transferRequestId)
+        val transferRequestItem = transferDao.getTransferRequest(merchantId = merchantId, transferRequestId = transferRequestId)
         if (transferRequestItem.status != TransferStatus.NOT_STARTED) {
             throw TransferStatusException("Transfer status is no longer in NOT_STARTED state.")
         }
-        logger.info { "Fetching bank item from userId $userId, accountId ${request.bankAccountId}" }
-        bankDao.getBankAccount(userId, request.bankAccountId) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
-        val merchantItem = userDao.getMerchant(request.merchantId) ?: throw ResourceNotFoundException("MERCHANT")
+        logger.info { "Fetching bank item from userId $userId, accountId $bankAccountId" }
+        bankDao.getBankAccount(userId, bankAccountId) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
+        val merchantItem = userDao.getMerchant(merchantId) ?: throw ResourceNotFoundException("MERCHANT")
 
         val transferAmount = transferRequestItem.amount!!
         val transferRequestData = transferRequestItem.data!!
@@ -55,9 +55,8 @@ class FulfillTransferOperation @Inject constructor(
         val creditorId = PaymentParticipantIdentity(
             id = userId,
             name = cognitoUtil.getUserFullName(userId),
-            bankAccountId = request.bankAccountId,
+            bankAccountId = bankAccountId,
         )
-        val transferRequestId = request.transferRequestId
         val fulfillRequestId = input.requestContext.requestId
 
         val fulfillTimestamp = Instant.now()
