@@ -40,7 +40,7 @@ class BankHandler: RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyRe
         val operation = when (input?.path) {
             "/create-link-token" -> createLinkTokenOperation
             "/exchange-token" -> exchangeTokenOperation
-            "/list-banks" -> listBanksOperation
+            "/list-bank-accounts" -> listBanksOperation
             else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
         }
         return responseHandler.returnApiGwResponse(operation, input, context!!)

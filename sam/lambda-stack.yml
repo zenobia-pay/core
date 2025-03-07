@@ -135,10 +135,10 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
-          /list-banks:
+          /list-bank-accounts:
             get:
               summary: "Lists all bank accounts associated with account"
-              operationId: "ListBanks"
+              operationId: "ListBankAccounts"
               responses:
                 '200':
                   description: "Successful response"
@@ -154,9 +154,9 @@ Resources:
                             items:
                               type: object
                               properties:
-                                accountId:
+                                bankAccountId:
                                   type: string
-                                accountName:
+                                bankAccountName:
                                   type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -656,7 +656,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
-            Path: /list-banks
+            Path: /list-bank-accounts
             Method: GET
             Auth:
               Authorizer: CognitoAuthorizer
