@@ -7,8 +7,8 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.di.DaggerAppComponent
 import com.zenobiapay.model.exception.UnknownPathException
-import com.zenobiapay.operations.GetMerchantOperation
-import com.zenobiapay.operations.UpdateMerchantOperation
+import com.zenobiapay.operations.GetMerchantConfigOperation
+import com.zenobiapay.operations.UpdateMerchantConfigOperation
 import com.zenobiapay.util.ResponseHandler
 import javax.inject.Inject
 
@@ -17,10 +17,10 @@ class UserHandler: RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyRe
     lateinit var responseHandler: ResponseHandler
 
     @Inject
-    lateinit var updateMerchantOperation: UpdateMerchantOperation
+    lateinit var updateMerchantConfigOperation: UpdateMerchantConfigOperation
 
     @Inject
-    lateinit var getMerchantOperation: GetMerchantOperation
+    lateinit var getMerchantConfigOperation: GetMerchantConfigOperation
 
     @Inject
     lateinit var objectMapper: ObjectMapper
@@ -31,8 +31,8 @@ class UserHandler: RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyRe
 
     override fun handleRequest(input: APIGatewayProxyRequestEvent?, context: Context?): APIGatewayProxyResponseEvent {
         val operation = when (input?.path) {
-            "/update-merchant" -> updateMerchantOperation
-            "/get-merchant" -> getMerchantOperation
+            "/update-merchant-config" -> updateMerchantConfigOperation
+            "/get-merchant-config" -> getMerchantConfigOperation
             else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
         }
         return responseHandler.returnApiGwResponse(operation, input, context!!)

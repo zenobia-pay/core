@@ -1,7 +1,7 @@
 package com.zenobiapay.dao
 
 import com.zenobiapay.di.USER_TABLE_NAME
-import com.zenobiapay.model.api.account.Location
+import com.zenobiapay.generated.models.Location as ApiLocation
 import com.zenobiapay.model.ddb.user.*
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
@@ -39,17 +39,22 @@ class UserDao @Inject constructor(
         bankAccountId: String?,
         merchantDisplayName: String?,
         merchantDescription: String?,
-        merchantLocation: Location?,
+        merchantLocation: ApiLocation?,
         webhookUrl: String?,
     ) {
         // TODO: use ddb instead to handle null values
         val currentMerchantItem = merchantItem ?: MerchantItem(pk = MerchantItem.generatePk(merchantId), sk = MerchantItem.generateSk())
         val merchantData = currentMerchantItem.data
+        val location = if (merchantLocation != null) {
+            Location.fromApiLocation(merchantLocation)
+        } else {
+            null
+        }
         val updatedMerchantItem = currentMerchantItem.copy(
             data = currentMerchantItem.data.copy(
                 displayName = merchantDisplayName ?: merchantData.displayName,
                 description = merchantDescription ?: merchantData.description,
-                location = merchantLocation?.toDdbLocation() ?: merchantData.location,
+                location = location ?: merchantData.location,
                 bankAccountId = bankAccountId ?: merchantData.bankAccountId,
                 webhookUrl = webhookUrl ?: merchantData.webhookUrl
             )

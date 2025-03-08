@@ -5,6 +5,8 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
 
+import com.zenobiapay.generated.models.Location as ApiLocation
+
 @DynamoDbBean
 data class MerchantItem(
     @get:DynamoDbPartitionKey
@@ -34,4 +36,14 @@ data class Location(
     var address: String? = null,
     var latitude: Double? = null,
     var longitude: Double? = null,
-)
+) {
+    companion object {
+        fun fromApiLocation(location: ApiLocation): Location {
+            return Location(
+                address = location.address,
+                latitude = location.latitude?.toDouble(),
+                longitude = location.longitude?.toDouble(),
+            )
+        }
+    }
+}

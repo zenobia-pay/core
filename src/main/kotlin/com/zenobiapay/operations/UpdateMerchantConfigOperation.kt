@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.dao.BankDao
 import com.zenobiapay.dao.UserDao
+import com.zenobiapay.generated.models.UpdateMerchantConfigRequest
 import com.zenobiapay.model.api.ApiResponse
 import com.zenobiapay.model.api.EmptyApiResponse
 import com.zenobiapay.model.api.account.UpdateMerchantRequest
@@ -15,14 +16,14 @@ import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
-class UpdateMerchantOperation @Inject constructor(
+class UpdateMerchantConfigOperation @Inject constructor(
     private val bankDao: BankDao,
     private val userDao: UserDao,
     private val objectMapper: ObjectMapper
 ): Operation() {
 
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): ApiResponse {
-        val request = objectMapper.readValue(input.body, UpdateMerchantRequest::class.java)
+        val request = objectMapper.readValue(input.body, UpdateMerchantConfigRequest::class.java)
         logger.info { "Got request $request" }
         if (request.bankAccountId != null) {
             // Validate bank id exists

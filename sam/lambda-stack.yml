@@ -107,6 +107,16 @@ Resources:
                   type: string
                 amount:
                   type: integer
+            Location:
+              type: object
+              properties:
+                address:
+                  type: string
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+
         paths:
           /create-link-token:
             get:
@@ -414,10 +424,10 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
-          /get-merchant:
+          /get-merchant-config:
             get:
               summary: "Fetches metadata associated with a merchant"
-              operationId: "GetMerchant"
+              operationId: "GetMerchantConfig"
               responses:
                 '200':
                   description: "Successful response"
@@ -456,10 +466,10 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
-          /update-merchant:
+          /update-merchant-config:
             post:
-              summary: "Update merchant"
-              operationId: "UpdateMerchant"
+              summary: "Update merchant configuration"
+              operationId: "UpdateMerchantConfig"
               requestBody:
                 required: true
                 content:
@@ -476,14 +486,7 @@ Resources:
                         webhookUrl:
                           type: string
                         merchantLocation:
-                          type: object
-                          properties:
-                            address:
-                              type: string
-                            latitude:
-                              type: number
-                            longitude:
-                              type: number
+                          $ref: "#/components/schemas/Location"
               responses:
                 '200':
                   description: "Successful response"
@@ -781,7 +784,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
-            Path: /update-merchant
+            Path: /update-merchant-config
             Method: POST
             Auth:
               Authorizer: CognitoAuthorizer
@@ -789,7 +792,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
-            Path: /get-merchant
+            Path: /get-merchant-config
             Method: GET
             Auth:
               Authorizer: CognitoAuthorizer

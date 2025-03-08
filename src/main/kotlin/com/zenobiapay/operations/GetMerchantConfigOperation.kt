@@ -8,7 +8,7 @@ import com.zenobiapay.generated.models.GetMerchant200ResponseMerchantLocation
 import com.zenobiapay.model.cognito.UserPoolGroup
 import javax.inject.Inject
 
-class GetMerchantOperation @Inject constructor(private val userDao: UserDao): Operation() {
+class GetMerchantConfigOperation @Inject constructor(private val userDao: UserDao): Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
         val merchantItem = userDao.getMerchant(userId)
 
