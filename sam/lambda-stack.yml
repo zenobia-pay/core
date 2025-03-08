@@ -328,10 +328,10 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
-          /list-transfers:
+          /list-customer-transfers:
             get:
               summary: "Lists all transfers made with customer account"
-              operationId: "ListTransfers"
+              operationId: "ListCustomerTransfers"
               responses:
                 '200':
                   description: "Successful response"
@@ -349,17 +349,12 @@ Resources:
                               properties:
                                 amount:
                                   type: integer
+                                creationTime:
+                                  type: string
                                 status:
-                                  type: string
-                                debtor:
-                                  type: object
-                                  properties:
-                                    id:
-                                      type: string
-                                    name:
-                                      type: string
-                                statementDisplayName:
-                                  type: string
+                                  $ref: "#/components/schemas/TransferStatus"
+                                merchant:
+                                  $ref: "#/components/schemas/PaymentParticipantIdentity"
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -731,11 +726,11 @@ Resources:
             Method: GET
             Auth:
               Authorizer: CognitoAuthorizer
-        ListTransfers:
+        ListCustomerTransfers:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
-            Path: /list-transfers
+            Path: /list-customer-transfers
             Method: GET
             Auth:
               Authorizer: CognitoAuthorizer
