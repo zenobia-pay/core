@@ -25,7 +25,7 @@ class TransferHandler: RequestHandler<APIGatewayProxyRequestEvent, APIGatewayPro
     lateinit var fulfillTransferOperation: FulfillTransferOperation
 
     @Inject
-    lateinit var getTransferOperation: GetTransferOperation
+    lateinit var getMerchantTransferOperation: GetMerchantTransferOperation
 
     @Inject
     lateinit var listTransfersOperation: ListTransfersOperation
@@ -41,7 +41,7 @@ class TransferHandler: RequestHandler<APIGatewayProxyRequestEvent, APIGatewayPro
         val operation = when (input?.path) {
             "/create-transfer-request" -> createTransferRequestOperation
             "/fulfill-transfer" -> fulfillTransferOperation
-            "/get-transfer" -> getTransferOperation
+            "/get-transfer" -> getMerchantTransferOperation
             "/list-transfers" -> listTransfersOperation
             "/list-merchant-transfers" -> listMerchantTransfersOperation
             else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())

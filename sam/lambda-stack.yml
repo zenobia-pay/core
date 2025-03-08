@@ -85,6 +85,28 @@ Resources:
                   type: string
                 message:
                   type: string
+            PaymentParticipantIdentity:
+              type: object
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+            TransferStatus:
+              type: string
+              enum:
+                - NOT_STARTED
+                - IN_FLIGHT
+                - COMPLETED
+                - FAILED
+                - CANCELLED
+            StatementItem:
+              type: object
+              properties:
+                name:
+                  type: string
+                amount:
+                  type: integer
         paths:
           /create-link-token:
             get:
@@ -189,12 +211,7 @@ Resources:
                         statementItems:
                           type: array
                           items:
-                            type: object
-                            properties:
-                              name:
-                                type: string
-                              amount:
-                                type: integer
+                            $ref: "#/components/schemas/StatementItem"
               responses:
                 '200':
                   description: "Successful response"
@@ -248,21 +265,11 @@ Resources:
                           amount:
                             type: number
                           merchant:
-                            type: object
-                            properties:
-                              id:
-                                type: string
-                              name:
-                                type: string
-                          items:
+                            $ref: "#/components/schemas/PaymentParticipantIdentity"
+                          statementItems:
                             type: array
                             items:
-                              type: object
-                              properties:
-                                name:
-                                  type: string
-                                amount:
-                                  type: integer
+                              $ref: "#/components/schemas/StatementItem"
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -277,10 +284,16 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
-          /get-transfer:
+          /get-merchant-transfer:
             get:
-              summary: "Fetches metadata associated with a transfer request"
-              operationId: "GetTransfer"
+              summary: "Fetches metadata associated with a merchant's transfer request"
+              operationId: "GetMerchantTransfer"
+              parameters:
+                - name: id
+                  in: query
+                  required: true
+                  schema:
+                    type: string
               responses:
                 '200':
                   description: "Successful response"
@@ -291,26 +304,14 @@ Resources:
                         properties:
                           transferRequestId:
                             type: string
-                          transferStatus:
-                            type: string
-                          creditor:
-                            type: object
-                            properties:
-                              id:
-                                type: string
-                              name:
-                                type: string
-                          debtor:
-                            type: object
-                            properties:
-                              id:
-                                type: string
-                              name:
-                                type: string
-                          statementDisplayName:
-                            type: string
+                          merchant:
+                            $ref: "#/components/schemas/PaymentParticipantIdentity"
                           status:
-                            type: string
+                            $ref: "#/components/schemas/TransferStatus"
+                          statementItems:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/StatementItem"
                           statusMessage:
                             type: string
                 "400":
@@ -722,11 +723,11 @@ Resources:
             Method: POST
             Auth:
               Authorizer: CognitoAuthorizer
-        GetTransfer:
+        GetTransferRequest:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
-            Path: /get-transfer
+            Path: /get-transfer-request
             Method: GET
             Auth:
               Authorizer: CognitoAuthorizer

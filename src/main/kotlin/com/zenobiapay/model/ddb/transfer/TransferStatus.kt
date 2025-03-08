@@ -1,6 +1,6 @@
 package com.zenobiapay.model.ddb.transfer
 
-import com.zenobiapay.model.api.transfer.TransferStatus
+import com.zenobiapay.generated.models.TransferStatus as ApiTransferStatus
 
 enum class TransferStatus {
     NOT_STARTED,
@@ -9,13 +9,13 @@ enum class TransferStatus {
     FAILED,
     CANCELLED;
 
-    fun toApiTransferStatus(): TransferStatus {
+    fun toApiTransferStatus(): ApiTransferStatus {
         return when (this) {
-            NOT_STARTED -> TransferStatus.NOT_STARTED
-            IN_FLIGHT -> TransferStatus.IN_FLIGHT
-            COMPLETED -> TransferStatus.COMPLETED
-            FAILED -> TransferStatus.FAILED
-            CANCELLED -> TransferStatus.CANCELLED
+            NOT_STARTED -> ApiTransferStatus.NOT_STARTED
+            IN_FLIGHT -> ApiTransferStatus.IN_FLIGHT
+            COMPLETED -> ApiTransferStatus.COMPLETED
+            FAILED -> ApiTransferStatus.FAILED
+            CANCELLED -> ApiTransferStatus.CANCELLED
         }
     }
 }

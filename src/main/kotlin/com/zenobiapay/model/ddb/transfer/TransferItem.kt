@@ -1,9 +1,8 @@
 package com.zenobiapay.model.ddb.transfer
 
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue
-import com.zenobiapay.generated.models.CreateTransferRequestRequestStatementItemsInner
+import com.zenobiapay.generated.models.PaymentParticipantIdentity as ApiPaymentParticipantIdentity
 import com.zenobiapay.model.exception.InvalidRequestException
-import dagger.internal.codegen.base.DaggerSuperficialValidation.ValidationException
 import software.amazon.awssdk.enhanced.dynamodb.extensions.annotations.DynamoDbVersionAttribute
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
@@ -118,8 +117,8 @@ data class PaymentParticipantIdentity(
         }
     }
 
-    fun toApiParticipantIdentity(): com.zenobiapay.model.api.transfer.PaymentParticipantIdentity {
-        return com.zenobiapay.model.api.transfer.PaymentParticipantIdentity(
+    fun toApiParticipantIdentity(): ApiPaymentParticipantIdentity {
+        return ApiPaymentParticipantIdentity(
             id = this.id,
             name = this.name,
         )
@@ -139,15 +138,15 @@ data class StatementItem(
             )
         }
 
-        fun fromApiRequestStatementItem(item: CreateTransferRequestRequestStatementItemsInner) =
+        fun fromApiRequestStatementItem(item: com.zenobiapay.generated.models.StatementItem) =
             StatementItem(
                 name = item.name ?: throw InvalidRequestException("name not specified in statementItems"),
                 amount = item.amount ?: throw InvalidRequestException("item amount not specified in statementItems")
             )
     }
 
-    fun toApiStatementItem(): com.zenobiapay.model.api.transfer.StatementItem {
-        return com.zenobiapay.model.api.transfer.StatementItem(
+    fun toApiStatementItem(): com.zenobiapay.generated.models.StatementItem {
+        return com.zenobiapay.generated.models.StatementItem(
             name = name,
             amount = amount,
         )

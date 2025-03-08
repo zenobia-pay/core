@@ -78,7 +78,7 @@ class FulfillTransferOperation @Inject constructor(
 
         return FulfillTransferResponse(
             amount = transferAmount,
-            statementItems = statementItems,
+            statementItems = listOf(), // TODO: fix,
             debtor = Debtor(
                 id = debtorId.id,
                 name = debtorId.name

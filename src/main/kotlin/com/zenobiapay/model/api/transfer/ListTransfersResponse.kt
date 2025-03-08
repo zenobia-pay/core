@@ -1,5 +1,8 @@
 package com.zenobiapay.model.api.transfer
 
+import com.zenobiapay.generated.models.PaymentParticipantIdentity
+import com.zenobiapay.generated.models.StatementItem
+import com.zenobiapay.generated.models.TransferStatus
 import com.zenobiapay.model.api.ApiResponse
 import com.zenobiapay.model.ddb.transfer.TransferItem
 

@@ -1,7 +1,7 @@
 package com.zenobiapay.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.model.api.transfer.TransferStatus
+import com.zenobiapay.generated.models.TransferStatus
 import com.zenobiapay.model.webhook.TransferWebhookBody
 import io.github.oshai.kotlinlogging.KotlinLogging
 import okhttp3.OkHttpClient
