@@ -3,6 +3,7 @@ package com.zenobiapay.dao
 import com.zenobiapay.di.TRANSFER_TABLE_NAME
 import com.zenobiapay.model.ddb.transfer.*
 import com.zenobiapay.model.ddb.transfer.TransferItem.Companion.GSI_1
+import com.zenobiapay.model.ddb.transfer.TransferItem.Companion.GSI_2
 import com.zenobiapay.util.MAX_LIST_ITEMS
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
@@ -83,7 +84,23 @@ class TransferDao @Inject constructor(
         // TODO: handle Conditional check failed from optimistic version lock
     }
 
-    fun getTransferRequest(merchantId: String, transferRequestId: String): TransferItem {
+    fun getCustomerTransfer(customerId: String, fulfillRequestId: String): TransferItem? {
+        val pk = TransferItem.generateGsi2Pk(customerId)
+        val sk = TransferItem.generateGsi2Sk(fulfillRequestId)
+
+        val queryConditional = QueryConditional.keyEqualTo {
+            it.partitionValue(pk)
+                .sortValue(sk)
+        }
+
+        return transferTable.index(GSI_2).query(
+            QueryEnhancedRequest.builder()
+                .queryConditional(queryConditional)
+                .build()
+        ).first().items().firstOrNull()
+    }
+
+    fun getMerchantTransfer(merchantId: String, transferRequestId: String): TransferItem {
         val pk = TransferItem.generatePk(merchantId)
         val sk = TransferItem.generateSk(transferRequestId)
         return transferTable.getItem {

@@ -713,11 +713,19 @@ Resources:
             Method: POST
             Auth:
               Authorizer: CognitoAuthorizer
-        GetTransferRequest:
+        GetCustomerTransfer:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
-            Path: /get-transfer-request
+            Path: /get-customer-transfer
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        GetMerchantTransfer:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /get-merchant-transfer
             Method: GET
             Auth:
               Authorizer: CognitoAuthorizer

@@ -41,7 +41,7 @@ class FulfillTransferOperation @Inject constructor(
         val bankAccountId = request.bankAccountId ?: throw InvalidRequestException("Parameter bankAccountId not passed")
 
         val date = getUtcDate().also { logger.info { "Using date $it" } }
-        val transferRequestItem = transferDao.getTransferRequest(merchantId = merchantId, transferRequestId = transferRequestId)
+        val transferRequestItem = transferDao.getMerchantTransfer(merchantId = merchantId, transferRequestId = transferRequestId)
         if (transferRequestItem.status != TransferStatus.NOT_STARTED) {
             throw TransferStatusException("Transfer status is no longer in NOT_STARTED state.")
         }

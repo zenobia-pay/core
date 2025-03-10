@@ -13,7 +13,7 @@ class GetMerchantTransferOperation @Inject constructor(private val objectMapper:
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
         val request = GetTransferRequest.from(input.queryStringParameters, objectMapper)
 
-        val transferItem = transferDao.getTransferRequest(
+        val transferItem = transferDao.getMerchantTransfer(
             merchantId = userId,
             transferRequestId = request.id
         )
