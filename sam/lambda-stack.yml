@@ -273,7 +273,7 @@ Resources:
                         type: object
                         properties:
                           amount:
-                            type: number
+                            type: integer
                           merchant:
                             $ref: "#/components/schemas/PaymentParticipantIdentity"
                           statementItems:

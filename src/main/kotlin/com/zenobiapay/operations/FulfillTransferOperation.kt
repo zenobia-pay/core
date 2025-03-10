@@ -6,10 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.dao.BankDao
 import com.zenobiapay.dao.TransferDao
 import com.zenobiapay.dao.UserDao
+import com.zenobiapay.generated.models.FulfillTransfer200Response
 import com.zenobiapay.generated.models.FulfillTransferRequest
-import com.zenobiapay.model.api.ApiResponse
-import com.zenobiapay.model.api.transfer.FulfillTransferResponse
-import com.zenobiapay.model.api.transfer.Debtor
+import com.zenobiapay.generated.models.PaymentParticipantIdentity as ApiPaymentParticipantIdentity
 import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.model.ddb.transfer.*
 import com.zenobiapay.model.exception.InvalidRequestException
@@ -34,7 +33,7 @@ class FulfillTransferOperation @Inject constructor(
     private val objectMapper: ObjectMapper,
     private val cognitoUtil: CognitoUtil,
 ): Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): ApiResponse {
+    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): FulfillTransfer200Response {
         val request = objectMapper.readValue(input.body, FulfillTransferRequest::class.java)
         val transferRequestId = request.transferRequestId ?: throw InvalidRequestException("Parameter transferRequestId not passed")
         val merchantId = request.merchantId ?: throw InvalidRequestException("Parameter merchantId not passed")
@@ -76,10 +75,10 @@ class FulfillTransferOperation @Inject constructor(
             webhookUrl = merchantItem.data.webhookUrl
         )
 
-        return FulfillTransferResponse(
+        return FulfillTransfer200Response(
             amount = transferAmount,
-            statementItems = listOf(), // TODO: fix,
-            debtor = Debtor(
+            statementItems = statementItems,
+            merchant = com.zenobiapay.generated.models.PaymentParticipantIdentity(
                 id = debtorId.id,
                 name = debtorId.name
             ),

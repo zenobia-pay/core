@@ -6,10 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.dao.BankDao
 import com.zenobiapay.generated.models.ListBankAccounts200Response
 import com.zenobiapay.generated.models.ListBankAccounts200ResponseItemsInner
-import com.zenobiapay.model.api.ApiResponse
-import com.zenobiapay.model.api.bank.ListBankItem
 import com.zenobiapay.model.api.bank.ListBanksRequest
-import com.zenobiapay.model.api.bank.ListBanksResponse
 import com.zenobiapay.model.cognito.UserPoolGroup
 import javax.inject.Inject
 
