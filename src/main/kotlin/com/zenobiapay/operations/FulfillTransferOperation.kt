@@ -8,7 +8,6 @@ import com.zenobiapay.dao.TransferDao
 import com.zenobiapay.dao.UserDao
 import com.zenobiapay.generated.models.FulfillTransfer200Response
 import com.zenobiapay.generated.models.FulfillTransferRequest
-import com.zenobiapay.generated.models.PaymentParticipantIdentity as ApiPaymentParticipantIdentity
 import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.model.ddb.transfer.*
 import com.zenobiapay.model.exception.InvalidRequestException
@@ -31,8 +30,8 @@ class FulfillTransferOperation @Inject constructor(
     private val bankDao: BankDao,
     private val userDao: UserDao,
     private val objectMapper: ObjectMapper,
-    private val cognitoUtil: CognitoUtil,
-): Operation() {
+    private val cognitoUtil: CognitoUtil
+) : Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): FulfillTransfer200Response {
         val request = objectMapper.readValue(input.body, FulfillTransferRequest::class.java)
         val transferRequestId = request.transferRequestId ?: throw InvalidRequestException("Parameter transferRequestId not passed")
@@ -54,7 +53,7 @@ class FulfillTransferOperation @Inject constructor(
         val creditorId = PaymentParticipantIdentity(
             id = userId,
             name = cognitoUtil.getUserFullName(userId),
-            bankAccountId = bankAccountId,
+            bankAccountId = bankAccountId
         )
         val fulfillRequestId = input.requestContext.requestId
 
@@ -81,7 +80,7 @@ class FulfillTransferOperation @Inject constructor(
             merchant = com.zenobiapay.generated.models.PaymentParticipantIdentity(
                 id = debtorId.id,
                 name = debtorId.name
-            ),
+            )
         )
     }
 
@@ -92,7 +91,7 @@ class FulfillTransferOperation @Inject constructor(
     private fun transferFunds(
         transferRequestId: String,
         transferAmount: Int,
-        creditorId: PaymentParticipantIdentity,
+        creditorId: PaymentParticipantIdentity
     ): OrumCreateTransferResponse? {
         if (transferAmount == 0) {
             logger.info { "Transfer amount is 0. Skipping deduction." }
@@ -108,10 +107,9 @@ class FulfillTransferOperation @Inject constructor(
                         accountReferenceId = creditorId.bankAccountId,
                         statementDisplayName = creditorId.name
                     ),
-                    destination = null,
+                    destination = null
                 )
             )
-
         } catch (e: WaiterFailedException) {
             throw TransferFailedException()
         }
@@ -122,7 +120,7 @@ class FulfillTransferOperation @Inject constructor(
         fulfillRequestId: String,
         transferItem: TransferItem,
         timestamp: Instant,
-        webhookUrl: String?,
+        webhookUrl: String?
     ) {
         logger.info { "Updating DDB with transfer fulfill details" }
         transferDao.updateTransferRequest(

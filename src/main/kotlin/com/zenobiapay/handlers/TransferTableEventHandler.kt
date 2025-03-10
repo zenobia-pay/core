@@ -18,7 +18,7 @@ class TransferTableEventHandler : RequestHandler<DynamodbEvent, Unit> {
     @Inject
     lateinit var logic: TransferTableEventLogic
 
-    override fun handleRequest(event: DynamodbEvent, context: Context?): Unit {
+    override fun handleRequest(event: DynamodbEvent, context: Context?) {
         logger.info { "Got event $event" }
         event.records.forEach {
             logic.handleRecord(it)

@@ -24,9 +24,9 @@ class SqsUtilTest {
             sqsClient.sendMessage(
                 match<Consumer<SendMessageRequest.Builder>> {
                     val request = SendMessageRequest.builder().applyMutation(it).build()
-                    request.queueUrl() == queueUrl
-                            && request.messageBody() == message
-                            && request.messageAttributes()["requestId"]!!.stringValue() == requestId
+                    request.queueUrl() == queueUrl &&
+                        request.messageBody() == message &&
+                        request.messageAttributes()["requestId"]!!.stringValue() == requestId
                 }
             )
         }

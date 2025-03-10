@@ -8,7 +8,7 @@ import com.zenobiapay.generated.models.ListMerchantTransfers200ResponseItemsInne
 import com.zenobiapay.model.cognito.UserPoolGroup
 import javax.inject.Inject
 
-class ListMerchantTransfersOperation @Inject constructor(private val transferDao: TransferDao): Operation() {
+class ListMerchantTransfersOperation @Inject constructor(private val transferDao: TransferDao) : Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
         val merchantTransfers = transferDao.listMerchantTransfers(userId)
         return ListMerchantTransfers200Response(
@@ -16,7 +16,7 @@ class ListMerchantTransfersOperation @Inject constructor(private val transferDao
                 ListMerchantTransfers200ResponseItemsInner(
                     amount = it.amount,
                     status = it.status.name,
-                    transferRequestId = it.requestId,
+                    transferRequestId = it.requestId
                 )
             }
         )

@@ -9,16 +9,16 @@ import java.lang.Exception
 
 private val logger = KotlinLogging.logger {}
 
-class NoSubFoundException(e: String): Exception(e)
+class NoSubFoundException(e: String) : Exception(e)
 
 fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserId(objectMapper: ObjectMapper): String {
     val claims = this.authorizer["claims"]
-    val claimsMap = objectMapper.convertValue(claims, object: TypeReference<Map<String, String>>() {})
+    val claimsMap = objectMapper.convertValue(claims, object : TypeReference<Map<String, String>>() {})
 
     return claimsMap["sub"] ?: throw NoSubFoundException("Could not find sub key in claims map")
 }
 
-fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserPoolGroups(): List<UserPoolGroup>  {
+fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserPoolGroups(): List<UserPoolGroup> {
     val claims = this.authorizer["claims"] as? Map<String, Any>
     val userGroups = claims?.get("cognito:groups") as String?
     logger.info { "Got claims $claims, userGroups $userGroups" }

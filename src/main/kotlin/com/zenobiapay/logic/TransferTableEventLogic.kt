@@ -34,7 +34,7 @@ class TransferTableEventLogic @Inject constructor(private val webhookHandler: We
                     webhookUrl,
                     newItem.requestId,
                     newItem.status.toApiTransferStatus(),
-                    newItem.amount!!,
+                    newItem.amount!!
                 )
             }
             logger.info { "Got new item $newItem" }

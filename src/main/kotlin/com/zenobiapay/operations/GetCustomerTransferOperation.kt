@@ -12,7 +12,7 @@ import javax.inject.Inject
 class GetCustomerTransferOperation @Inject constructor(
     private val transferDao: TransferDao,
     private val objectMapper: ObjectMapper
-): Operation() {
+) : Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
         val request = GetTransferRequest.from(input.queryStringParameters, objectMapper)
         val transfer = transferDao.getCustomerTransfer(userId, request.id) ?: throw ResourceNotFoundException("Transfer")

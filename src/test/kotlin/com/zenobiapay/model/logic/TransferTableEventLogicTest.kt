@@ -12,6 +12,5 @@ class TransferTableEventLogicTest {
     @Test
     fun `test sends transfer payment update to webhook handler`() {
         val transferTableEventLogic = TransferTableEventLogic(webhookHandler)
-
     }
 }

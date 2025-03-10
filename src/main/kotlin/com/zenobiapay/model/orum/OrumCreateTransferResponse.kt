@@ -20,5 +20,5 @@ data class Transfer(
     val destination: TransferParticipant?,
     val status: OrumTransferStatus,
     @JsonProperty("status_reasons")
-    val statusReasons: List<StatusReason>?,
+    val statusReasons: List<StatusReason>?
 )

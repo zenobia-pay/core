@@ -1,3 +1,3 @@
 package com.zenobiapay.model.api
 
-class EmptyApiResponse: ApiResponse
+class EmptyApiResponse : ApiResponse

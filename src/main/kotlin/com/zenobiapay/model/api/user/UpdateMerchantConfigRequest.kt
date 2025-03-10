@@ -7,5 +7,5 @@ data class UpdateMerchantConfigRequest(
     val merchantDisplayName: String?,
     val merchantDescription: String?,
     val webhookUrl: String?,
-    val merchantLocation: Location?,
+    val merchantLocation: Location?
 )

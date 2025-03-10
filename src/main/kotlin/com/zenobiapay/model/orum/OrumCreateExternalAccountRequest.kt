@@ -16,5 +16,5 @@ data class OrumCreateExternalAccountRequest(
     @JsonProperty("routing_number")
     val routingNumber: String,
     @JsonProperty("account_holder_name")
-    val accountHolderName: String,
-);
+    val accountHolderName: String
+)

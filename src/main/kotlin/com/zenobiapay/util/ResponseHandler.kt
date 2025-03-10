@@ -31,7 +31,7 @@ class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper
     }
 
     fun generateApiGatewayErrorResponse(error: Exception): APIGatewayProxyResponseEvent {
-        val (errorCode, status) = when(error) {
+        val (errorCode, status) = when (error) {
             is ResourceNotFoundException, is UnknownPathException -> 404 to error.message
             is UnauthorizedException -> 403 to error.message
             is ZenobiaExternalException -> 400 to error.message

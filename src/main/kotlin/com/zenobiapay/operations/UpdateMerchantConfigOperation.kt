@@ -18,7 +18,7 @@ class UpdateMerchantConfigOperation @Inject constructor(
     private val bankDao: BankDao,
     private val userDao: UserDao,
     private val objectMapper: ObjectMapper
-): Operation() {
+) : Operation() {
 
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
         val request = objectMapper.readValue(input.body, UpdateMerchantConfigRequest::class.java)

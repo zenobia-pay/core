@@ -10,7 +10,7 @@ data class OrumCreateTransferRequest(
     val speed: String = "standard",
     val source: TransferParticipant? = null,
     val destination: TransferParticipant? = null,
-    val accountStatementDescriptor: String? = null,
+    val accountStatementDescriptor: String? = null
 )
 
 data class TransferParticipant(
@@ -19,5 +19,5 @@ data class TransferParticipant(
     @JsonProperty("account_reference_id")
     val accountReferenceId: String,
     @JsonProperty("statement_display_name")
-    val statementDisplayName: String? = null,
+    val statementDisplayName: String? = null
 )

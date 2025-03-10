@@ -9,10 +9,13 @@ class ExchangeTokenRequestTest {
 
     @Test
     fun `test deserializing body succeeds`() {
-        ExchangeTokenRequest.from("""
+        ExchangeTokenRequest.from(
+            """
             {
                 "linkToken": "public-sandbox-4d2c1ae3-4020-4645-aa84-c2abb525649f"
             }
-        """.trimIndent() , objectMapper)
+            """.trimIndent(),
+            objectMapper
+        )
     }
 }

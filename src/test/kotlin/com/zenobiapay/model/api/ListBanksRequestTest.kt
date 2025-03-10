@@ -8,6 +8,7 @@ import kotlin.test.assertNull
 
 class ListBanksRequestTest {
     private val objectMapper = jacksonObjectMapper()
+
     @Test
     fun `test list banks request deserializes token if it exists`() {
         val token = "token"

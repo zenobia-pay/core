@@ -1,7 +1,6 @@
 package com.zenobiapay.model.ddb.transfer
 
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue
-import com.zenobiapay.generated.models.PaymentParticipantIdentity as ApiPaymentParticipantIdentity
 import com.zenobiapay.model.exception.InvalidRequestException
 import software.amazon.awssdk.enhanced.dynamodb.extensions.annotations.DynamoDbVersionAttribute
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
@@ -10,6 +9,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecon
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondarySortKey
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
 import java.time.Instant
+import com.zenobiapay.generated.models.PaymentParticipantIdentity as ApiPaymentParticipantIdentity
 
 @DynamoDbBean
 data class TransferItem(
@@ -27,7 +27,7 @@ data class TransferItem(
     var deleted: Boolean = false,
     var ttl: Int? = null,
     var data: TransferData? = null,
-    @get:DynamoDbVersionAttribute var version: Int? = null,
+    @get:DynamoDbVersionAttribute var version: Int? = null
 ) {
     val requestId: String
         get() = sk
@@ -63,7 +63,7 @@ data class TransferItem(
                 deleted = map["deleted"]!!.bool,
                 ttl = map["ttl"]?.n?.toInt(),
                 data = TransferData.fromAttributeValueMap(map["data"]!!.m),
-                version = map["version"]!!.n.toInt(),
+                version = map["version"]!!.n.toInt()
             )
         }
     }
@@ -76,7 +76,7 @@ data class TransferData(
     var statementItems: List<StatementItem> = listOf(),
     var statusMessage: String? = null,
     var creationTime: String = "",
-    var webhookUrl: String? = null,
+    var webhookUrl: String? = null
 ) {
     companion object {
         fun fromAttributeValueMap(map: Map<String, AttributeValue>): TransferData {
@@ -105,14 +105,14 @@ data class TransferData(
 data class PaymentParticipantIdentity(
     var id: String = "",
     var name: String = "",
-    var bankAccountId: String = "",
+    var bankAccountId: String = ""
 ) {
     companion object {
         fun fromAttributeValueMap(map: Map<String, AttributeValue>): PaymentParticipantIdentity {
             return PaymentParticipantIdentity(
                 id = map["id"]!!.s,
                 name = map["name"]!!.s,
-                bankAccountId = map["bankAccountId"]!!.s,
+                bankAccountId = map["bankAccountId"]!!.s
             )
         }
     }
@@ -120,7 +120,7 @@ data class PaymentParticipantIdentity(
     fun toApiParticipantIdentity(): ApiPaymentParticipantIdentity {
         return ApiPaymentParticipantIdentity(
             id = this.id,
-            name = this.name,
+            name = this.name
         )
     }
 }
@@ -128,13 +128,13 @@ data class PaymentParticipantIdentity(
 @DynamoDbBean
 data class StatementItem(
     var name: String = "",
-    var amount: Int = 0,
+    var amount: Int = 0
 ) {
     companion object {
         fun fromAttributeValueMap(map: Map<String, AttributeValue>): StatementItem {
             return StatementItem(
                 name = map["name"]!!.s,
-                amount = map["amount"]!!.n.toInt(),
+                amount = map["amount"]!!.n.toInt()
             )
         }
 
@@ -148,7 +148,7 @@ data class StatementItem(
     fun toApiStatementItem(): com.zenobiapay.generated.models.StatementItem {
         return com.zenobiapay.generated.models.StatementItem(
             name = name,
-            amount = amount,
+            amount = amount
         )
     }
 }

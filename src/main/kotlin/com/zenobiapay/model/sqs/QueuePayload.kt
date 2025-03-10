@@ -11,5 +11,5 @@ data class QueuePayload(
 data class QueueRecord(
     val messageId: String,
     val receiptHandle: String,
-    val body: PayoutMessage,
+    val body: PayoutMessage
 )

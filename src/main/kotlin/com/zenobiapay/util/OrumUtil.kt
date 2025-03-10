@@ -13,7 +13,7 @@ import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}
 
-class OrumException(val errorCode: Int, override val message: String): Exception(message) {
+class OrumException(val errorCode: Int, override val message: String) : Exception(message) {
     fun isCreatePersonAlreadyExistsException(): Boolean {
         return errorCode == 400 && message.contains("duplicate_customer_reference_id")
     }
@@ -98,8 +98,8 @@ class OrumUtil @Inject constructor(
             successCondition = { response ->
                 response.transfer.status.let {
                     it == OrumTransferStatus.PENDING ||
-                            it == OrumTransferStatus.SETTLED ||
-                            it == OrumTransferStatus.COMPLETED
+                        it == OrumTransferStatus.SETTLED ||
+                        it == OrumTransferStatus.COMPLETED
                 }
             },
             failCondition = { response -> response.transfer.status == OrumTransferStatus.FAILED }

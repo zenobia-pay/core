@@ -11,7 +11,7 @@ import com.zenobiapay.operations.*
 import com.zenobiapay.util.ResponseHandler
 import javax.inject.Inject
 
-class TransferHandler: RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+class TransferHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     @Inject
     lateinit var responseHandler: ResponseHandler
 

@@ -2,7 +2,6 @@ package com.zenobiapay.operations
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
-import com.zenobiapay.model.api.ApiResponse
 import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.model.exception.UnauthorizedException
 

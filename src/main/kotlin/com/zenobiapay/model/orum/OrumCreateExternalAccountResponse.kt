@@ -19,5 +19,5 @@ data class ExternalAccount(
     val customerResourceType: String,
     @JsonProperty("account_type")
     val accountType: String,
-    val status: String,
+    val status: String
 )

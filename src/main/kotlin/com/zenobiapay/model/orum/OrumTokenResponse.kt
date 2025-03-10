@@ -8,5 +8,5 @@ data class OrumTokenResponse(
     @JsonProperty("token_type")
     val tokenType: String,
     @JsonProperty("expires_in")
-    val expiresIn: Int,
+    val expiresIn: Int
 )

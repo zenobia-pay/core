@@ -1,7 +1,6 @@
 package com.zenobiapay.dao
 
 import com.zenobiapay.di.USER_TABLE_NAME
-import com.zenobiapay.generated.models.Location as ApiLocation
 import com.zenobiapay.model.ddb.user.*
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
@@ -11,6 +10,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException
 import javax.inject.Inject
 import javax.inject.Named
+import com.zenobiapay.generated.models.Location as ApiLocation
 
 private val logger = KotlinLogging.logger {}
 
@@ -40,7 +40,7 @@ class UserDao @Inject constructor(
         merchantDisplayName: String?,
         merchantDescription: String?,
         merchantLocation: ApiLocation?,
-        webhookUrl: String?,
+        webhookUrl: String?
     ) {
         // TODO: use ddb instead to handle null values
         val currentMerchantItem = merchantItem ?: MerchantItem(pk = MerchantItem.generatePk(merchantId), sk = MerchantItem.generateSk())

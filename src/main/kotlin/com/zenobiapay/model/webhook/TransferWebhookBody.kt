@@ -6,5 +6,5 @@ data class TransferWebhookBody(
     val transferRequestId: String,
     val amount: Int,
     val status: TransferStatus,
-    val expiry: String,
+    val expiry: String
 )

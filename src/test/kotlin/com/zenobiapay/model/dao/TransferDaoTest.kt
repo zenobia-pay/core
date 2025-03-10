@@ -1,16 +1,23 @@
 package com.zenobiapay.model.dao
 
 import com.zenobiapay.dao.TransferDao
-import com.zenobiapay.model.ddb.transfer.*
-import io.mockk.*
+import com.zenobiapay.model.ddb.transfer.PaymentParticipantIdentity
+import com.zenobiapay.model.ddb.transfer.PayoutItem
+import com.zenobiapay.model.ddb.transfer.StatementItem
+import com.zenobiapay.model.ddb.transfer.TransferData
+import com.zenobiapay.model.ddb.transfer.TransferItem
+import com.zenobiapay.model.ddb.transfer.TransferStatus
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.slot
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import java.time.Instant
 import kotlin.test.Test
 
@@ -44,13 +51,13 @@ class TransferDaoTest {
                 statementItems = listOf(
                     StatementItem(
                         "item1",
-                        10,
+                        10
                     )
                 ),
                 merchant = PaymentParticipantIdentity(
                     id = "merchantId",
                     name = "merchantName",
-                    bankAccountId = "accountId",
+                    bankAccountId = "accountId"
                 )
             )
 
@@ -74,7 +81,7 @@ class TransferDaoTest {
                 customerName
             ),
             timestamp,
-            null,
+            null
         )
 
         assertTrue(newDdbItemSlot.isCaptured)

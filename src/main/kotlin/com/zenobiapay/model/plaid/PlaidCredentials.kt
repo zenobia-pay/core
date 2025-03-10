@@ -12,6 +12,6 @@ data class PlaidCredentials(
 ) {
     fun toMap(): Map<String, String> = mapOf(
         "clientId" to clientId,
-        "secret" to secret,
+        "secret" to secret
     )
 }

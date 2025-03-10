@@ -11,7 +11,9 @@ import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Response
 import okhttp3.ResponseBody
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class OrumUtilTest {
@@ -29,7 +31,8 @@ class OrumUtilTest {
         val dob = "dob"
         every {
             httpClient.newCall(any())
-        } returns mockResponse(getMockCredentialsResponse()) andThen mockResponse("""
+        } returns mockResponse(getMockCredentialsResponse()) andThen mockResponse(
+            """
             {
               "person": {
                 "id": "$personId",
@@ -74,7 +77,8 @@ class OrumUtilTest {
                 "metadata": {}
               }
             }
-        """.trimIndent())
+            """.trimIndent()
+        )
 
         // TODO: verify arguments
         val request = OrumCreatePersonRequest(
@@ -82,7 +86,7 @@ class OrumUtilTest {
             firstName,
             lastName,
             contacts = listOf(),
-            socialSecurityNumber = null,
+            socialSecurityNumber = null
         )
 
         val personResponse = orumUtil.updatePerson(request)

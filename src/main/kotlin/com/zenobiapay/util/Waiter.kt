@@ -5,7 +5,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration
 
-class WaiterFailedException(e: String): Exception(e)
+class WaiterFailedException(e: String) : Exception(e)
 
 fun <T> waitUntilCondition(
     timeout: Duration,

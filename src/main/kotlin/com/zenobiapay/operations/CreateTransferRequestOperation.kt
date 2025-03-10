@@ -13,7 +13,7 @@ import com.zenobiapay.model.exception.InvalidRequestException
 import com.zenobiapay.util.CognitoUtil
 import javax.inject.Inject
 
-class CreateTransferRequestOperation @Inject constructor(private val transferDao: TransferDao, private val objectMapper: ObjectMapper, private val cognitoUtil: CognitoUtil):
+class CreateTransferRequestOperation @Inject constructor(private val transferDao: TransferDao, private val objectMapper: ObjectMapper, private val cognitoUtil: CognitoUtil) :
     Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
         val request = objectMapper.readValue<CreateTransferRequestRequest>(input.body)
@@ -25,7 +25,7 @@ class CreateTransferRequestOperation @Inject constructor(private val transferDao
         transferDao.putTransferRequest(
             userId,
             requestId,
-            request.amount,
+            request.amount!!,
             userFullName,
             request.statementItems?.map {
                 StatementItem.fromApiRequestStatementItem(it)

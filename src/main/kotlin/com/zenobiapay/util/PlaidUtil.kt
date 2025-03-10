@@ -8,7 +8,7 @@ import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
-class PlaidException(message: String): Exception(message)
+class PlaidException(message: String) : Exception(message)
 
 class PlaidUtil @Inject constructor(private val plaidApi: PlaidApi) {
     fun createLinkToken(userId: String): LinkTokenCreateResponse {
@@ -74,7 +74,7 @@ class PlaidUtil @Inject constructor(private val plaidApi: PlaidApi) {
         return getResponseOrThrowException("AuthGet") {
             plaidApi.authGet(request).execute()
         }.also {
-            logger.info { "got plaid response for ach ${it.numbers.ach}"}
+            logger.info { "got plaid response for ach ${it.numbers.ach}" }
         }
     }
 

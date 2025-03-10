@@ -22,5 +22,5 @@ data class UserItem(
 
 @DynamoDbBean
 data class UserItemData(
-    var orumPersonId: String = "",
+    var orumPersonId: String = ""
 )

@@ -10,7 +10,7 @@ import com.zenobiapay.model.api.bank.ListBanksRequest
 import com.zenobiapay.model.cognito.UserPoolGroup
 import javax.inject.Inject
 
-class ListBanksOperation @Inject constructor(private val objectMapper: ObjectMapper, private val bankDao: BankDao): Operation() {
+class ListBanksOperation @Inject constructor(private val objectMapper: ObjectMapper, private val bankDao: BankDao) : Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
         context.logger.log("Got path parameter keys ${input.pathParameters?.keys}")
         val request = ListBanksRequest.from(input.pathParameters, objectMapper)

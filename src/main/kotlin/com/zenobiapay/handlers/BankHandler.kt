@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
-class BankHandler: RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+class BankHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     @Inject
     lateinit var responseHandler: ResponseHandler
 

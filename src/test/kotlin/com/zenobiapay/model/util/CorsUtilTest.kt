@@ -9,7 +9,7 @@ class CorsUtilTest {
     fun `test getCorsHeaders returns correct headers`() {
         val output = getCorsHeaders()
         assertEquals("https://zenobiapay.com", output["Access-Control-Allow-Origin"])
-        assertEquals("Content-Type,Authorization",output["Access-Control-Allow-Headers"])
+        assertEquals("Content-Type,Authorization", output["Access-Control-Allow-Headers"])
         assertEquals("GET, POST, OPTIONS", output["Access-Control-Allow-Methods"])
     }
 }

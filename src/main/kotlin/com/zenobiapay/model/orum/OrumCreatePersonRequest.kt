@@ -11,11 +11,10 @@ data class OrumCreatePersonRequest(
     val lastName: String,
     @JsonProperty("social_security_number")
     val socialSecurityNumber: String?,
-    val contacts: List<Contact>,
+    val contacts: List<Contact>
 )
 
 data class Contact(
     val type: String,
-    val value: String,
+    val value: String
 )
-

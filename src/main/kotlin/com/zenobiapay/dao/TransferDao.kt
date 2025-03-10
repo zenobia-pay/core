@@ -50,7 +50,7 @@ class TransferDao @Inject constructor(
                         id = merchantId,
                         name = merchantName
                     ),
-                    creationTime = creationTime.toString(),
+                    creationTime = creationTime.toString()
                 )
             )
         )
@@ -61,14 +61,14 @@ class TransferDao @Inject constructor(
         fulfillRequestId: String,
         customerIdentity: PaymentParticipantIdentity,
         timestamp: Instant,
-        webhookUrl: String?,
+        webhookUrl: String?
     ) {
         val updatedItem = transferItem.copy(
             status = TransferStatus.IN_FLIGHT,
             transferFulfillId = fulfillRequestId,
             data = transferItem.data?.copy(
                 customer = customerIdentity,
-                webhookUrl = webhookUrl,
+                webhookUrl = webhookUrl
             ),
             gsi2Pk = TransferItem.generateGsi2Pk(customerIdentity.id),
             gsi2Sk = TransferItem.generateGsi2Sk(fulfillRequestId),
@@ -167,7 +167,7 @@ class TransferDao @Inject constructor(
             .expressionAttributeValues(
                 mapOf(
                     ":0" to AttributeValue.builder().n("0").build(),
-                    ":inc" to AttributeValue.builder().n(amount.toString()).build(),
+                    ":inc" to AttributeValue.builder().n(amount.toString()).build()
                 )
             ).build()
         logger.info { "Calling payout item ddb update using request $updateRequest" }
@@ -181,7 +181,7 @@ class TransferDao @Inject constructor(
         merchantAmount: Int? = null,
         feePaid: Boolean = false,
         feeAmount: Int? = null,
-        feePayoutId: PayoutId? = null,
+        feePayoutId: PayoutId? = null
     ) {
         val updatedItem = item.copy(
             data = PayoutData(
@@ -190,7 +190,7 @@ class TransferDao @Inject constructor(
                 merchantPayoutId = merchantPayoutId,
                 feePaid = feePaid,
                 feeAmount = feeAmount,
-                feePayoutId = feePayoutId,
+                feePayoutId = feePayoutId
             )
         )
         payoutTable.updateItem(updatedItem)

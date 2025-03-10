@@ -4,7 +4,6 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttri
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
-
 import com.zenobiapay.generated.models.Location as ApiLocation
 
 @DynamoDbBean
@@ -28,21 +27,21 @@ data class MerchantItemData(
     var description: String? = null,
     var location: Location? = null,
     var bankAccountId: String? = null,
-    var webhookUrl: String? = null,
+    var webhookUrl: String? = null
 )
 
 @DynamoDbBean
 data class Location(
     var address: String? = null,
     var latitude: Double? = null,
-    var longitude: Double? = null,
+    var longitude: Double? = null
 ) {
     companion object {
         fun fromApiLocation(location: ApiLocation): Location {
             return Location(
                 address = location.address,
                 latitude = location.latitude?.toDouble(),
-                longitude = location.longitude?.toDouble(),
+                longitude = location.longitude?.toDouble()
             )
         }
     }

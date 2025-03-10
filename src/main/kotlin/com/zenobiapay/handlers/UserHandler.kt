@@ -12,7 +12,7 @@ import com.zenobiapay.operations.UpdateMerchantConfigOperation
 import com.zenobiapay.util.ResponseHandler
 import javax.inject.Inject
 
-class UserHandler: RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+class UserHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     @Inject
     lateinit var responseHandler: ResponseHandler
 

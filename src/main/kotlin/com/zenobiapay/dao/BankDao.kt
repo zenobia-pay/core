@@ -1,8 +1,8 @@
 package com.zenobiapay.dao
 
 import com.zenobiapay.di.BANK_TABLE_NAME
-import com.zenobiapay.model.ddb.bank.BankData
 import com.zenobiapay.model.ddb.bank.BankAccountItem
+import com.zenobiapay.model.ddb.bank.BankData
 import com.zenobiapay.util.MAX_LIST_ITEMS
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
@@ -26,7 +26,7 @@ class BankDao @Inject constructor(
         bankAccountName: String,
         token: String,
         bankAccountType: String,
-        orumId: String,
+        orumId: String
     ) {
         val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankAccountItem::class.java))
         val pk = BankAccountItem.generatePk(userId)
@@ -41,7 +41,7 @@ class BankDao @Inject constructor(
                     bankAccountName = bankAccountName,
                     bankAccountType = bankAccountType,
                     orumId = orumId,
-                    plaidItemId = plaidItemId,
+                    plaidItemId = plaidItemId
                 )
             )
         )

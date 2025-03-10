@@ -15,7 +15,7 @@ import javax.inject.Named
 
 private val logger = KotlinLogging.logger {}
 
-class PayoutDispatcher: RequestHandler<Map<String, Any>, Unit> {
+class PayoutDispatcher : RequestHandler<Map<String, Any>, Unit> {
     @Inject
     lateinit var cognitoUtil: CognitoUtil
 

@@ -9,7 +9,7 @@ import com.zenobiapay.model.api.transfer.GetTransferRequest
 import com.zenobiapay.model.cognito.UserPoolGroup
 import javax.inject.Inject
 
-class GetMerchantTransferOperation @Inject constructor(private val objectMapper: ObjectMapper, private val transferDao: TransferDao): Operation() {
+class GetMerchantTransferOperation @Inject constructor(private val objectMapper: ObjectMapper, private val transferDao: TransferDao) : Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
         val request = GetTransferRequest.from(input.queryStringParameters, objectMapper)
 

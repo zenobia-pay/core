@@ -23,7 +23,7 @@ class ExchangeTokenOperation @Inject constructor(
     private val orumUtil: OrumUtil,
     private val objectMapper: ObjectMapper,
     private val bankDao: BankDao
-): Operation() {
+) : Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): ApiResponse {
         logger.info { "Got input body ${input.body}" }
         val request = ExchangeTokenRequest.from(input.body, objectMapper)
@@ -33,7 +33,7 @@ class ExchangeTokenOperation @Inject constructor(
         val accountsToAch = plaidUtil.getZippedAccountsAndAch(exchangeResponse.accessToken)
 
         accountsToAch.forEach { (account, ach) ->
-            logger.info { "Processing account $account, ach $ach"}
+            logger.info { "Processing account $account, ach $ach" }
             if (ach == null) {
                 logger.error { "Could not find ach number for account ${account.accountId}" }
                 throw InvalidRequestException("Could not find ach number for provided account")
@@ -43,15 +43,17 @@ class ExchangeTokenOperation @Inject constructor(
                 throw InvalidRequestException("Provided account is not checking nor savings")
             }
 
-            val orumId = orumUtil.createExternalOrganization(OrumCreateExternalAccountRequest(
-                accountReferenceId = ach.accountId,
-                customerReferenceId = userId,
-                customerResourceType = "person", // TODO: use enum
-                accountType = account.subtype!!.value,
-                accountNumber = ach.account,
-                routingNumber = ach.routing,
-                accountHolderName = "John Doe" // TODO: pass real user name
-            )).externalAccount.id
+            val orumId = orumUtil.createExternalOrganization(
+                OrumCreateExternalAccountRequest(
+                    accountReferenceId = ach.accountId,
+                    customerReferenceId = userId,
+                    customerResourceType = "person", // TODO: use enum
+                    accountType = account.subtype!!.value,
+                    accountNumber = ach.account,
+                    routingNumber = ach.routing,
+                    accountHolderName = "John Doe" // TODO: pass real user name
+                )
+            ).externalAccount.id
 
             bankDao.putBankAccount(
                 userId = userId,
@@ -60,7 +62,7 @@ class ExchangeTokenOperation @Inject constructor(
                 bankAccountName = account.name,
                 token = exchangeResponse.accessToken,
                 bankAccountType = account.subtype!!.value,
-                orumId = orumId,
+                orumId = orumId
             )
             context.logger.log("Successfully wrote to ddb bank item ${account.accountId}, orum id $orumId")
         }

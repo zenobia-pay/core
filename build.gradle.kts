@@ -3,6 +3,8 @@ plugins {
     kotlin("plugin.serialization") version "1.9.21"
     id("com.google.devtools.ksp") version "2.1.0-1.0.29"
     id("org.openapi.generator") version "7.12.0"
+    id("org.jlleitschuh.gradle.ktlint") version "11.6.0"
+    id("io.gitlab.arturbosch.detekt") version "1.23.1"
 }
 
 java {
@@ -72,8 +74,8 @@ tasks.register("parseYaml", Exec::class) {
         "sh",
         "-c",
         "yq .Resources.ZenobiaApi.Properties.DefinitionBody sam/lambda-stack.yml | " +
-                "sed -E 's/!Sub //g' > " +
-                "openapi.yml"
+            "sed -E 's/!Sub //g' > " +
+            "openapi.yml"
     )
 }
 

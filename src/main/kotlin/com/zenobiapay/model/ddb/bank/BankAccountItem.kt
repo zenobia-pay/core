@@ -1,8 +1,8 @@
 package com.zenobiapay.model.ddb.bank
 
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
 
 @DynamoDbBean
@@ -11,7 +11,7 @@ data class BankAccountItem(
     @get:DynamoDbSortKey var sk: String = "",
     var publicToken: String = "",
     @get:DynamoDbAttribute("data")
-    var data: BankData = BankData(),
+    var data: BankData = BankData()
 ) {
     companion object {
         fun generatePk(userId: String) = "BANK_ACCOUNT#c_$userId"
@@ -26,5 +26,5 @@ data class BankData(
     var bankAccountName: String = "",
     var bankAccountType: String = "",
     var orumId: String = "",
-    var plaidItemId: String = "",
+    var plaidItemId: String = ""
 )

@@ -26,11 +26,11 @@ data class PayoutData(
     var merchantPayoutId: PayoutId? = null,
     var feePaid: Boolean = false,
     var feeAmount: Int? = null,
-    var feePayoutId: PayoutId? = null,
+    var feePayoutId: PayoutId? = null
 )
 
 @DynamoDbBean
 data class PayoutId(
     var type: String = "Orum",
-    var id: String? = null,
+    var id: String? = null
 )

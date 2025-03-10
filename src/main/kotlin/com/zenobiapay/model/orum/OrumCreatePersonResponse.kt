@@ -23,7 +23,7 @@ data class Person(
     val dateOfBirth: String?,
     val status: String,
     @JsonProperty("status_reasons")
-    val statusReason: List<StatusReason>?,
+    val statusReason: List<StatusReason>?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -31,5 +31,5 @@ data class StatusReason(
     @JsonProperty("reason_code")
     val reasonCode: String,
     @JsonProperty("reason_code_message")
-    val reasonCodeMessage: String,
+    val reasonCodeMessage: String
 )

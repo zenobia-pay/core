@@ -3,8 +3,8 @@ package com.zenobiapay.handlers
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
-import com.zenobiapay.dao.TransferDao
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.dao.TransferDao
 import com.zenobiapay.di.DaggerAppComponent
 import com.zenobiapay.logic.getFee
 import com.zenobiapay.model.ddb.transfer.PayoutId
@@ -75,7 +75,7 @@ class PayoutProcessor : RequestHandler<SQSEvent, Unit> {
             merchantAmount = merchantPayout,
             merchantPayoutId = PayoutId(id = transferResponse.transfer.id),
             feePaid = false,
-            feeAmount = fee,
+            feeAmount = fee
         )
     }
 }

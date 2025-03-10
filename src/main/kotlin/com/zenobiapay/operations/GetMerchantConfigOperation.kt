@@ -8,7 +8,7 @@ import com.zenobiapay.generated.models.Location
 import com.zenobiapay.model.cognito.UserPoolGroup
 import javax.inject.Inject
 
-class GetMerchantConfigOperation @Inject constructor(private val userDao: UserDao): Operation() {
+class GetMerchantConfigOperation @Inject constructor(private val userDao: UserDao) : Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
         val merchantItem = userDao.getMerchant(userId)
 
@@ -30,7 +30,7 @@ class GetMerchantConfigOperation @Inject constructor(private val userDao: UserDa
             merchantLocation = Location(
                 address = merchantItem.data.location?.address,
                 latitude = merchantItem.data.location?.latitude?.toBigDecimal(),
-                longitude = merchantItem.data.location?.longitude?.toBigDecimal(),
+                longitude = merchantItem.data.location?.longitude?.toBigDecimal()
             )
         )
     }

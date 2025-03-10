@@ -6,9 +6,11 @@ import org.junit.jupiter.api.Test
 
 class OrumCreateTransferResponseTest {
     private val mapper = jacksonObjectMapper()
+
     @Test
     fun `test serialize`() {
-        val mappedResponse = mapper.readValue("""
+        val mappedResponse = mapper.readValue(
+            """
             {   
                 "transfer": {
                     "amount":10,
@@ -26,6 +28,8 @@ class OrumCreateTransferResponseTest {
                 "updated_at":"2025-01-22T08:00:43.648085Z"
             }
         }
-        """.trimIndent(), OrumCreateTransferResponse::class.java)
+            """.trimIndent(),
+            OrumCreateTransferResponse::class.java
+        )
     }
 }
