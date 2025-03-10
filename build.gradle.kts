@@ -72,7 +72,7 @@ tasks.register("parseYaml", Exec::class) {
         "sh",
         "-c",
         "yq .Resources.ZenobiaApi.Properties.DefinitionBody sam/lambda-stack.yml | " +
-                "sed -E 's/!Sub//g' > " +
+                "sed -E 's/!Sub //g' > " +
                 "openapi.yml"
     )
 }

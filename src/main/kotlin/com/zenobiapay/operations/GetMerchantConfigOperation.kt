@@ -3,8 +3,8 @@ package com.zenobiapay.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.zenobiapay.dao.UserDao
-import com.zenobiapay.generated.models.GetMerchant200Response
-import com.zenobiapay.generated.models.GetMerchant200ResponseMerchantLocation
+import com.zenobiapay.generated.models.GetMerchantConfig200Response
+import com.zenobiapay.generated.models.Location
 import com.zenobiapay.model.cognito.UserPoolGroup
 import javax.inject.Inject
 
@@ -13,7 +13,7 @@ class GetMerchantConfigOperation @Inject constructor(private val userDao: UserDa
         val merchantItem = userDao.getMerchant(userId)
 
         if (merchantItem == null) {
-            return GetMerchant200Response(
+            return GetMerchantConfig200Response(
                 bankAccountId = null,
                 merchantDisplayName = null,
                 merchantDescription = null,
@@ -22,12 +22,12 @@ class GetMerchantConfigOperation @Inject constructor(private val userDao: UserDa
             )
         }
 
-        return GetMerchant200Response(
+        return GetMerchantConfig200Response(
             bankAccountId = merchantItem.data.bankAccountId,
             merchantDisplayName = merchantItem.data.displayName,
             merchantDescription = merchantItem.data.description,
             webhookUrl = merchantItem.data.webhookUrl,
-            merchantLocation = GetMerchant200ResponseMerchantLocation(
+            merchantLocation = Location(
                 address = merchantItem.data.location?.address,
                 latitude = merchantItem.data.location?.latitude?.toBigDecimal(),
                 longitude = merchantItem.data.location?.longitude?.toBigDecimal(),

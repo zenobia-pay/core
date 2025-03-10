@@ -6,9 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.dao.BankDao
 import com.zenobiapay.dao.UserDao
 import com.zenobiapay.generated.models.UpdateMerchantConfigRequest
-import com.zenobiapay.model.api.ApiResponse
 import com.zenobiapay.model.api.EmptyApiResponse
-import com.zenobiapay.model.api.account.UpdateMerchantRequest
 import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.model.exception.ResourceNotFoundException
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -22,7 +20,7 @@ class UpdateMerchantConfigOperation @Inject constructor(
     private val objectMapper: ObjectMapper
 ): Operation() {
 
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): ApiResponse {
+    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
         val request = objectMapper.readValue(input.body, UpdateMerchantConfigRequest::class.java)
         logger.info { "Got request $request" }
         if (request.bankAccountId != null) {
