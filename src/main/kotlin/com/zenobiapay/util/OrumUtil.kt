@@ -1,7 +1,16 @@
 package com.zenobiapay.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.model.orum.*
+import com.zenobiapay.model.orum.OrumCreateExternalAccountRequest
+import com.zenobiapay.model.orum.OrumCreateExternalAccountResponse
+import com.zenobiapay.model.orum.OrumCreatePersonRequest
+import com.zenobiapay.model.orum.OrumCreatePersonResponse
+import com.zenobiapay.model.orum.OrumCreateTransferRequest
+import com.zenobiapay.model.orum.OrumCreateTransferResponse
+import com.zenobiapay.model.orum.OrumCredentials
+import com.zenobiapay.model.orum.OrumGetTransferResponse
+import com.zenobiapay.model.orum.OrumTokenResponse
+import com.zenobiapay.model.orum.OrumTransferStatus
 import io.github.oshai.kotlinlogging.KotlinLogging
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient

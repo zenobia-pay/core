@@ -1,6 +1,20 @@
 package com.zenobiapay.util
 
-import com.plaid.client.model.*
+import com.plaid.client.model.AccountBase
+import com.plaid.client.model.AccountsGetRequest
+import com.plaid.client.model.AccountsGetResponse
+import com.plaid.client.model.AuthGetRequest
+import com.plaid.client.model.AuthGetResponse
+import com.plaid.client.model.CountryCode
+import com.plaid.client.model.ItemGetRequest
+import com.plaid.client.model.ItemGetResponse
+import com.plaid.client.model.ItemPublicTokenExchangeRequest
+import com.plaid.client.model.ItemPublicTokenExchangeResponse
+import com.plaid.client.model.LinkTokenCreateRequest
+import com.plaid.client.model.LinkTokenCreateRequestUser
+import com.plaid.client.model.LinkTokenCreateResponse
+import com.plaid.client.model.NumbersACH
+import com.plaid.client.model.Products
 import com.plaid.client.request.PlaidApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import retrofit2.Response
@@ -77,12 +91,6 @@ class PlaidUtil @Inject constructor(private val plaidApi: PlaidApi) {
             logger.info { "got plaid response for ach ${it.numbers.ach}" }
         }
     }
-
-//    fun createTransferAuthorization() {
-//        val request = TransferAuthorizationCreateRequest()
-//            .
-//        plaidApi.transferAuthorizationCreate()
-//    }
 
     private fun <T> getResponseOrThrowException(operationName: String, block: () -> Response<T>): T {
         val response = block()

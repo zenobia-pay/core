@@ -1,7 +1,10 @@
 package com.zenobiapay.dao
 
 import com.zenobiapay.di.USER_TABLE_NAME
-import com.zenobiapay.model.ddb.user.*
+import com.zenobiapay.model.ddb.user.Location
+import com.zenobiapay.model.ddb.user.MerchantItem
+import com.zenobiapay.model.ddb.user.UserItem
+import com.zenobiapay.model.ddb.user.UserItemData
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.Key

@@ -158,6 +158,41 @@ Resources:
         KMSMasterKeyId: !Ref UserKmsKey
         SSEType: KMS
 
+  CredentialsKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Key to encrypt Bank DynamoDB table
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowRootAccount
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: "kms:*"
+            Resource: "*"
+
+  CredentialsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: UserTable
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: clientSecret
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+        KMSMasterKeyId: !Ref CredentialsKmsKey
+        SSEType: KMS
+
 #  # TODO: increase security. Only allow authenticated users to access.
 #  ProfilePictureBucket:
 #    Type: AWS::S3::Bucket

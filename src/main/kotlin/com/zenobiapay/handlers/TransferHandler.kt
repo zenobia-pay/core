@@ -7,7 +7,12 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.di.DaggerAppComponent
 import com.zenobiapay.model.exception.UnknownPathException
-import com.zenobiapay.operations.*
+import com.zenobiapay.operations.CreateTransferRequestOperation
+import com.zenobiapay.operations.FulfillTransferOperation
+import com.zenobiapay.operations.GetCustomerTransferOperation
+import com.zenobiapay.operations.GetMerchantTransferOperation
+import com.zenobiapay.operations.ListCustomerTransfersOperation
+import com.zenobiapay.operations.ListMerchantTransfersOperation
 import com.zenobiapay.util.ResponseHandler
 import javax.inject.Inject
 
@@ -28,7 +33,7 @@ class TransferHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayPr
     lateinit var getCustomerTransferOperation: GetMerchantTransferOperation
 
     @Inject
-    lateinit var getMerchantTransferOperation: GetMerchantTransferOperation
+    lateinit var getMerchantTransferOperation: GetCustomerTransferOperation
 
     @Inject
     lateinit var listCustomerTransfersOperation: ListCustomerTransfersOperation
@@ -42,7 +47,7 @@ class TransferHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayPr
 
     override fun handleRequest(input: APIGatewayProxyRequestEvent?, context: Context?): APIGatewayProxyResponseEvent {
         val operation = when (input?.path) {
-            "/create-transfer-request" -> createTransferRequestOperation
+            "/create-transfer-request"  -> createTransferRequestOperation
             "/fulfill-transfer" -> fulfillTransferOperation
             "/get-customer-transfer" -> getCustomerTransferOperation
             "/get-merchant-transfer" -> getMerchantTransferOperation
