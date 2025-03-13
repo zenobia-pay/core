@@ -44,9 +44,11 @@ Resources:
         BankTableName: !GetAtt TableStack.Outputs.BankTableName
         UserTableName: !GetAtt TableStack.Outputs.UserTableName
         TransferTableName: !GetAtt TableStack.Outputs.TransferTableName
+        CredentialsTableName: !GetAtt TableStack.Outputs.CredentialsTableName
         BankKeyId: !GetAtt TableStack.Outputs.BankKeyId
         TransferKeyId: !GetAtt TableStack.Outputs.TransferKeyId
         UserKeyId: !GetAtt TableStack.Outputs.UserKeyId
+        CredentialsKeyId: !GetAtt TableStack.Outputs.CredentialsKeyId
         TransferTableStreamArn: !GetAtt TableStack.Outputs.TransferTableStreamArn
 
   PayoutStack:

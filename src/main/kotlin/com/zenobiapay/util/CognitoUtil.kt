@@ -5,6 +5,10 @@ import com.zenobiapay.model.cognito.UserPoolGroup
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolClientRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolClientResponse
+import software.amazon.awssdk.services.cognitoidentityprovider.model.OAuthFlowType
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserPoolClientType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType
 import javax.inject.Inject
 import javax.inject.Named
@@ -49,6 +53,18 @@ class CognitoUtil @Inject constructor(
         }.users()
         logger.info { "Got ${users.size} merchants" }
         return users.listIterator()
+    }
+
+    fun createUserPoolClient(clientName: String): UserPoolClientType {
+        val request = CreateUserPoolClientRequest.builder()
+            .userPoolId(userPoolId)
+            .clientName(clientName)
+            .generateSecret(true)
+            .allowedOAuthFlows(OAuthFlowType.CLIENT_CREDENTIALS)
+            .allowedOAuthFlowsUserPoolClient(true)
+            .allowedOAuthScopes("Zenobia/machine")
+            .build()
+        return cognitoClient.createUserPoolClient(request).userPoolClient()
     }
 
     private fun searchUserAttributes(userAttributes: List<AttributeType>, fieldName: String): String {

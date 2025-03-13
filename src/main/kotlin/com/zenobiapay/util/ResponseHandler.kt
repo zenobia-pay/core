@@ -17,17 +17,25 @@ private val logger = KotlinLogging.logger {}
 
 class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper) {
     fun returnApiGwResponse(operation: Operation, input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
-        try {
-            operation.assertUserPoolGroupValid(input.requestContext.getUserPoolGroups())
+        return wrapOperation {
             val userId = input.requestContext.getUserId(objectMapper)
-            val response = operation.run(input, context, userId)
-            return APIGatewayProxyResponseEvent()
-                .withStatusCode(200)
-                .withHeaders(getCorsHeaders())
-                .withBody(objectMapper.writeValueAsString(response))
-        } catch (e: Exception) {
-            return generateApiGatewayErrorResponse(e)
+            operation.run(input, context, userId)
         }
+    }
+
+    fun wrapOperation(body: () -> Any): APIGatewayProxyResponseEvent {
+        return try {
+            generateSuccessResponse(body())
+        } catch (e: Exception) {
+            generateApiGatewayErrorResponse(e)
+        }
+    }
+
+    fun generateSuccessResponse(response: Any): APIGatewayProxyResponseEvent {
+        return APIGatewayProxyResponseEvent()
+            .withStatusCode(200)
+            .withHeaders(getCorsHeaders())
+            .withBody(objectMapper.writeValueAsString(response))
     }
 
     fun generateApiGatewayErrorResponse(error: Exception): APIGatewayProxyResponseEvent {

@@ -61,6 +61,10 @@ dependencies {
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+
+    implementation("at.favre.lib:bcrypt:0.9.0")
+    implementation("com.auth0:java-jwt:4.2.1")
+    implementation("com.auth0:jwks-rsa:0.22.1")
 }
 
 tasks.test {

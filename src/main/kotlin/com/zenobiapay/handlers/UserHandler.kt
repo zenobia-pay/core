@@ -10,7 +10,10 @@ import com.zenobiapay.model.exception.UnknownPathException
 import com.zenobiapay.operations.GetMerchantConfigOperation
 import com.zenobiapay.operations.UpdateMerchantConfigOperation
 import com.zenobiapay.util.ResponseHandler
+import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
+
+private val logger = KotlinLogging.logger {}
 
 class UserHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     @Inject
@@ -30,6 +33,7 @@ class UserHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
     }
 
     override fun handleRequest(input: APIGatewayProxyRequestEvent?, context: Context?): APIGatewayProxyResponseEvent {
+        logger.info { "Got input $input" }
         val operation = when (input?.path) {
             "/update-merchant-config" -> updateMerchantConfigOperation
             "/get-merchant-config" -> getMerchantConfigOperation

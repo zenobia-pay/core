@@ -67,6 +67,22 @@ Resources:
       AuthSessionValidity: 15
       RefreshTokenValidity: 30
 
+  CognitoDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: zenobia
+      UserPoolId: !Ref UserPool
+
+  CognitoResourceServer:
+    Type: AWS::Cognito::UserPoolResourceServer
+    Properties:
+      Identifier: Zenobia
+      Name: Zenobia Resource Server
+      UserPoolId: !Ref UserPool
+      Scopes:
+        - ScopeName: machine
+          ScopeDescription: "Scope for backend servers"
+
   CognitoIdentityPool:
     Type: 'AWS::Cognito::IdentityPool'
     Properties:

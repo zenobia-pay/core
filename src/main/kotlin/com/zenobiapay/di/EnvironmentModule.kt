@@ -9,6 +9,7 @@ const val SAM_LOCAL = "SAM_LOCAL"
 const val BANK_TABLE_NAME = "BANK_TABLE_NAME"
 const val TRANSFER_TABLE_NAME = "TRANSFER_TABLE_NAME"
 const val USER_TABLE_NAME = "USER_TABLE_NAME"
+const val CREDENTIALS_TABLE_NAME = "CREDENTIALS_TABLE_NAME"
 const val USER_POOL_ID = "USER_POOL_ID"
 const val PAYOUT_QUEUE_URL = "PAYOUT_QUEUE_URL"
 
@@ -31,6 +32,10 @@ class EnvironmentModule {
     @Provides
     @Named(USER_TABLE_NAME)
     fun provideUserTableName(): String = System.getenv("USER_TABLE_NAME")
+
+    @Provides
+    @Named(CREDENTIALS_TABLE_NAME)
+    fun provideCredentialsTableName(): String = System.getenv("CREDENTIALS_TABLE_NAME")
 
     @Provides
     @Named(USER_POOL_ID)

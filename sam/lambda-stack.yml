@@ -23,11 +23,15 @@ Parameters:
     Type: String
   UserKeyId:
     Type: String
+  CredentialsKeyId:
+    Type: String
   BankTableName:
     Type: String
   TransferTableName:
     Type: String
   UserTableName:
+    Type: String
+  CredentialsTableName:
     Type: String
   TransferTableStreamArn:
     Type: String
@@ -118,39 +122,6 @@ Resources:
                   type: number
 
         paths:
-          /get-auth-token:
-            post:
-              summary: "Gets auth token"
-              operationId: "CreateAuthToken"
-              security: []
-              x-amazon-apigateway-auth:
-                type: "NONE"
-              requestBody:
-                required: true
-                content:
-                  application/json:
-                    schema:
-                      type: object
-                      properties:
-                        clientId:
-                          type: string
-                        clientSecret:
-                          type: string
-              responses:
-                '200':
-                  description: "Successful response"
-                  content:
-                    application/json:
-                      schema:
-                        type: object
-                        properties:
-                          linkToken:
-                            type: string
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${M2MAuthHandlerFunction.Arn}:prod/invocations
-                httpMethod: POST
-                type: aws_proxy
-
           /create-link-token:
             get:
               summary: "Creates a plaid link token"
@@ -632,26 +603,6 @@ Resources:
       Roles:
         authenticated: !GetAtt AuthenticatedRole.Arn
         unauthenticated: !GetAtt UnauthenticatedRole.Arn
-
-  M2MAuthHandlerFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: M2MAuthHandler
-      CodeUri: ..
-      Handler: com.zenobiapay.handlers.M2MAuthHandler::handleRequest
-      MemorySize: 2048
-      AutoPublishAlias: prod
-      AutoPublishAliasAllProperties: true
-      Events:
-        GetAuthToken:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ZenobiaApi
-            Path: /get-auth-token
-            Method: POST
-            Auth:
-              OverrideApiAuth: true
-              Authorizer: "NONE"
 
   BankHandlerFunction:
     Type: AWS::Serverless::Function

@@ -2,7 +2,7 @@ package com.zenobiapay.di
 
 import com.zenobiapay.handlers.BankHandler
 import com.zenobiapay.handlers.CognitoEventHandler
-import com.zenobiapay.handlers.M2MAuthHandler
+import com.zenobiapay.handlers.CredentialsHandler
 import com.zenobiapay.handlers.PayoutDispatcher
 import com.zenobiapay.handlers.PayoutProcessor
 import com.zenobiapay.handlers.TransferHandler
@@ -19,5 +19,5 @@ interface AppComponent {
     fun inject(handler: PayoutDispatcher)
     fun inject(handler: PayoutProcessor)
     fun inject(handler: TransferTableEventHandler)
-    fun inject(handler: M2MAuthHandler)
+    fun inject(handler: CredentialsHandler)
 }
