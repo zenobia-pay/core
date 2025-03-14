@@ -660,7 +660,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: TransferHandler
-      CodeUri: ..
+      CodeUri: ../backend
       Handler: com.zenobiapay.handlers.TransferHandler::handleRequest
       MemorySize: 2048
       AutoPublishAlias: prod
