@@ -34,7 +34,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: PayoutDispatcher
-      CodeUri: ..
+      CodeUri: ../kotlin/lambda/payout/
       Handler: com.zenobiapay.handlers.PayoutDispatcher::handleRequest
       Environment:
         Variables:
@@ -53,7 +53,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: PayoutProcessor
-      CodeUri: ..
+      CodeUri: ../kotlin/lambda/payout/
       Handler: com.zenobiapay.handlers.PayoutProcessor::handleRequest
       Environment:
         Variables:
