@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.model.cognito.UserPoolGroup
 import io.github.oshai.kotlinlogging.KotlinLogging
-import java.lang.Exception
 
 private val logger = KotlinLogging.logger {}
 

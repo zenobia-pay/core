@@ -4,6 +4,7 @@ plugins {
     kotlin("jvm") version "2.1.0"
     kotlin("plugin.serialization") version "1.9.21"
     id("com.google.devtools.ksp") version "2.1.0-1.0.29"
+    id("org.openapi.generator") version "7.12.0"
 }
 
 java {
@@ -26,42 +27,35 @@ repositories {
 }
 
 dependencies {
-    api(project(":kotlin:shared"))
-    api(project(":kotlin:shared:orum"))
     api("org.jetbrains.kotlin:kotlin-stdlib")
-    api("com.amazonaws:aws-lambda-java-core:1.2.3")
-    api("com.amazonaws:aws-lambda-java-events:3.11.3")
-    api("com.squareup.okhttp3:okhttp:4.9.2")
-
-    // Json processing
-    api("com.fasterxml.jackson.core:jackson-databind:2.18.2")
-    runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.+")
-
-    // Injection
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     api("com.google.dagger:dagger:2.48")
     runtimeOnly("com.google.dagger:dagger-compiler:2.54")
     ksp("com.google.dagger:dagger-compiler:2.51.1")
+
+    // deserialization
     api("javax.inject:javax.inject:1")
     runtimeOnly("com.fasterxml.jackson.core:jackson-core:2.18.3")
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.3")
+    api("com.fasterxml.jackson.core:jackson-databind:2.18.3")
+    api("com.fasterxml.jackson.core:jackson-annotations:2.18.3")
+
+    // Http
+    api(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
+    implementation("com.squareup.okhttp3:okhttp")
 
     // Logging
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
-    implementation("org.slf4j:slf4j-simple:2.0.3")
+    runtimeOnly("org.slf4j:slf4j-simple:2.0.3")
 
     // AWS
-    implementation("software.amazon.awssdk:dynamodb:2.29.45")
-    implementation("software.amazon.awssdk:dynamodb-enhanced:2.29.47")
-    implementation("software.amazon.awssdk:secretsmanager:2.29.45")
-    testImplementation("software.amazon.awssdk:utils:2.30.22")
+    api("software.amazon.awssdk:secretsmanager:2.29.45")
 
     // Testing
-    testImplementation("org.jetbrains.kotlin:kotlin-test:2.1.0")
     testImplementation("io.mockk:mockk:1.13.16")
+    testImplementation("io.mockk:mockk-dsl:1.13.16")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
-
-    // Plaid
-    implementation("com.plaid:plaid-java:29.0.0")
 }
 
 tasks.test {

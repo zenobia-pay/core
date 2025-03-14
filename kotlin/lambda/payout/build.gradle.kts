@@ -27,6 +27,7 @@ repositories {
 
 dependencies {
     api(project(":kotlin:shared"))
+    api(project(":kotlin:shared:orum"))
     api("org.jetbrains.kotlin:kotlin-stdlib")
     api("com.amazonaws:aws-lambda-java-core:1.2.3")
     api("com.amazonaws:aws-lambda-java-events:3.11.3")

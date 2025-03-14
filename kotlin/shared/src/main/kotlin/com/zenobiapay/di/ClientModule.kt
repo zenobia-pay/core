@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.plaid.client.ApiClient
 import com.plaid.client.request.PlaidApi
-import com.zenobiapay.model.orum.OrumCredentials
 import com.zenobiapay.model.plaid.PlaidCredentials
 import dagger.Module
 import dagger.Provides
@@ -64,14 +63,6 @@ class ClientModule {
             it.secretId("plaid/sandbox/credentials")
         }.secretString()
         return objectMapper.readValue(secretString, PlaidCredentials::class.java)
-    }
-
-    @Provides
-    fun provideOrumCredentials(secretsManagerClient: SecretsManagerClient, objectMapper: ObjectMapper): OrumCredentials {
-        val secretString = secretsManagerClient.getSecretValue {
-            it.secretId("orum/sandbox/credentials")
-        }.secretString()
-        return objectMapper.readValue(secretString, OrumCredentials::class.java)
     }
 
     @Provides
