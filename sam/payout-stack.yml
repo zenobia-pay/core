@@ -35,7 +35,7 @@ Resources:
     Properties:
       FunctionName: PayoutDispatcher
       CodeUri: ../kotlin/lambda/payout/
-      Handler: com.zenobiapay.handlers.PayoutDispatcher::handleRequest
+      Handler: com.zenobiapay.payout.handlers.PayoutDispatcher::handleRequest
       Environment:
         Variables:
            COGNITO_USER_POOL_ARN: !Ref UserPoolArn
@@ -54,7 +54,7 @@ Resources:
     Properties:
       FunctionName: PayoutProcessor
       CodeUri: ../kotlin/lambda/payout/
-      Handler: com.zenobiapay.handlers.PayoutProcessor::handleRequest
+      Handler: com.zenobiapay.payout.handlers.PayoutProcessor::handleRequest
       Environment:
         Variables:
           COGNITO_USER_POOL_ARN: !Ref UserPoolArn

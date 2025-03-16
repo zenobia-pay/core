@@ -54,6 +54,9 @@ dependencies {
     testImplementation("io.mockk:mockk:1.13.16")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+
+    // AWS
+    api("software.amazon.awssdk:secretsmanager:2.30.22")
 }
 
 tasks.test {

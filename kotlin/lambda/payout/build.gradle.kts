@@ -58,10 +58,10 @@ dependencies {
     implementation("software.amazon.awssdk:sdk-core:2.30.22")
     testImplementation("software.amazon.awssdk:utils:2.30.22")
 
-    api("software.amazon.awssdk:dynamodb:2.29.45")
-    api("software.amazon.awssdk:dynamodb-enhanced:2.29.47")
-    api("software.amazon.awssdk:secretsmanager:2.29.45")
-    api("software.amazon.awssdk:cognitoidentityprovider:2.29.31")
+    api("software.amazon.awssdk:dynamodb:2.30.22")
+    api("software.amazon.awssdk:dynamodb-enhanced:2.30.22")
+    api("software.amazon.awssdk:secretsmanager:2.30.22")
+    api("software.amazon.awssdk:cognitoidentityprovider:2.30.22")
     api("software.amazon.awssdk:sqs:2.30.22")
     testImplementation("software.amazon.awssdk:utils:2.30.22")
 

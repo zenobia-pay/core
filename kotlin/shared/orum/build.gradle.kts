@@ -49,7 +49,7 @@ dependencies {
     runtimeOnly("org.slf4j:slf4j-simple:2.0.3")
 
     // AWS
-    api("software.amazon.awssdk:secretsmanager:2.29.45")
+    api("software.amazon.awssdk:secretsmanager:2.30.22")
 
     // Testing
     testImplementation("io.mockk:mockk:1.13.16")

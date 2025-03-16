@@ -49,9 +49,9 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.3")
 
     // AWS
-    implementation("software.amazon.awssdk:dynamodb:2.29.45")
-    implementation("software.amazon.awssdk:dynamodb-enhanced:2.29.47")
-    implementation("software.amazon.awssdk:secretsmanager:2.29.45")
+    implementation("software.amazon.awssdk:dynamodb:2.30.22")
+    implementation("software.amazon.awssdk:dynamodb-enhanced:2.30.22")
+    implementation("software.amazon.awssdk:secretsmanager:2.30.22")
     testImplementation("software.amazon.awssdk:utils:2.30.22")
 
     // Testing
