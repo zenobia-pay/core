@@ -2,7 +2,7 @@ package com.zenobiapay.bank.operations
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
-import com.zenobiapay.generated.models.CreateLinkToken200Response
+import com.zenobiapay.api.generated.models.CreateLinkToken200Response
 import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.operation.Operation
 import com.zenobiapay.util.PlaidUtil

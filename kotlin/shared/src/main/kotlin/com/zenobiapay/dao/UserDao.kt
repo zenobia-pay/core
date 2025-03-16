@@ -13,7 +13,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException
 import javax.inject.Inject
 import javax.inject.Named
-import com.zenobiapay.generated.models.Location as ApiLocation
+import com.zenobiapay.api.generated.models.Location as ApiLocation
 
 private val logger = KotlinLogging.logger {}
 

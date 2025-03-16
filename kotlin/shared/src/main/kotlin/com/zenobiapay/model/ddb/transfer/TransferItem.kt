@@ -9,7 +9,8 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecon
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondarySortKey
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
 import java.time.Instant
-import com.zenobiapay.generated.models.PaymentParticipantIdentity as ApiPaymentParticipantIdentity
+import com.zenobiapay.api.generated.models.PaymentParticipantIdentity as ApiPaymentParticipantIdentity
+import com.zenobiapay.api.generated.models.StatementItem as ApiStatementItem
 
 @DynamoDbBean
 data class TransferItem(
@@ -138,15 +139,15 @@ data class StatementItem(
             )
         }
 
-        fun fromApiRequestStatementItem(item: com.zenobiapay.generated.models.StatementItem) =
+        fun fromApiRequestStatementItem(item: ApiStatementItem) =
             StatementItem(
                 name = item.name ?: throw InvalidRequestException("name not specified in statementItems"),
                 amount = item.amount ?: throw InvalidRequestException("item amount not specified in statementItems")
             )
     }
 
-    fun toApiStatementItem(): com.zenobiapay.generated.models.StatementItem {
-        return com.zenobiapay.generated.models.StatementItem(
+    fun toApiStatementItem(): ApiStatementItem {
+        return ApiStatementItem(
             name = name,
             amount = amount
         )

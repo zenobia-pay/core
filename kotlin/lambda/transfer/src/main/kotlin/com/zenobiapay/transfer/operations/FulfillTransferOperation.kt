@@ -7,8 +7,8 @@ import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.dao.BankDao
 import com.zenobiapay.dao.TransferDao
 import com.zenobiapay.dao.UserDao
-import com.zenobiapay.generated.models.FulfillTransfer200Response
-import com.zenobiapay.generated.models.FulfillTransferRequest
+import com.zenobiapay.api.generated.models.FulfillTransfer200Response
+import com.zenobiapay.api.generated.models.FulfillTransferRequest
 import com.zenobiapay.orum.model.OrumCreateTransferRequest
 import com.zenobiapay.orum.model.OrumCreateTransferResponse
 import com.zenobiapay.orum.model.TransferParticipant
@@ -83,7 +83,7 @@ class FulfillTransferOperation @Inject constructor(
         return FulfillTransfer200Response(
             amount = transferAmount,
             statementItems = statementItems,
-            merchant = com.zenobiapay.generated.models.PaymentParticipantIdentity(
+            merchant = com.zenobiapay.api.generated.models.PaymentParticipantIdentity(
                 id = debtorId.id,
                 name = debtorId.name
             )

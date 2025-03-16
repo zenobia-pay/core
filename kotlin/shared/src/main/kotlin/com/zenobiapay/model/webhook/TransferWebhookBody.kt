@@ -1,6 +1,6 @@
 package com.zenobiapay.model.webhook
 
-import com.zenobiapay.generated.models.TransferStatus
+import com.zenobiapay.api.generated.models.TransferStatus
 
 data class TransferWebhookBody(
     val transferRequestId: String,

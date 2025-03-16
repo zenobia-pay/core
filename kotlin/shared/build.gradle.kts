@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.jvm)
     alias(libs.plugins.serialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.openapi)
 }
 
 java {
@@ -27,6 +26,7 @@ repositories {
 }
 
 dependencies {
+    implementation(project(":kotlin:shared:api"))
     api(libs.kotlin.stdlib)
     api(libs.lambda.core)
     api(libs.lambda.events)
@@ -74,49 +74,6 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
-}
-
-tasks.register("parseYaml", Exec::class) {
-    commandLine(
-        "sh",
-        "-c",
-        "yq .Resources.ZenobiaApi.Properties.DefinitionBody ../../sam/lambda-stack.yml | " +
-                "sed -E 's/!Sub //g' > " +
-                "openapi.yml"
-    )
-}
-
-openApiGenerate {
-    generatorName.set("kotlin")
-    inputSpec.set("$projectDir/openapi.yml")
-    outputDir.set(layout.buildDirectory.dir("generated").get().toString())
-    packageName.set("com.zenobiapay.generated")
-
-    additionalProperties.set(
-        mapOf(
-            "serializationLibrary" to "jackson"
-        )
-    )
-}
-
-sourceSets.main {
-    kotlin.srcDir(layout.buildDirectory.dir("generated/src/main/kotlin").get().asFile)
-}
-
-tasks.named("openApiGenerate") {
-    dependsOn("parseYaml")
-}
-
-tasks.named("build") {
-    dependsOn("openApiGenerate")
-}
-
-tasks.named("compileKotlin") {
-    dependsOn("openApiGenerate")
-}
-
-tasks.matching { it.name.startsWith("ksp") }.configureEach {
-    dependsOn("openApiGenerate")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {

@@ -4,10 +4,10 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.zenobiapay.api.generated.models.CreateTransferRequest200Response
+import com.zenobiapay.api.generated.models.CreateTransferRequestRequest
 import com.zenobiapay.dao.TransferDao
 import com.zenobiapay.dao.UserDao
-import com.zenobiapay.generated.models.CreateTransferRequest200Response
-import com.zenobiapay.generated.models.CreateTransferRequestRequest
 import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.model.ddb.transfer.StatementItem
 import com.zenobiapay.model.exception.InvalidRequestException

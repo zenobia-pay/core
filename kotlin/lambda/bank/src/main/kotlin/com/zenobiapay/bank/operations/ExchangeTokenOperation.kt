@@ -5,9 +5,9 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.plaid.client.model.AccountSubtype
 import com.zenobiapay.dao.BankDao
-import com.zenobiapay.model.api.ApiResponse
-import com.zenobiapay.model.api.EmptyApiResponse
-import com.zenobiapay.model.api.bank.ExchangeTokenRequest
+import com.zenobiapay.api.model.ApiResponse
+import com.zenobiapay.api.model.EmptyApiResponse
+import com.zenobiapay.api.model.bank.ExchangeTokenRequest
 import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.model.exception.InvalidRequestException
 import com.zenobiapay.operation.Operation

@@ -3,8 +3,8 @@ package com.zenobiapay.transfer.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.zenobiapay.dao.TransferDao
-import com.zenobiapay.generated.models.ListMerchantTransfers200Response
-import com.zenobiapay.generated.models.ListMerchantTransfers200ResponseItemsInner
+import com.zenobiapay.api.generated.models.ListMerchantTransfers200Response
+import com.zenobiapay.api.generated.models.ListMerchantTransfers200ResponseItemsInner
 import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.operation.Operation
 import javax.inject.Inject

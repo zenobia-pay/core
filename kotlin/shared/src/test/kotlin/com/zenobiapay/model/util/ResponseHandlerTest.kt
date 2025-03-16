@@ -1,7 +1,7 @@
 package com.zenobiapay.model.util
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.zenobiapay.generated.models.ErrorResponse
+import com.zenobiapay.api.generated.models.ErrorResponse
 import com.zenobiapay.model.exception.ResourceNotFoundException
 import com.zenobiapay.model.exception.UnauthorizedException
 import com.zenobiapay.model.exception.UnknownPathException

@@ -3,8 +3,8 @@ package com.zenobiapay.user.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.zenobiapay.dao.UserDao
-import com.zenobiapay.generated.models.GetMerchantConfig200Response
-import com.zenobiapay.generated.models.Location
+import com.zenobiapay.api.generated.models.GetMerchantConfig200Response
+import com.zenobiapay.api.generated.models.Location
 import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.operation.Operation
 import javax.inject.Inject

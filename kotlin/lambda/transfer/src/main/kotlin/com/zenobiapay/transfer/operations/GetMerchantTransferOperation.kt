@@ -3,9 +3,9 @@ package com.zenobiapay.transfer.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.api.model.transfer.GetTransferRequest
 import com.zenobiapay.dao.TransferDao
-import com.zenobiapay.generated.models.GetMerchantTransfer200Response
-import com.zenobiapay.model.api.transfer.GetTransferRequest
+import com.zenobiapay.api.generated.models.GetMerchantTransfer200Response
 import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.operation.Operation
 import javax.inject.Inject
