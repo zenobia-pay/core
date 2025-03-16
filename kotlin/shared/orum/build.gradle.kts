@@ -1,10 +1,9 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("jvm") version "2.1.0"
-    kotlin("plugin.serialization") version "1.9.21"
-    id("com.google.devtools.ksp") version "2.1.0-1.0.29"
-    id("org.openapi.generator") version "7.12.0"
+    alias(libs.plugins.jvm)
+    alias(libs.plugins.serialization)
+    alias(libs.plugins.ksp)
 }
 
 java {
@@ -27,35 +26,35 @@ repositories {
 }
 
 dependencies {
-    api("org.jetbrains.kotlin:kotlin-stdlib")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    api("com.google.dagger:dagger:2.48")
-    runtimeOnly("com.google.dagger:dagger-compiler:2.54")
-    ksp("com.google.dagger:dagger-compiler:2.51.1")
+    api(libs.kotlin.stdlib)
+    implementation(libs.kotlin.coroutines)
+    api(libs.dagger)
+    runtimeOnly(libs.dagger.compiler)
+    ksp(libs.dagger.compiler)
 
     // deserialization
-    api("javax.inject:javax.inject:1")
-    runtimeOnly("com.fasterxml.jackson.core:jackson-core:2.18.3")
-    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.3")
-    api("com.fasterxml.jackson.core:jackson-databind:2.18.3")
-    api("com.fasterxml.jackson.core:jackson-annotations:2.18.3")
+    api(libs.javax.inject)
+    runtimeOnly(libs.jackson.core)
+    testImplementation(libs.jackson.kotlin)
+    api(libs.jackson.databind)
+    api(libs.jackson.annotations)
 
     // Http
-    api(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
-    implementation("com.squareup.okhttp3:okhttp")
+    implementation(libs.okhttp)
+    api(platform(libs.okhttp.bom))
 
     // Logging
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
-    runtimeOnly("org.slf4j:slf4j-simple:2.0.3")
+    implementation(libs.kotlin.logging)
+    runtimeOnly(libs.slf4j)
 
     // AWS
-    api("software.amazon.awssdk:secretsmanager:2.30.22")
+    api(libs.aws.secretsmanager)
 
     // Testing
-    testImplementation("io.mockk:mockk:1.13.16")
-    testImplementation("io.mockk:mockk-dsl:1.13.16")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+    testImplementation(libs.mockk)
+    testImplementation(libs.mockk.dsl)
+    testImplementation(libs.junit)
+    testImplementation(libs.junit.api)
 }
 
 tasks.test {
@@ -68,10 +67,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 
 tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    manifest {
-        attributes["Main-Class"] = "com.zenobiapay.handlers.BankHandler"
-    }
 
     from(sourceSets.main.get().output)
 
