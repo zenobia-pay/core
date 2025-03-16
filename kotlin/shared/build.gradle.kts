@@ -1,10 +1,10 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("jvm") version "2.1.0"
-    kotlin("plugin.serialization") version "1.9.21"
-    id("com.google.devtools.ksp") version "2.1.0-1.0.29"
-    id("org.openapi.generator") version "7.12.0"
+    alias(libs.plugins.jvm)
+    alias(libs.plugins.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.openapi)
 }
 
 java {
@@ -27,52 +27,49 @@ repositories {
 }
 
 dependencies {
-    api("org.jetbrains.kotlin:kotlin-stdlib")
-    api("com.amazonaws:aws-lambda-java-core:1.2.3")
-    api("com.amazonaws:aws-lambda-java-events:3.11.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    api("com.squareup.okhttp3:okhttp:4.9.2")
+    api(libs.kotlin.stdlib)
+    api(libs.lambda.core)
+    api(libs.lambda.events)
 
     // Json processing
-    api("com.fasterxml.jackson.core:jackson-databind:2.18.2")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.+")
-    api("com.fasterxml.jackson.core:jackson-annotations:2.18.3")
+    implementation(libs.jackson.core)
+    implementation(libs.jackson.kotlin)
+    api(libs.jackson.databind)
+    api(libs.jackson.annotations)
 
     // Injection
-    api("com.google.dagger:dagger:2.48")
-    runtimeOnly("com.google.dagger:dagger-compiler:2.54")
-    ksp("com.google.dagger:dagger-compiler:2.51.1")
-    api("javax.inject:javax.inject:1")
-    implementation("com.fasterxml.jackson.core:jackson-core:2.18.3")
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    api(libs.dagger)
+    ksp(libs.dagger.compiler)
+    api(libs.javax.inject)
+
+    // HTTP
+    api(libs.okhttp)
 
     // Logging
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
-    implementation("org.slf4j:slf4j-simple:2.0.3")
+    implementation(libs.kotlin.logging)
+    implementation(libs.slf4j)
 
     // AWS
-    implementation("software.amazon.awssdk:aws-core:2.30.22")
-    implementation("software.amazon.awssdk:regions:2.30.22")
-    implementation("software.amazon.awssdk:sdk-core:2.30.22")
-    testImplementation("software.amazon.awssdk:utils:2.30.22")
+    implementation(libs.aws.core)
+    implementation(libs.aws.regions)
+    implementation(libs.aws.sdk.core)
+    testImplementation(libs.aws.sdk.utils)
 
-    api("software.amazon.awssdk:dynamodb:2.30.22")
-    api("software.amazon.awssdk:dynamodb-enhanced:2.30.22")
-    api("software.amazon.awssdk:secretsmanager:2.30.22")
-    api("software.amazon.awssdk:cognitoidentityprovider:2.30.22")
-    api("software.amazon.awssdk:sqs:2.30.22")
-    testImplementation("software.amazon.awssdk:utils:2.30.22")
+    api(libs.aws.dynamodb)
+    api(libs.aws.dynamodb.enhanced)
+    api(libs.aws.secretsmanager)
+    api(libs.aws.cognito)
+    api(libs.aws.sqs)
 
     // Testing
-    testImplementation("org.jetbrains.kotlin:kotlin-test:2.1.0")
-    testImplementation("io.mockk:mockk:1.13.16")
-    testImplementation("io.mockk:mockk-dsl:1.13.16")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.mockk.dsl)
+    testImplementation(libs.junit)
+    testImplementation(libs.junit.api)
 
     // Plaid
-    api("com.plaid:plaid-java:29.0.0")
+    api(libs.plaid)
 }
 
 tasks.test {
@@ -111,6 +108,10 @@ tasks.named("openApiGenerate") {
 }
 
 tasks.named("build") {
+    dependsOn("openApiGenerate")
+}
+
+tasks.named("compileKotlin") {
     dependsOn("openApiGenerate")
 }
 

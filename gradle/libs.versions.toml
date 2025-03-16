@@ -12,8 +12,17 @@ okhttp = "4.12.0"
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin" }
 
+# Lambda events
+lambda-core = { module = "com.amazonaws:aws-lambda-java-core", version = "1.2.3" }
+lambda-events = { module = "com.amazonaws:aws-lambda-java-events", version = "3.11.3" }
+
 # AWS SDK services
 aws-secretsmanager = { module = "software.amazon.awssdk:secretsmanager", version.ref = "aws" }
+aws-core = { module = "software.amazon.awssdk:aws-core", version.ref = "aws" }
+aws-regions = { module = "software.amazon.awssdk:regions", version.ref = "aws" }
+aws-sdk-core = { module = "software.amazon.awssdk:sdk-core", version.ref = "aws" }
+aws-sdk-utils = { module = "software.amazon.awssdk:utils", version.ref = "aws" }
+
 aws-s3 = { module = "software.amazon.awssdk:s3", version.ref = "aws" }
 aws-dynamodb = { module = "software.amazon.awssdk:dynamodb", version.ref = "aws" }
 aws-dynamodb-enhanced = { module = "software.amazon.awssdk:dynamodb-enhanced", version.ref = "aws" }
@@ -37,8 +46,11 @@ dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = 
 javax-inject = { module = "javax.inject:javax.inject", version = "1" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version = "2.9.0" }
 
+# Plaid
+plaid = { module = "com.plaid:plaid-java", version = "29.0.0" }
+
 # Testing
-kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version = "2.2.0"}
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version = "2.1.10"}
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mockk-dsl = { module = "io.mockk:mockk-dsl", version.ref = "mockk" }
 junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
@@ -51,4 +63,5 @@ okhttp-bom = { module = "com.squareup.okhttp3:okhttp-bom", version.ref = "okhttp
 [plugins]
 jvm = { id = "org.jetbrains.kotlin.jvm", version = "2.1.0"}
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version = "1.9.21" }
-ksp = { id = "com.google.devtools.ksp", version = "2.1.0-1.0.29"}
+ksp = { id = "com.google.devtools.ksp", version = "2.1.0-1.0.29" }
+openapi = { id = "org.openapi.generator", version = "7.12.0" }
