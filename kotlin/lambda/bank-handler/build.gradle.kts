@@ -28,6 +28,7 @@ repositories {
 
 dependencies {
     api(project(":kotlin:shared"))
+    api(project(":kotlin:shared:table:bank"))
     implementation(project(":kotlin:shared:api"))
     api(project(":kotlin:shared:orum"))
     api("org.jetbrains.kotlin:kotlin-stdlib")

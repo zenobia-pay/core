@@ -6,12 +6,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.zenobiapay.api.generated.models.CreateTransferRequest200Response
 import com.zenobiapay.api.generated.models.CreateTransferRequestRequest
-import com.zenobiapay.dao.TransferDao
 import com.zenobiapay.dao.UserDao
 import com.zenobiapay.model.cognito.UserPoolGroup
-import com.zenobiapay.model.ddb.transfer.StatementItem
 import com.zenobiapay.model.exception.InvalidRequestException
 import com.zenobiapay.operation.Operation
+import com.zenobiapay.table.transfer.dao.TransferDao
+import com.zenobiapay.table.transfer.model.StatementItem
 import com.zenobiapay.util.CognitoUtil
 import javax.inject.Inject
 

@@ -28,6 +28,7 @@ repositories {
 
 dependencies {
     api(project(":kotlin:shared"))
+    api(project(":kotlin:shared:api"))
     api(project(":kotlin:shared:table:transfer"))
     api("org.jetbrains.kotlin:kotlin-stdlib")
     api("com.amazonaws:aws-lambda-java-core:1.2.3")

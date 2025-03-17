@@ -1,7 +1,7 @@
 package com.zenobiapay.transfertableevent.logic
 
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent
-import com.zenobiapay.model.ddb.transfer.TransferItem
+import com.zenobiapay.table.transfer.model.TransferItem
 import com.zenobiapay.util.WebhookHandler
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
@@ -30,13 +30,12 @@ class TransferTableEventLogic @Inject constructor(private val webhookHandler: We
             val requestId = newItem.requestId
             if (newItem.transferFulfillId != null && webhookUrl != null) {
                 logger.info { "Sending status $status for request id $requestId to webhook $webhookUrl" }
-                TODO()
-//                webhookHandler.sendTransferStatus(
-//                    webhookUrl,
-//                    newItem.requestId,
-////                    newItem.status.toApiTransferStatus(), TODO(),
-//                    newItem.amount!!
-//                )
+                webhookHandler.sendTransferStatus(
+                    webhookUrl,
+                    newItem.requestId,
+                    newItem.status.toApiTransferStatus(),
+                    newItem.amount!!
+                )
             }
             logger.info { "Got new item $newItem" }
         } else {

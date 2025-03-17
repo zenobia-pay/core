@@ -4,9 +4,9 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.model.bank.ListBanksRequest
-import com.zenobiapay.dao.BankDao
 import com.zenobiapay.api.generated.models.ListBankAccounts200Response
 import com.zenobiapay.api.generated.models.ListBankAccounts200ResponseItemsInner
+import com.zenobiapay.bank.transfer.dao.BankDao
 import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.operation.Operation
 import javax.inject.Inject

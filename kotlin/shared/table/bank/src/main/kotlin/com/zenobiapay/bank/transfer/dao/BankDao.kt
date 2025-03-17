@@ -1,4 +1,4 @@
-package com.zenobiapay.dao
+package com.zenobiapay.bank.transfer.dao
 
 import com.zenobiapay.di.BANK_TABLE_NAME
 import com.zenobiapay.model.ddb.bank.BankAccountItem

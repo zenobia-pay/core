@@ -4,10 +4,10 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.model.transfer.GetTransferRequest
-import com.zenobiapay.dao.TransferDao
 import com.zenobiapay.api.generated.models.GetMerchantTransfer200Response
 import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.operation.Operation
+import com.zenobiapay.table.transfer.dao.TransferDao
 import javax.inject.Inject
 
 class GetMerchantTransferOperation @Inject constructor(private val objectMapper: ObjectMapper, private val transferDao: TransferDao) : Operation() {

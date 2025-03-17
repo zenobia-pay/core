@@ -5,13 +5,13 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.orum.OrumWrapper
-import com.zenobiapay.dao.TransferDao
 import com.zenobiapay.model.ddb.transfer.PayoutId
 import com.zenobiapay.orum.model.OrumCreateTransferRequest
 import com.zenobiapay.orum.model.TransferParticipant
 import com.zenobiapay.model.sqs.PayoutMessage
 import com.zenobiapay.payout.di.DaggerAppComponent
 import com.zenobiapay.payout.util.getFee
+import com.zenobiapay.table.transfer.dao.TransferDao
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 
