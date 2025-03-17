@@ -8,8 +8,8 @@ import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.model.ddb.transfer.PayoutId
 import com.zenobiapay.orum.model.OrumCreateTransferRequest
 import com.zenobiapay.orum.model.TransferParticipant
-import com.zenobiapay.model.sqs.PayoutMessage
 import com.zenobiapay.payout.di.DaggerAppComponent
+import com.zenobiapay.payout.model.PayoutMessage
 import com.zenobiapay.payout.util.getFee
 import com.zenobiapay.table.transfer.dao.TransferDao
 import io.github.oshai.kotlinlogging.KotlinLogging

@@ -23,9 +23,10 @@ import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
 import com.zenobiapay.table.transfer.model.TransferItem
 import com.zenobiapay.table.transfer.model.TransferStatus
 import com.zenobiapay.table.user.dao.UserDao
-import com.zenobiapay.util.getUtcDate
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
@@ -44,7 +45,7 @@ class FulfillTransferOperation @Inject constructor(
         val merchantId = request.merchantId ?: throw InvalidRequestException("Parameter merchantId not passed")
         val bankAccountId = request.bankAccountId ?: throw InvalidRequestException("Parameter bankAccountId not passed")
 
-        val date = getUtcDate().also { logger.info { "Using date $it" } }
+        val date = LocalDate.now(ZoneOffset.UTC).also { logger.info { "Using date $it" } }
         val transferRequestItem = transferDao.getMerchantTransfer(merchantId = merchantId, transferRequestId = transferRequestId)
         if (transferRequestItem.status != TransferStatus.NOT_STARTED) {
             throw TransferStatusException("Transfer status is no longer in NOT_STARTED state.")

@@ -1,6 +1,5 @@
-package com.zenobiapay.model.util
+package com.zenobiapay.payout.util
 
-import com.zenobiapay.util.SqsUtil
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test

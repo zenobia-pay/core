@@ -2,7 +2,7 @@ package com.zenobiapay.transfertableevent.logic
 
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent
 import com.zenobiapay.table.transfer.model.TransferItem
-import com.zenobiapay.util.WebhookHandler
+import com.zenobiapay.transfertableevent.util.WebhookHandler
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 

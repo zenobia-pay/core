@@ -1,4 +1,4 @@
-package com.zenobiapay.model.webhook
+package com.zenobiapay.transfertableevent.model
 
 import com.zenobiapay.api.generated.models.TransferStatus
 

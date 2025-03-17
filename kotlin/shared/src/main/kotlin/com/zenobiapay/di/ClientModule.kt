@@ -17,21 +17,6 @@ import javax.inject.Named
 @Module
 class ClientModule {
     @Provides
-    fun provideDynamoDbClient(@Named(SAM_LOCAL) samLocal: String?): DynamoDbClient {
-        val builder = DynamoDbClient.builder()
-            .region(Region.US_EAST_1)
-        if (samLocal != null) {
-            builder.endpointOverride(URI("http://dynamodb-local:8000"))
-        }
-        return builder.build()
-    }
-
-    @Provides
-    fun provideDynamoDbEnhancedClient(dynamoDbClient: DynamoDbClient) = DynamoDbEnhancedClient.builder()
-        .dynamoDbClient(dynamoDbClient)
-        .build()
-
-    @Provides
     fun provideSecretsManagerClient(): SecretsManagerClient {
         return SecretsManagerClient.create()
     }

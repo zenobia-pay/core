@@ -1,4 +1,4 @@
-package com.zenobiapay.model.event
+package com.zenobiapay.cognito.model
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty

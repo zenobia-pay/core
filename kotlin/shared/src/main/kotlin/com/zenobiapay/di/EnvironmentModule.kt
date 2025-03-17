@@ -9,7 +9,6 @@ const val SAM_LOCAL = "SAM_LOCAL"
 const val BANK_TABLE_NAME = "BANK_TABLE_NAME"
 const val TRANSFER_TABLE_NAME = "TRANSFER_TABLE_NAME"
 const val USER_TABLE_NAME = "USER_TABLE_NAME"
-const val CREDENTIALS_TABLE_NAME = "CREDENTIALS_TABLE_NAME"
 const val USER_POOL_ID = "USER_POOL_ID"
 const val PAYOUT_QUEUE_URL = "PAYOUT_QUEUE_URL"
 
@@ -20,22 +19,6 @@ class EnvironmentModule {
     @Provides
     @Named(SAM_LOCAL)
     fun provideSamLocal(): String? = System.getenv("AWS_SAM_LOCAL")
-
-    @Provides
-    @Named(BANK_TABLE_NAME)
-    fun provideBankTableName(): String = System.getenv("BANK_TABLE_NAME")!!
-
-    @Provides
-    @Named(TRANSFER_TABLE_NAME)
-    fun provideTransferTableName(): String = System.getenv("TRANSFER_TABLE_NAME")
-
-    @Provides
-    @Named(USER_TABLE_NAME)
-    fun provideUserTableName(): String = System.getenv("USER_TABLE_NAME")
-
-    @Provides
-    @Named(CREDENTIALS_TABLE_NAME)
-    fun provideCredentialsTableName(): String = System.getenv("CREDENTIALS_TABLE_NAME")
 
     @Provides
     @Named(USER_POOL_ID)

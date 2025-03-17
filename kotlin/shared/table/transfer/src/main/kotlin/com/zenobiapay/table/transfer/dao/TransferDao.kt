@@ -1,5 +1,6 @@
 package com.zenobiapay.table.transfer.dao
 
+import com.zenobiapay.table.MAX_LIST_ITEMS
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
 import com.zenobiapay.model.ddb.transfer.PayoutData
 import com.zenobiapay.model.ddb.transfer.PayoutId
@@ -27,8 +28,6 @@ import javax.inject.Inject
 import javax.inject.Named
 
 private val logger = KotlinLogging.logger {}
-
-const val MAX_LIST_ITEMS = 100 // TODO: fix
 
 class TransferDao @Inject constructor(
     private val client: DynamoDbEnhancedClient,

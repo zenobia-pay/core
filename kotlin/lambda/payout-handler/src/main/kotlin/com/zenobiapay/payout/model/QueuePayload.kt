@@ -1,4 +1,4 @@
-package com.zenobiapay.model.sqs
+package com.zenobiapay.payout.model
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 

@@ -1,4 +1,4 @@
-package com.zenobiapay.util
+package com.zenobiapay.transfertableevent.util
 
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue

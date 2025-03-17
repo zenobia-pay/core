@@ -7,6 +7,7 @@ include(
     "kotlin:shared:cognito",
     "kotlin:shared:orum",
     "kotlin:shared:plaid",
+    "kotlin:shared:table",
     "kotlin:shared:table:bank",
     "kotlin:shared:table:transfer",
     "kotlin:shared:table:user",

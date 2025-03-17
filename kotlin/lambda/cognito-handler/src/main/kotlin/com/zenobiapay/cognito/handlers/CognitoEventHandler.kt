@@ -8,9 +8,9 @@ import com.zenobiapay.cognito.CognitoUtil
 import com.zenobiapay.orum.OrumException
 import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.cognito.di.DaggerAppComponent
+import com.zenobiapay.cognito.model.CognitoNewUserEvent
 import com.zenobiapay.orum.model.Contact
 import com.zenobiapay.orum.model.OrumCreatePersonRequest
-import com.zenobiapay.model.event.CognitoNewUserEvent
 import com.zenobiapay.table.user.dao.UserDao
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject

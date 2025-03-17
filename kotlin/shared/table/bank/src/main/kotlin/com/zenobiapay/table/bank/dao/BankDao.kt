@@ -1,9 +1,9 @@
 package com.zenobiapay.table.bank.dao
 
-import com.zenobiapay.di.BANK_TABLE_NAME
+import com.zenobiapay.table.MAX_LIST_ITEMS
 import com.zenobiapay.table.bank.model.BankAccountItem
 import com.zenobiapay.table.bank.model.BankData
-import com.zenobiapay.util.MAX_LIST_ITEMS
+import com.zenobiapay.table.di.BANK_TABLE_NAME
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
