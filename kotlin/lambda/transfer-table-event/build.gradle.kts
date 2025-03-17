@@ -1,9 +1,10 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("jvm") version "2.1.0"
-    kotlin("plugin.serialization") version "1.9.21"
-    id("com.google.devtools.ksp") version "2.1.0-1.0.29"
+    alias(libs.plugins.jvm)
+    alias(libs.plugins.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.shadow)
 }
 
 java {
@@ -27,6 +28,7 @@ repositories {
 
 dependencies {
     api(project(":kotlin:shared"))
+    api(project(":kotlin:shared:table:transfer"))
     api("org.jetbrains.kotlin:kotlin-stdlib")
     api("com.amazonaws:aws-lambda-java-core:1.2.3")
     api("com.amazonaws:aws-lambda-java-events:3.11.3")
@@ -87,17 +89,19 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
 }
 
-tasks.jar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    manifest {
-        attributes["Main-Class"] = "com.zenobiapay.handlers.TransferHandler"
+tasks {
+    shadowJar {
+        archiveBaseName.set("lambda")
+        archiveClassifier.set("")
+        archiveVersion.set("")
+        manifest {
+            attributes(mapOf("Main-Class" to "com.zenobiapay.transfertableevent.handlers.TransferTableEventHandler"))
+        }
     }
-
-    from(sourceSets.main.get().output)
-
-    dependsOn(configurations.runtimeClasspath)
-    from({
-        configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }
-    })
+    jar {
+        enabled = false
+    }
+    build {
+        dependsOn(shadowJar)
+    }
 }

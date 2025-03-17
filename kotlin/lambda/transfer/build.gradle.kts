@@ -1,9 +1,10 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("jvm") version "2.1.0"
-    kotlin("plugin.serialization") version "1.9.21"
-    id("com.google.devtools.ksp") version "2.1.0-1.0.29"
+    alias(libs.plugins.jvm)
+    alias(libs.plugins.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.shadow)
 }
 
 java {
@@ -62,4 +63,21 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks {
+    shadowJar {
+        archiveBaseName.set("lambda")
+        archiveClassifier.set("")
+        archiveVersion.set("")
+        manifest {
+            attributes(mapOf("Main-Class" to "com.zenobiapay.transfer.handlers.TransferHandler"))
+        }
+    }
+    jar {
+        enabled = false
+    }
+    build {
+        dependsOn(shadowJar)
+    }
 }
