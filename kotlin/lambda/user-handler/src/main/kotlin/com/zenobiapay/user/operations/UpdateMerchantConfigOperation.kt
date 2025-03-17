@@ -5,11 +5,11 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.model.EmptyApiResponse
 import com.zenobiapay.api.model.user.UpdateMerchantConfigRequest
-import com.zenobiapay.bank.transfer.dao.BankDao
-import com.zenobiapay.dao.UserDao
+import com.zenobiapay.table.bank.dao.BankDao
 import com.zenobiapay.model.cognito.UserPoolGroup
-import com.zenobiapay.model.exception.ResourceNotFoundException
+import com.zenobiapay.api.exception.ResourceNotFoundException
 import com.zenobiapay.operation.Operation
+import com.zenobiapay.table.user.dao.UserDao
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 

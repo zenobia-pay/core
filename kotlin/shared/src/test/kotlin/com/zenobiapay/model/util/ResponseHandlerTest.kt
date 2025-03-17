@@ -2,9 +2,9 @@ package com.zenobiapay.model.util
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.zenobiapay.api.generated.models.ErrorResponse
-import com.zenobiapay.model.exception.ResourceNotFoundException
-import com.zenobiapay.model.exception.UnauthorizedException
-import com.zenobiapay.model.exception.UnknownPathException
+import com.zenobiapay.api.exception.ResourceNotFoundException
+import com.zenobiapay.api.exception.UnauthorizedException
+import com.zenobiapay.api.exception.UnknownPathException
 import com.zenobiapay.util.ResponseHandler
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals

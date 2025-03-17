@@ -32,6 +32,7 @@ dependencies {
     implementation(project(":kotlin:shared:orum"))
     implementation(project(":kotlin:shared:table:bank"))
     implementation(project(":kotlin:shared:table:transfer"))
+    implementation(project(":kotlin:shared:table:user"))
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("com.amazonaws:aws-lambda-java-core:1.2.3")

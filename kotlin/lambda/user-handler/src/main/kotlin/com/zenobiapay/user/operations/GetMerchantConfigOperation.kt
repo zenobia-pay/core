@@ -2,11 +2,11 @@ package com.zenobiapay.user.operations
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
-import com.zenobiapay.dao.UserDao
 import com.zenobiapay.api.generated.models.GetMerchantConfig200Response
 import com.zenobiapay.api.generated.models.Location
 import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.operation.Operation
+import com.zenobiapay.table.user.dao.UserDao
 import javax.inject.Inject
 
 class GetMerchantConfigOperation @Inject constructor(private val userDao: UserDao) : Operation() {

@@ -1,7 +1,7 @@
 package com.zenobiapay.table.transfer.model
 
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue
-import com.zenobiapay.model.exception.InvalidRequestException
+import com.zenobiapay.api.exception.InvalidRequestException
 import software.amazon.awssdk.enhanced.dynamodb.extensions.annotations.DynamoDbVersionAttribute
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey

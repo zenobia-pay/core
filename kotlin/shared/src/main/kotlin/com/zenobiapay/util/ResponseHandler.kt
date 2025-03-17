@@ -5,10 +5,10 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.generated.models.ErrorResponse
-import com.zenobiapay.model.exception.ResourceNotFoundException
-import com.zenobiapay.model.exception.UnauthorizedException
-import com.zenobiapay.model.exception.UnknownPathException
-import com.zenobiapay.model.exception.ZenobiaExternalException
+import com.zenobiapay.api.exception.ResourceNotFoundException
+import com.zenobiapay.api.exception.UnauthorizedException
+import com.zenobiapay.api.exception.UnknownPathException
+import com.zenobiapay.api.exception.ZenobiaExternalException
 import com.zenobiapay.operation.Operation
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject

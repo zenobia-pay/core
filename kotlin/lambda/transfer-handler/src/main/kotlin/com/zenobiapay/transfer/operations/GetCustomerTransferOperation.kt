@@ -5,7 +5,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.model.transfer.GetTransferRequest
 import com.zenobiapay.model.cognito.UserPoolGroup
-import com.zenobiapay.model.exception.ResourceNotFoundException
+import com.zenobiapay.api.exception.ResourceNotFoundException
 import com.zenobiapay.operation.Operation
 import com.zenobiapay.table.transfer.dao.TransferDao
 import javax.inject.Inject

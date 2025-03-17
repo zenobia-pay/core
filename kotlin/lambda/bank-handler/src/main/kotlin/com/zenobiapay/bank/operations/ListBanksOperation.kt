@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.model.bank.ListBanksRequest
 import com.zenobiapay.api.generated.models.ListBankAccounts200Response
 import com.zenobiapay.api.generated.models.ListBankAccounts200ResponseItemsInner
-import com.zenobiapay.bank.transfer.dao.BankDao
+import com.zenobiapay.table.bank.dao.BankDao
 import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.operation.Operation
 import javax.inject.Inject

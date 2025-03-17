@@ -1,4 +1,4 @@
-package com.zenobiapay.model.ddb.user
+package com.zenobiapay.table.user.model
 
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean

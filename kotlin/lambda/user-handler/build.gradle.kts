@@ -30,6 +30,7 @@ dependencies {
     api(project(":kotlin:shared"))
     implementation(project(":kotlin:shared:api"))
     implementation(project(":kotlin:shared:table:bank"))
+    implementation(project(":kotlin:shared:table:user"))
     api("org.jetbrains.kotlin:kotlin-stdlib")
     api("com.amazonaws:aws-lambda-java-core:1.2.3")
     api("com.amazonaws:aws-lambda-java-events:3.11.3")

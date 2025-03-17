@@ -3,7 +3,7 @@ package com.zenobiapay.operation
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.zenobiapay.model.cognito.UserPoolGroup
-import com.zenobiapay.model.exception.UnauthorizedException
+import com.zenobiapay.api.exception.UnauthorizedException
 
 abstract class Operation {
     abstract fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any

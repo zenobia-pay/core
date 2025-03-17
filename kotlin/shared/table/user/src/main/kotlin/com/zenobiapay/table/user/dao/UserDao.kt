@@ -1,10 +1,11 @@
-package com.zenobiapay.dao
+package com.zenobiapay.table.user.dao
 
+import com.zenobiapay.api.generated.models.Location as ApiLocation
 import com.zenobiapay.di.USER_TABLE_NAME
-import com.zenobiapay.model.ddb.user.Location
-import com.zenobiapay.model.ddb.user.MerchantItem
-import com.zenobiapay.model.ddb.user.UserItem
-import com.zenobiapay.model.ddb.user.UserItemData
+import com.zenobiapay.table.user.model.Location
+import com.zenobiapay.table.user.model.MerchantItem
+import com.zenobiapay.table.user.model.UserItem
+import com.zenobiapay.table.user.model.UserItemData
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.Key
@@ -13,7 +14,6 @@ import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException
 import javax.inject.Inject
 import javax.inject.Named
-import com.zenobiapay.api.generated.models.Location as ApiLocation
 
 private val logger = KotlinLogging.logger {}
 

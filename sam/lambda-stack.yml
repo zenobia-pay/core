@@ -608,7 +608,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: BankHandler
-      CodeUri: ../kotlin/lambda/bank/build/libs/lambda.jar
+      CodeUri: ../kotlin/lambda/bank-handler/build/libs/lambda.jar
       Handler: com.zenobiapay.bank.handlers.BankHandler::handleRequest
       MemorySize: 2048
       AutoPublishAlias: prod
@@ -660,7 +660,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: TransferHandler
-      CodeUri: ../kotlin/lambda/transfer/build/libs/lambda.jar
+      CodeUri: ../kotlin/lambda/transfer-handler/build/libs/lambda.jar
       Handler: com.zenobiapay.transfer.handlers.TransferHandler::handleRequest
       MemorySize: 2048
       AutoPublishAlias: prod
@@ -754,7 +754,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: UserHandler
-      CodeUri: ../kotlin/lambda/user/build/libs/lambda.jar
+      CodeUri: ../kotlin/lambda/user-handler/build/libs/lambda.jar
       Handler: com.zenobiapay.user.handlers.UserHandler::handleRequest
       MemorySize: 2048
 #      ProvisionedConcurrencyConfig:
@@ -805,7 +805,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: CognitoEventHandler
-      CodeUri: ../kotlin/lambda/cognito/build/libs/lambda.jar
+      CodeUri: ../kotlin/lambda/cognito-handler/build/libs/lambda.jar
       Handler: com.zenobiapay.cognito.handlers.CognitoEventHandler::handleRequest
       Environment:
         Variables:
@@ -842,7 +842,7 @@ Resources:
       FunctionName: TransferTableEventHandler
       Handler: com.zenobiapay.transfertableevent.handlers.TransferTableEventHandler::handleRequest
       Runtime: java17
-      CodeUri: ../kotlin/lambda/transfer-table-event/build/libs/lambda.jar
+      CodeUri: ../kotlin/lambda/transfer-event-handler/build/libs/lambda.jar
       Policies:
         - DynamoDBStreamReadPolicy:
             TableName: !Ref TransferTableName
