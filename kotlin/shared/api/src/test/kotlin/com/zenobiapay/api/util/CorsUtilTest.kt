@@ -1,6 +1,5 @@
-package com.zenobiapay.model.util
+package com.zenobiapay.api.util
 
-import com.zenobiapay.util.getCorsHeaders
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 

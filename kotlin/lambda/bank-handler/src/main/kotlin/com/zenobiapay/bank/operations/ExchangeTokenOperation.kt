@@ -8,9 +8,9 @@ import com.zenobiapay.api.model.ApiResponse
 import com.zenobiapay.api.model.EmptyApiResponse
 import com.zenobiapay.api.model.bank.ExchangeTokenRequest
 import com.zenobiapay.table.bank.dao.BankDao
-import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.api.exception.InvalidRequestException
-import com.zenobiapay.operation.Operation
+import com.zenobiapay.api.model.Operation
+import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.orum.model.OrumCreateExternalAccountRequest
 import com.zenobiapay.plaid.PlaidWrapper

@@ -1,4 +1,4 @@
-package com.zenobiapay.util
+package com.zenobiapay.api.util
 
 fun getCorsHeaders() = mapOf(
     "Access-Control-Allow-Origin" to "https://zenobiapay.com",

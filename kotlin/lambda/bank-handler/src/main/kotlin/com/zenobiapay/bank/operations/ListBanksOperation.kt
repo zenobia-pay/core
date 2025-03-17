@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.model.bank.ListBanksRequest
 import com.zenobiapay.api.generated.models.ListBankAccounts200Response
 import com.zenobiapay.api.generated.models.ListBankAccounts200ResponseItemsInner
+import com.zenobiapay.api.model.Operation
+import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.table.bank.dao.BankDao
-import com.zenobiapay.model.cognito.UserPoolGroup
-import com.zenobiapay.operation.Operation
 import javax.inject.Inject
 
 class ListBanksOperation @Inject constructor(private val objectMapper: ObjectMapper, private val bankDao: BankDao) : Operation() {

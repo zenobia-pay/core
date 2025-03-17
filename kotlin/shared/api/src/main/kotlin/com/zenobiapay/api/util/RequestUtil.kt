@@ -1,9 +1,9 @@
-package com.zenobiapay.util
+package com.zenobiapay.api.util
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.model.cognito.UserPoolGroup
+import com.zenobiapay.api.model.cognito.UserPoolGroup
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}

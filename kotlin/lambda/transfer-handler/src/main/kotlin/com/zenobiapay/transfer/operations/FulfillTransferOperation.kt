@@ -10,13 +10,13 @@ import com.zenobiapay.table.bank.dao.BankDao
 import com.zenobiapay.orum.model.OrumCreateTransferRequest
 import com.zenobiapay.orum.model.OrumCreateTransferResponse
 import com.zenobiapay.orum.model.TransferParticipant
-import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.api.exception.InvalidRequestException
 import com.zenobiapay.api.exception.ResourceNotFoundException
 import com.zenobiapay.api.exception.TransferFailedException
 import com.zenobiapay.api.exception.TransferStatusException
-import com.zenobiapay.operation.Operation
-import com.zenobiapay.util.CognitoUtil
+import com.zenobiapay.api.model.Operation
+import com.zenobiapay.api.model.cognito.UserPoolGroup
+import com.zenobiapay.cognito.CognitoUtil
 import com.zenobiapay.orum.util.WaiterFailedException
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity

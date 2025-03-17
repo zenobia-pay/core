@@ -3,10 +3,10 @@ package com.zenobiapay.payout.handlers
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.cognito.CognitoUtil
 import com.zenobiapay.di.PAYOUT_QUEUE_URL
 import com.zenobiapay.model.sqs.PayoutMessage
 import com.zenobiapay.payout.di.DaggerAppComponent
-import com.zenobiapay.util.CognitoUtil
 import com.zenobiapay.util.SqsUtil
 import com.zenobiapay.util.getUtcDate
 import io.github.oshai.kotlinlogging.KotlinLogging

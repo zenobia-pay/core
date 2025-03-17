@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.exception.UnknownPathException
+import com.zenobiapay.api.util.ResponseHandler
 import com.zenobiapay.transfer.di.DaggerAppComponent
 import com.zenobiapay.transfer.operations.CreateTransferRequestOperation
 import com.zenobiapay.transfer.operations.FulfillTransferOperation
@@ -13,7 +14,6 @@ import com.zenobiapay.transfer.operations.GetCustomerTransferOperation
 import com.zenobiapay.transfer.operations.GetMerchantTransferOperation
 import com.zenobiapay.transfer.operations.ListCustomerTransfersOperation
 import com.zenobiapay.transfer.operations.ListMerchantTransfersOperation
-import com.zenobiapay.util.ResponseHandler
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 

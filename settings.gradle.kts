@@ -1,7 +1,10 @@
+import org.gradle.kotlin.dsl.project
+
 rootProject.name = "zenobiapay-backend"
 include(
     "kotlin:shared",
     "kotlin:shared:api",
+    "kotlin:shared:cognito",
     "kotlin:shared:orum",
     "kotlin:shared:plaid",
     "kotlin:shared:table:bank",

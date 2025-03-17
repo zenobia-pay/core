@@ -3,15 +3,15 @@ package com.zenobiapay.cognito.handlers
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.api.model.cognito.UserPoolGroup
+import com.zenobiapay.cognito.CognitoUtil
 import com.zenobiapay.orum.OrumException
 import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.cognito.di.DaggerAppComponent
 import com.zenobiapay.orum.model.Contact
 import com.zenobiapay.orum.model.OrumCreatePersonRequest
-import com.zenobiapay.model.cognito.UserPoolGroup
 import com.zenobiapay.model.event.CognitoNewUserEvent
 import com.zenobiapay.table.user.dao.UserDao
-import com.zenobiapay.util.CognitoUtil
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 

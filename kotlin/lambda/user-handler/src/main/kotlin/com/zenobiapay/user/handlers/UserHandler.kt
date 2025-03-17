@@ -6,10 +6,10 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.exception.UnknownPathException
+import com.zenobiapay.api.util.ResponseHandler
 import com.zenobiapay.user.di.DaggerAppComponent
 import com.zenobiapay.user.operations.GetMerchantConfigOperation
 import com.zenobiapay.user.operations.UpdateMerchantConfigOperation
-import com.zenobiapay.util.ResponseHandler
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 

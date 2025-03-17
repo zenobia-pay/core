@@ -1,4 +1,4 @@
-package com.zenobiapay.model.cognito
+package com.zenobiapay.api.model.cognito
 
 enum class UserPoolGroup(val value: String) {
     MERCHANT("MerchantGroup"),

@@ -8,9 +8,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.bank.di.DaggerAppComponent
 import com.zenobiapay.bank.operations.CreateLinkTokenOperation
 import com.zenobiapay.api.exception.UnknownPathException
+import com.zenobiapay.api.util.ResponseHandler
 import com.zenobiapay.bank.operations.ExchangeTokenOperation
 import com.zenobiapay.bank.operations.ListBanksOperation
-import com.zenobiapay.util.ResponseHandler
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 
