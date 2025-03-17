@@ -29,7 +29,6 @@ dependencies {
     implementation(project(":kotlin:shared:api"))
 
     api(libs.kotlin.stdlib)
-    implementation(libs.kotlin.coroutines)
     api(libs.dagger)
     runtimeOnly(libs.dagger.compiler)
     ksp(libs.dagger.compiler)
@@ -39,10 +38,8 @@ dependencies {
     runtimeOnly(libs.jackson.core)
     testImplementation(libs.jackson.kotlin)
     api(libs.jackson.databind)
-    api(libs.jackson.annotations)
 
     // Http
-    implementation(libs.okhttp)
     api(platform(libs.okhttp.bom))
 
     // Logging

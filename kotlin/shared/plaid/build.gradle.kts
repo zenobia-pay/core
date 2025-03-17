@@ -27,7 +27,6 @@ repositories {
 
 dependencies {
     api(libs.kotlin.stdlib)
-    implementation(libs.kotlin.coroutines)
     api(libs.dagger)
     runtimeOnly(libs.dagger.compiler)
     ksp(libs.dagger.compiler)

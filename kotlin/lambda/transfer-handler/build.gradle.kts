@@ -27,7 +27,7 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":kotlin:shared"))
+    api(project(":kotlin:shared"))
     implementation(project(":kotlin:shared:api"))
     implementation(project(":kotlin:shared:orum"))
     implementation(project(":kotlin:shared:cognito"))
@@ -36,38 +36,48 @@ dependencies {
     implementation(project(":kotlin:shared:table:transfer"))
     implementation(project(":kotlin:shared:table:user"))
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib")
-    implementation("com.amazonaws:aws-lambda-java-core:1.2.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    implementation("com.amazonaws:aws-lambda-java-events:3.11.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    api(libs.kotlin.stdlib)
+    api(libs.lambda.core)
+    api(libs.lambda.events)
 
     // Json processing
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.+")
+    api(libs.jackson.databind)
+    implementation(libs.jackson.kotlin)
 
     // Injection
-    implementation("com.google.dagger:dagger:2.48")
-    implementation("com.google.dagger:dagger-compiler:2.54")
-    implementation("com.google.dagger:dagger-compiler:2.51.1")
-    ksp("com.google.dagger:dagger-compiler:2.51.1")
+    api(libs.dagger)
+    ksp(libs.dagger.compiler)
+    api(libs.javax.inject)
+
+    // JSON
+    implementation(libs.jackson.core)
 
     // Logging
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
-    implementation("org.slf4j:slf4j-simple:2.0.3")
-
-    // Testing
-    testImplementation("io.mockk:mockk:1.13.16")
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+    implementation(libs.kotlin.logging)
+    implementation(libs.slf4j)
 
     // AWS
-    api("software.amazon.awssdk:secretsmanager:2.30.22")
+    api(libs.aws.dynamodb)
+    api(libs.aws.dynamodb.enhanced)
+
+    // Testing
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.mockk.dsl)
+    testImplementation(libs.junit.api)
+    testImplementation(libs.junit)
 }
 
 tasks.test {
     useJUnitPlatform()
+}
+
+sourceSets.main {
+    java.srcDir("${layout.buildDirectory}/generated/src/main/kotlin")
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
 }
 
 tasks {
@@ -76,7 +86,7 @@ tasks {
         archiveClassifier.set("")
         archiveVersion.set("")
         manifest {
-            attributes(mapOf("Main-Class" to "com.zenobiapay.transfer.handlers.TransferHandler"))
+            attributes(mapOf("Main-Class" to "com.zenobiapay.user.handlers.UserHandler"))
         }
     }
     jar {

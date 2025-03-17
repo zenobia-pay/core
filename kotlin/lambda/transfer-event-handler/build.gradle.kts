@@ -28,55 +28,39 @@ repositories {
 
 dependencies {
     api(project(":kotlin:shared"))
-    api(project(":kotlin:shared:api"))
-    api(project(":kotlin:shared:table"))
-    api(project(":kotlin:shared:table:transfer"))
-    api("org.jetbrains.kotlin:kotlin-stdlib")
-    api("com.amazonaws:aws-lambda-java-core:1.2.3")
-    api("com.amazonaws:aws-lambda-java-events:3.11.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    api("com.squareup.okhttp3:okhttp:4.9.2")
+    implementation(project(":kotlin:shared:api"))
+    implementation(project(":kotlin:shared:table"))
+    implementation(project(":kotlin:shared:table:transfer"))
+
+    api(libs.kotlin.stdlib)
+    api(libs.lambda.core)
+    api(libs.lambda.events)
 
     // Json processing
-    api("com.fasterxml.jackson.core:jackson-databind:2.18.2")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.+")
-    api("com.fasterxml.jackson.core:jackson-annotations:2.18.3")
+    api(libs.jackson.databind)
+    implementation(libs.jackson.kotlin)
 
     // Injection
-    api("com.google.dagger:dagger:2.48")
-    runtimeOnly("com.google.dagger:dagger-compiler:2.54")
-    ksp("com.google.dagger:dagger-compiler:2.51.1")
-    api("javax.inject:javax.inject:1")
-    implementation("com.fasterxml.jackson.core:jackson-core:2.18.3")
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    api(libs.dagger)
+    ksp(libs.dagger.compiler)
+    api(libs.javax.inject)
+
+    // JSON
+    implementation(libs.jackson.core)
 
     // Logging
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
-    implementation("org.slf4j:slf4j-simple:2.0.3")
+    implementation(libs.kotlin.logging)
+    implementation(libs.slf4j)
 
     // AWS
-    implementation("software.amazon.awssdk:aws-core:2.30.22")
-    implementation("software.amazon.awssdk:regions:2.30.22")
-    implementation("software.amazon.awssdk:sdk-core:2.30.22")
-    testImplementation("software.amazon.awssdk:utils:2.30.22")
-
-    api("software.amazon.awssdk:dynamodb:2.29.45")
-    api("software.amazon.awssdk:dynamodb-enhanced:2.29.47")
-    api("software.amazon.awssdk:secretsmanager:2.29.45")
-    api("software.amazon.awssdk:cognitoidentityprovider:2.29.31")
-    api("software.amazon.awssdk:sqs:2.30.22")
-    testImplementation("software.amazon.awssdk:utils:2.30.22")
+    api(libs.aws.sqs)
 
     // Testing
-    testImplementation("org.jetbrains.kotlin:kotlin-test:2.1.0")
-    testImplementation("io.mockk:mockk:1.13.16")
-    testImplementation("io.mockk:mockk-dsl:1.13.16")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
-
-    // Plaid
-    api("com.plaid:plaid-java:29.0.0")
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.mockk.dsl)
+    testImplementation(libs.junit.api)
+    testImplementation(libs.junit)
 }
 
 tasks.test {
@@ -97,7 +81,7 @@ tasks {
         archiveClassifier.set("")
         archiveVersion.set("")
         manifest {
-            attributes(mapOf("Main-Class" to "com.zenobiapay.transfertableevent.handlers.TransferTableEventHandler"))
+            attributes(mapOf("Main-Class" to "com.zenobiapay.user.handlers.UserHandler"))
         }
     }
     jar {

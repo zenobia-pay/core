@@ -30,18 +30,14 @@ dependencies {
     api(libs.kotlin.stdlib)
 
     // Json processing
-    implementation(libs.jackson.core)
-    implementation(libs.jackson.kotlin)
-    api(libs.jackson.databind)
-    api(libs.jackson.annotations)
+    runtimeOnly(libs.jackson.core)
+    runtimeOnly(libs.jackson.kotlin)
+    runtimeOnly(libs.jackson.databind)
 
     // Injection
     api(libs.dagger)
     ksp(libs.dagger.compiler)
     api(libs.javax.inject)
-
-    // HTTP
-    api(libs.okhttp)
 
     // Logging
     implementation(libs.kotlin.logging)
@@ -51,7 +47,6 @@ dependencies {
     implementation(libs.aws.core)
     implementation(libs.aws.regions)
     implementation(libs.aws.sdk.core)
-    testImplementation(libs.aws.sdk.utils)
 
     api(libs.aws.dynamodb)
     api(libs.aws.dynamodb.enhanced)
@@ -62,9 +57,6 @@ dependencies {
     testImplementation(libs.mockk.dsl)
     testImplementation(libs.junit)
     testImplementation(libs.junit.api)
-
-    // Plaid
-    api(libs.plaid)
 }
 
 tasks.test {

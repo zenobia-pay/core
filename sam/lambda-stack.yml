@@ -613,8 +613,6 @@ Resources:
       MemorySize: 2048
       AutoPublishAlias: prod
       AutoPublishAliasAllProperties: true
-#      ProvisionedConcurrencyConfig:
-#        ProvisionedConcurrentExecutions: 5
       Environment:
         Variables:
           BANK_TABLE_NAME: !Ref BankTableName
@@ -665,10 +663,6 @@ Resources:
       MemorySize: 2048
       AutoPublishAlias: prod
       AutoPublishAliasAllProperties: true
-#      ProvisionedConcurrencyConfig:
-#        ProvisionedConcurrentExecutions: 3
-#      AutoPublishAlias: live
-#      AutoPublishAliasAllProperties: true
       Environment:
         Variables:
           TRANSFER_TABLE_NAME: !Ref TransferTableName
@@ -757,8 +751,6 @@ Resources:
       CodeUri: ../kotlin/lambda/user-handler/build/libs/lambda.jar
       Handler: com.zenobiapay.user.handlers.UserHandler::handleRequest
       MemorySize: 2048
-#      ProvisionedConcurrencyConfig:
-#        ProvisionedConcurrentExecutions: 5
       AutoPublishAlias: prod
       AutoPublishAliasAllProperties: true
       Environment:
