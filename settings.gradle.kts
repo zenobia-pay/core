@@ -4,10 +4,10 @@ include(
     "kotlin:shared:api",
     "kotlin:shared:orum",
     "kotlin:shared:table:transfer",
-    "kotlin:lambda:bank",
-    "kotlin:lambda:transfer",
-    "kotlin:lambda:user",
-    "kotlin:lambda:payout",
-    "kotlin:lambda:cognito",
-    "kotlin:lambda:transfer-table-event"
+    "kotlin:lambda:bank-handler",
+    "kotlin:lambda:transfer-handler",
+    "kotlin:lambda:user-handler",
+    "kotlin:lambda:payout-handler",
+    "kotlin:lambda:cognito-handler",
+    "kotlin:lambda:transfer-event-handler"
 )
