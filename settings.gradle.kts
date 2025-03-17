@@ -3,6 +3,7 @@ include(
     "kotlin:shared",
     "kotlin:shared:api",
     "kotlin:shared:orum",
+    "kotlin:shared:plaid",
     "kotlin:shared:table:bank",
     "kotlin:shared:table:transfer",
     "kotlin:shared:table:user",

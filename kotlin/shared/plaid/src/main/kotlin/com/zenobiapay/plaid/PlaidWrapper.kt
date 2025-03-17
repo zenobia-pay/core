@@ -1,4 +1,4 @@
-package com.zenobiapay.util
+package com.zenobiapay.plaid
 
 import com.plaid.client.model.AccountBase
 import com.plaid.client.model.AccountsGetRequest
@@ -24,7 +24,7 @@ private val logger = KotlinLogging.logger {}
 
 class PlaidException(message: String) : Exception(message)
 
-class PlaidUtil @Inject constructor(private val plaidApi: PlaidApi) {
+class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
     fun createLinkToken(userId: String): LinkTokenCreateResponse {
         val user = LinkTokenCreateRequestUser()
             .clientUserId(userId)

@@ -13,14 +13,14 @@ import com.zenobiapay.api.exception.InvalidRequestException
 import com.zenobiapay.operation.Operation
 import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.orum.model.OrumCreateExternalAccountRequest
-import com.zenobiapay.util.PlaidUtil
+import com.zenobiapay.plaid.PlaidWrapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
 class ExchangeTokenOperation @Inject constructor(
-    private val plaidUtil: PlaidUtil,
+    private val plaidWrapper: PlaidWrapper,
     private val orumWrapper: OrumWrapper,
     private val objectMapper: ObjectMapper,
     private val bankDao: BankDao
@@ -28,10 +28,10 @@ class ExchangeTokenOperation @Inject constructor(
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): ApiResponse {
         logger.info { "Got input body ${input.body}" }
         val request = ExchangeTokenRequest.from(input.body, objectMapper)
-        val exchangeResponse = plaidUtil.exchangeLinkToken(userId, request.linkToken)
+        val exchangeResponse = plaidWrapper.exchangeLinkToken(userId, request.linkToken)
         logger.info { "Got exchange response $exchangeResponse" }
 
-        val accountsToAch = plaidUtil.getZippedAccountsAndAch(exchangeResponse.accessToken)
+        val accountsToAch = plaidWrapper.getZippedAccountsAndAch(exchangeResponse.accessToken)
 
         accountsToAch.forEach { (account, ach) ->
             logger.info { "Processing account $account, ach $ach" }

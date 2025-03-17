@@ -1,4 +1,4 @@
-package com.zenobiapay.model.plaid
+package com.zenobiapay.plaid.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
