@@ -4,8 +4,8 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.cognito.CognitoUtil
-import com.zenobiapay.di.PAYOUT_QUEUE_URL
 import com.zenobiapay.payout.di.DaggerAppComponent
+import com.zenobiapay.payout.di.PAYOUT_QUEUE_URL
 import com.zenobiapay.payout.model.PayoutMessage
 import com.zenobiapay.payout.util.SqsUtil
 import io.github.oshai.kotlinlogging.KotlinLogging

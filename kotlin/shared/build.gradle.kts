@@ -26,16 +26,12 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":kotlin:shared:api"))
     api(libs.kotlin.stdlib)
-    api(libs.lambda.core)
-    api(libs.lambda.events)
 
     // Json processing
-    implementation(libs.jackson.core)
+    runtimeOnly(libs.jackson.core)
     implementation(libs.jackson.kotlin)
     api(libs.jackson.databind)
-    api(libs.jackson.annotations)
 
     // Injection
     api(libs.dagger)
@@ -46,30 +42,7 @@ dependencies {
     api(libs.okhttp)
 
     // Logging
-    implementation(libs.kotlin.logging)
-    implementation(libs.slf4j)
-
-    // AWS
-    implementation(libs.aws.core)
-    implementation(libs.aws.regions)
-    implementation(libs.aws.sdk.core)
-    testImplementation(libs.aws.sdk.utils)
-
-    api(libs.aws.dynamodb)
-    api(libs.aws.dynamodb.enhanced)
-    api(libs.aws.secretsmanager)
-    api(libs.aws.cognito)
-    api(libs.aws.sqs)
-
-    // Testing
-    testImplementation(libs.kotlin.test)
-    testImplementation(libs.mockk)
-    testImplementation(libs.mockk.dsl)
-    testImplementation(libs.junit)
-    testImplementation(libs.junit.api)
-
-    // Plaid
-    api(libs.plaid)
+    runtimeOnly(libs.slf4j)
 }
 
 tasks.test {

@@ -47,19 +47,7 @@ dependencies {
 
     // Logging
     implementation(libs.kotlin.logging)
-    implementation(libs.slf4j)
-
-    // AWS
-    implementation(libs.aws.core)
-    implementation(libs.aws.regions)
-    implementation(libs.aws.sdk.core)
-    testImplementation(libs.aws.sdk.utils)
-
-    api(libs.aws.dynamodb)
-    api(libs.aws.dynamodb.enhanced)
-    api(libs.aws.secretsmanager)
-    api(libs.aws.cognito)
-    api(libs.aws.sqs)
+    runtimeOnly(libs.slf4j)
 
     // Testing
     testImplementation(libs.kotlin.test)
@@ -67,9 +55,6 @@ dependencies {
     testImplementation(libs.mockk.dsl)
     testImplementation(libs.junit)
     testImplementation(libs.junit.api)
-
-    // Plaid
-    api(libs.plaid)
 }
 
 tasks.test {

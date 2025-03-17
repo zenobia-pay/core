@@ -1,7 +1,7 @@
 package com.zenobiapay.table.user.dao
 
+import com.zenobiapay.table.di.USER_TABLE_NAME
 import com.zenobiapay.api.generated.models.Location as ApiLocation
-import com.zenobiapay.di.USER_TABLE_NAME
 import com.zenobiapay.table.user.model.Location
 import com.zenobiapay.table.user.model.MerchantItem
 import com.zenobiapay.table.user.model.UserItem

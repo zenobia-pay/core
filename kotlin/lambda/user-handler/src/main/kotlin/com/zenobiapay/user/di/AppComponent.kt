@@ -1,12 +1,11 @@
 package com.zenobiapay.user.di
 
-import com.zenobiapay.di.ClientModule
-import com.zenobiapay.di.EnvironmentModule
+import com.zenobiapay.di.SharedModule
 import com.zenobiapay.table.di.TableModule
 import com.zenobiapay.user.handlers.UserHandler
 import dagger.Component
 
-@Component(modules = [EnvironmentModule::class, ClientModule::class, TableModule::class])
+@Component(modules = [SharedModule::class, TableModule::class])
 interface AppComponent {
     fun inject(handler: UserHandler)
 }

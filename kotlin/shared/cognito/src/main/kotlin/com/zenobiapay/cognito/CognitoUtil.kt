@@ -1,7 +1,7 @@
 package com.zenobiapay.cognito
 
 import com.zenobiapay.api.model.cognito.UserPoolGroup
-import com.zenobiapay.di.USER_POOL_ID
+import com.zenobiapay.cognito.di.USER_POOL_ID
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType
