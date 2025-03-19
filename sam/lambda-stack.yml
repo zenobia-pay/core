@@ -63,9 +63,6 @@ Resources:
             Identity:
               Headers: 
                 - Authorization
-            # Identity:
-            #   QueryStrings:
-            #     - auth
       Cors:
         AllowCredentials: true
         AllowMethods: "'GET,POST,OPTIONS'"
@@ -94,6 +91,10 @@ Resources:
       Timeout: 5
       SnapStart:
         ApplyOn: None
+      Environment:
+        Variables:
+          AUTH_DOMAIN: dev-u0ert1rxhkdmhwy8.us.auth0.com
+          AUDIENCE: https://zenobiapay.com
 
   ApiGatewayLogGroup:
     Type: AWS::Logs::LogGroup
@@ -209,24 +210,18 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /create-link-token
             Method: GET
-            # Auth:
-            #   Authorizer: CustomAuthorizer
         GetExchangeToken:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /exchange-token
             Method: POST
-            # Auth:
-              # Authorizer: CustomAuthorizer
         ListBanks:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /list-bank-accounts
             Method: GET
-            # Auth:
-            #   Authorizer: CustomAuthorizer
 
   TransferHandlerFunction:
     Type: AWS::Serverless::Function
@@ -275,54 +270,36 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /create-transfer-request
             Method: POST
-            # Auth:
-            #   Authorizer: CognitoAuthorizer
         FulfillTransfer:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /fulfill-transfer
             Method: POST
-            # Auth:
-            #   Authorizer: CognitoAuthorizer
         GetCustomerTransfer:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /get-customer-transfer
             Method: GET
-            # Auth:
-            #   Authorizer: CustomAuthorizer
         GetMerchantTransfer:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /get-merchant-transfer
             Method: GET
-            # Auth:
-            #   Authorizer: CognitoAuthorizer
-            # Auth:
-            #   Authorizer: CustomAuthorizer
         ListCustomerTransfers:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /list-customer-transfers
             Method: GET
-            # Auth:
-            #   Authorizer: CognitoAuthorizer
-            # Auth:
-            #   Authorizer: CustomAuthorizer
         ListMerchantTransfers:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /list-merchant-transfers
             Method: GET
-            # Auth:
-            #   Authorizer: CognitoAuthorizer
-            # Auth:
-            #   Authorizer: CustomAuthorizer
 
   UserHandlerFunction:
     Type: AWS::Serverless::Function
@@ -362,18 +339,12 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /update-merchant-config
             Method: POST
-            # Auth:
-            #   Authorizer: CognitoAuthorizer
-            # Auth:
-            #   Authorizer: CustomAuthorizer
         GetMerchant:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /get-merchant-config
             Method: GET
-            # Auth:
-            #   Authorizer: CognitoAuthorizer
 
   CognitoEventHandlerFunction:
     Type: AWS::Serverless::Function

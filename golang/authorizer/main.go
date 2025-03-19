@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"os"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -45,16 +44,5 @@ func generatePolicy(principalID, effect, resource string) events.APIGatewayCusto
 }
 
 func main() {
-	if len(os.Args) > 1 {
-		token := os.Args[1]
-		println("Got args, checking token " + token)
-		isValid := EnsureValidToken(context.Background(), token)
-		if isValid {
-			println("Valid token!")
-		} else {
-			println("Invalid token!")
-		}
-	} else {
-		lambda.Start(handler)
-	}
+	lambda.Start(handler)
 }

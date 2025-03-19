@@ -11,6 +11,7 @@ private val logger = KotlinLogging.logger {}
 class NoSubFoundException(e: String) : Exception(e)
 
 fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserId(objectMapper: ObjectMapper): String {
+    logger.info { "Got authorizer $authorizer and values ${authorizer.keys}" }
     val claims = this.authorizer["claims"]
     val claimsMap = objectMapper.convertValue(claims, object : TypeReference<Map<String, String>>() {})
 

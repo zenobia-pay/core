@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/auth0/go-jwt-middleware/v2/jwks"
@@ -21,19 +21,27 @@ func (c CustomClaims) Validate(ctx context.Context) error {
 	return nil
 }
 
-// EnsureValidToken is a middleware that will check the validity of our JWT.
-func EnsureValidToken(ctx context.Context, token string) bool {
-	domain := "dev-u0ert1rxhkdmhwy8.us.auth0.com"
-	audience := "https://zenobiapay.com"
+var jwtValidator *validator.Validator
+var provider *jwks.CachingProvider
+
+func init() {
+	domain := os.Getenv("AUTH_DOMAIN")
+	audience := os.Getenv("AUDIENCE")
+
+	if domain == "" {
+		panic("Did not retrieve env var AUTH_DOMAIN")
+	}
+	if audience == "" {
+		panic("Did not retrieve env var AUDIENCE")
+	}
 
 	issuerURL, err := url.Parse("https://" + domain + "/")
 	if err != nil {
-		log.Fatalf("Failed to parse the issuer url: %v", err)
+		panic("Failed to parse the issuer url " + err.Error())
 	}
 
-	provider := jwks.NewCachingProvider(issuerURL, 5*time.Minute)
-
-	jwtValidator, err := validator.New(
+	provider = jwks.NewCachingProvider(issuerURL, 5*time.Minute)
+	jwtValidator, err = validator.New(
 		provider.KeyFunc,
 		validator.RS256,
 		issuerURL.String(),
@@ -46,9 +54,12 @@ func EnsureValidToken(ctx context.Context, token string) bool {
 		validator.WithAllowedClockSkew(time.Minute),
 	)
 	if err != nil {
-		log.Fatalf("Failed to set up the jwt validator")
-		return false
+		panic("Failed to set up the jwt validator " + err.Error())
 	}
-	_, err = jwtValidator.ValidateToken(ctx, token)
+}
+
+// EnsureValidToken is a middleware that will check the validity of our JWT.
+func EnsureValidToken(ctx context.Context, token string) bool {
+	_, err := jwtValidator.ValidateToken(ctx, token)
 	return err == nil
 }
