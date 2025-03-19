@@ -32,6 +32,8 @@ Resources:
 
   PayoutDispatcherFunction:
     Type: AWS::Serverless::Function
+    Metadata:
+      SkipBuild: true
     Properties:
       FunctionName: PayoutDispatcher
       CodeUri: ../kotlin/lambda/payout-handler/build/libs/lambda.jar
@@ -51,6 +53,8 @@ Resources:
 
   PayoutProcessorFunction:
     Type: AWS::Serverless::Function
+    Metadata:
+      SkipBuild: true
     Properties:
       FunctionName: PayoutProcessor
       CodeUri: ../kotlin/lambda/payout-handler/build/libs/lambda.jar

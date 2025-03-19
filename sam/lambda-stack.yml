@@ -54,461 +54,18 @@ Resources:
   ZenobiaApi:
     Type: AWS::Serverless::Api
     Properties:
-      DefinitionBody:
-        openapi: 3.0.1
-        info:
-          title: Zenobia API
-          version: 1.0
-        components:
-          responses:
-            BadRequest:
-              description: Bad request
-              content:
-                application/json:
-                  schema:
-                    $ref: "#/components/schemas/ErrorResponse"
-            Forbidden:
-              description: Forbidden
-              content:
-                application/json:
-                  schema:
-                    $ref: "#/components/schemas/ErrorResponse"
-            NotFound:
-              description: Resource not found
-              content:
-                application/json:
-                  schema:
-                    $ref: "#/components/schemas/ErrorResponse"
-            InternalServerError:
-              description: Internal server error
-              content:
-                application/json:
-                  schema:
-                    $ref: "#/components/schemas/ErrorResponse"
-          schemas:
-            ErrorResponse:
-              type: object
-              properties:
-                error:
-                  type: string
-                message:
-                  type: string
-            PaymentParticipantIdentity:
-              type: object
-              properties:
-                id:
-                  type: string
-                name:
-                  type: string
-            TransferStatus:
-              type: string
-              enum:
-                - NOT_STARTED
-                - IN_FLIGHT
-                - COMPLETED
-                - FAILED
-                - CANCELLED
-            StatementItem:
-              type: object
-              properties:
-                name:
-                  type: string
-                amount:
-                  type: integer
-            Location:
-              type: object
-              properties:
-                address:
-                  type: string
-                latitude:
-                  type: number
-                longitude:
-                  type: number
-
-        paths:
-          /create-link-token:
-            get:
-              summary: "Creates a plaid link token"
-              operationId: "CreateLinkToken"
-              responses:
-                '200':
-                  description: "Successful response"
-                  content:
-                    application/json:
-                      schema:
-                        type: object
-                        properties:
-                          linkToken:
-                            type: string
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
-                httpMethod: POST
-                type: aws_proxy
-
-          /exchange-token:
-            post:
-              summary: "Exchanges plaid token"
-              operationId: "ExchangeToken"
-              requestBody:
-                required: true
-                content:
-                  application/json:
-                    schema:
-                      type: object
-                      properties:
-                        linkToken:
-                          type: string
-
-              responses:
-                '200':
-                  description: "Successful response"
-                "400":
-                  $ref: "#/components/responses/BadRequest"
-                "403":
-                  $ref: "#/components/responses/Forbidden"
-                "404":
-                  $ref: "#/components/responses/NotFound"
-                "500":
-                  $ref: "#/components/responses/InternalServerError"
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
-                httpMethod: POST
-                type: aws_proxy
-
-          /list-bank-accounts:
-            get:
-              summary: "Lists all bank accounts associated with account"
-              operationId: "ListBankAccounts"
-              responses:
-                '200':
-                  description: "Successful response"
-                  content:
-                    application/json:
-                      schema:
-                        type: object
-                        properties:
-                          continuationToken:
-                            type: string
-                          items:
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                bankAccountId:
-                                  type: string
-                                bankAccountName:
-                                  type: string
-                "400":
-                  $ref: "#/components/responses/BadRequest"
-                "403":
-                  $ref: "#/components/responses/Forbidden"
-                "404":
-                  $ref: "#/components/responses/NotFound"
-                "500":
-                  $ref: "#/components/responses/InternalServerError"
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
-                httpMethod: POST
-                type: aws_proxy
-
-          /create-transfer-request:
-            post:
-              summary: "Creates a request for payment (merchant side)"
-              operationId: "CreateTransferRequest"
-              requestBody:
-                required: true
-                content:
-                  application/json:
-                    schema:
-                      type: object
-                      properties:
-                        amount:
-                          type: integer
-                        bankAccountId:
-                          type: string
-                        statementItems:
-                          type: array
-                          items:
-                            $ref: "#/components/schemas/StatementItem"
-              responses:
-                '200':
-                  description: "Successful response"
-                  content:
-                    application/json:
-                      schema:
-                        type: object
-                        properties:
-                          transferRequestId:
-                            type: string
-                          merchantId:
-                            type: string
-                "400":
-                  $ref: "#/components/responses/BadRequest"
-                "403":
-                  $ref: "#/components/responses/Forbidden"
-                "404":
-                  $ref: "#/components/responses/NotFound"
-                "500":
-                  $ref: "#/components/responses/InternalServerError"
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
-                httpMethod: POST
-                type: aws_proxy
-
-          /fulfill-transfer:
-            post:
-              summary: "Fulfill transfer request (customer side)"
-              operationId: "FulfillTransfer"
-              requestBody:
-                required: true
-                content:
-                  application/json:
-                    schema:
-                      type: object
-                      properties:
-                        transferRequestId:
-                          type: string
-                        merchantId:
-                          type: string
-                        bankAccountId:
-                          type: string
-              responses:
-                '200':
-                  description: "Successful response"
-                  content:
-                    application/json:
-                      schema:
-                        type: object
-                        properties:
-                          amount:
-                            type: integer
-                          merchant:
-                            $ref: "#/components/schemas/PaymentParticipantIdentity"
-                          statementItems:
-                            type: array
-                            items:
-                              $ref: "#/components/schemas/StatementItem"
-                "400":
-                  $ref: "#/components/responses/BadRequest"
-                "403":
-                  $ref: "#/components/responses/Forbidden"
-                "404":
-                  $ref: "#/components/responses/NotFound"
-                "500":
-                  $ref: "#/components/responses/InternalServerError"
-
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
-                httpMethod: POST
-                type: aws_proxy
-
-          /get-merchant-transfer:
-            get:
-              summary: "Fetches metadata associated with a merchant's transfer request"
-              operationId: "GetMerchantTransfer"
-              parameters:
-                - name: id
-                  in: query
-                  required: true
-                  schema:
-                    type: string
-              responses:
-                '200':
-                  description: "Successful response"
-                  content:
-                    application/json:
-                      schema:
-                        type: object
-                        properties:
-                          transferRequestId:
-                            type: string
-                          merchant:
-                            $ref: "#/components/schemas/PaymentParticipantIdentity"
-                          status:
-                            $ref: "#/components/schemas/TransferStatus"
-                          statementItems:
-                            type: array
-                            items:
-                              $ref: "#/components/schemas/StatementItem"
-                          statusMessage:
-                            type: string
-                "400":
-                  $ref: "#/components/responses/BadRequest"
-                "403":
-                  $ref: "#/components/responses/Forbidden"
-                "404":
-                  $ref: "#/components/responses/NotFound"
-                "500":
-                  $ref: "#/components/responses/InternalServerError"
-
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
-                httpMethod: POST
-                type: aws_proxy
-
-          /list-customer-transfers:
-            get:
-              summary: "Lists all transfers made with customer account"
-              operationId: "ListCustomerTransfers"
-              responses:
-                '200':
-                  description: "Successful response"
-                  content:
-                    application/json:
-                      schema:
-                        type: object
-                        properties:
-                          continuationToken:
-                            type: string
-                          items:
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                amount:
-                                  type: integer
-                                creationTime:
-                                  type: string
-                                status:
-                                  $ref: "#/components/schemas/TransferStatus"
-                                merchant:
-                                  $ref: "#/components/schemas/PaymentParticipantIdentity"
-                "400":
-                  $ref: "#/components/responses/BadRequest"
-                "403":
-                  $ref: "#/components/responses/Forbidden"
-                "404":
-                  $ref: "#/components/responses/NotFound"
-                "500":
-                  $ref: "#/components/responses/InternalServerError"
-
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
-                httpMethod: POST
-                type: aws_proxy
-
-          /list-merchant-transfers:
-            get:
-              summary: "Lists all transfers made to a merchant account"
-              operationId: "ListMerchantTransfers"
-              parameters:
-                - name: continuationToken
-                  in: query
-                  required: false
-                  schema:
-                    type: string
-              responses:
-                '200':
-                  description: "Successful response"
-                  content:
-                    application/json:
-                      schema:
-                        type: object
-                        properties:
-                          continuationToken:
-                            type: string
-                          items:
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                amount:
-                                  type: integer
-                                status:
-                                  type: string
-                                transferRequestId:
-                                  type: string
-                "400":
-                  $ref: "#/components/responses/BadRequest"
-                "403":
-                  $ref: "#/components/responses/Forbidden"
-                "404":
-                  $ref: "#/components/responses/NotFound"
-                "500":
-                  $ref: "#/components/responses/InternalServerError"
-
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
-                httpMethod: POST
-                type: aws_proxy
-
-          /get-merchant-config:
-            get:
-              summary: "Fetches metadata associated with a merchant"
-              operationId: "GetMerchantConfig"
-              responses:
-                '200':
-                  description: "Successful response"
-                  content:
-                    application/json:
-                      schema:
-                        type: object
-                        properties:
-                          bankAccountId:
-                            type: string
-                          merchantDisplayName:
-                            type: string
-                          merchantDescription:
-                            type: string
-                          webhookUrl:
-                            type: string
-                          merchantLocation:
-                            $ref: "#/components/schemas/Location"
-                "400":
-                  $ref: "#/components/responses/BadRequest"
-                "403":
-                  $ref: "#/components/responses/Forbidden"
-                "404":
-                  $ref: "#/components/responses/NotFound"
-                "500":
-                  $ref: "#/components/responses/InternalServerError"
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
-                httpMethod: POST
-                type: aws_proxy
-
-          /update-merchant-config:
-            post:
-              summary: "Update merchant configuration"
-              operationId: "UpdateMerchantConfig"
-              requestBody:
-                required: true
-                content:
-                  application/json:
-                    schema:
-                      type: object
-                      properties:
-                        bankAccountId:
-                          type: string
-                        merchantDisplayName:
-                          type: string
-                        merchantDescription:
-                          type: string
-                        webhookUrl:
-                          type: string
-                        merchantLocation:
-                          $ref: "#/components/schemas/Location"
-              responses:
-                '200':
-                  description: "Successful response"
-                "400":
-                  $ref: "#/components/responses/BadRequest"
-                "403":
-                  $ref: "#/components/responses/Forbidden"
-                "404":
-                  $ref: "#/components/responses/NotFound"
-                "500":
-                  $ref: "#/components/responses/InternalServerError"
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
-                httpMethod: POST
-                type: aws_proxy
       Auth:
-        DefaultAuthorizer: CognitoAuthorizer
-        AddDefaultAuthorizerToCorsPreflight: false
+        DefaultAuthorizer: CustomAuthorizer
         Authorizers:
-          CognitoAuthorizer:
-            UserPoolArn: !Ref UserPoolArn
+          CustomAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn: !GetAtt CustomAuthorizerFunction.Arn
+            Identity:
+              Headers: 
+                - Authorization
+            # Identity:
+            #   QueryStrings:
+            #     - auth
       Cors:
         AllowCredentials: true
         AllowMethods: "'GET,POST,OPTIONS'"
@@ -524,6 +81,19 @@ Resources:
           MetricsEnabled: true
           HttpMethod: "*"
           ResourcePath: "/*"
+  
+  CustomAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      SkipBuild: true
+    Properties:
+      FunctionName: AuthorizerHandler
+      Handler: main
+      Runtime: provided.al2
+      CodeUri: ../golang/authorizer/build/function.zip
+      Timeout: 5
+      SnapStart:
+        ApplyOn: None
 
   ApiGatewayLogGroup:
     Type: AWS::Logs::LogGroup
@@ -610,6 +180,8 @@ Resources:
 
   BankHandlerFunction:
     Type: AWS::Serverless::Function
+    Metadata:
+      SkipBuild: true
     Properties:
       FunctionName: BankHandler
       CodeUri: ../kotlin/lambda/bank-handler/build/libs/lambda.jar
@@ -637,27 +209,29 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /create-link-token
             Method: GET
-            Auth:
-              Authorizer: CognitoAuthorizer
+            # Auth:
+            #   Authorizer: CustomAuthorizer
         GetExchangeToken:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /exchange-token
             Method: POST
-            Auth:
-              Authorizer: CognitoAuthorizer
+            # Auth:
+              # Authorizer: CustomAuthorizer
         ListBanks:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /list-bank-accounts
             Method: GET
-            Auth:
-              Authorizer: CognitoAuthorizer
+            # Auth:
+            #   Authorizer: CustomAuthorizer
 
   TransferHandlerFunction:
     Type: AWS::Serverless::Function
+    Metadata:
+      SkipBuild: true
     Properties:
       FunctionName: TransferHandler
       CodeUri: ../kotlin/lambda/transfer-handler/build/libs/lambda.jar
@@ -701,51 +275,59 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /create-transfer-request
             Method: POST
-            Auth:
-              Authorizer: CognitoAuthorizer
+            # Auth:
+            #   Authorizer: CognitoAuthorizer
         FulfillTransfer:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /fulfill-transfer
             Method: POST
-            Auth:
-              Authorizer: CognitoAuthorizer
+            # Auth:
+            #   Authorizer: CognitoAuthorizer
         GetCustomerTransfer:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /get-customer-transfer
             Method: GET
-            Auth:
-              Authorizer: CognitoAuthorizer
+            # Auth:
+            #   Authorizer: CustomAuthorizer
         GetMerchantTransfer:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /get-merchant-transfer
             Method: GET
-            Auth:
-              Authorizer: CognitoAuthorizer
+            # Auth:
+            #   Authorizer: CognitoAuthorizer
+            # Auth:
+            #   Authorizer: CustomAuthorizer
         ListCustomerTransfers:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /list-customer-transfers
             Method: GET
-            Auth:
-              Authorizer: CognitoAuthorizer
+            # Auth:
+            #   Authorizer: CognitoAuthorizer
+            # Auth:
+            #   Authorizer: CustomAuthorizer
         ListMerchantTransfers:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /list-merchant-transfers
             Method: GET
-            Auth:
-              Authorizer: CognitoAuthorizer
+            # Auth:
+            #   Authorizer: CognitoAuthorizer
+            # Auth:
+            #   Authorizer: CustomAuthorizer
 
   UserHandlerFunction:
     Type: AWS::Serverless::Function
+    Metadata:
+      SkipBuild: true
     Properties:
       FunctionName: UserHandler
       CodeUri: ../kotlin/lambda/user-handler/build/libs/lambda.jar
@@ -780,19 +362,23 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /update-merchant-config
             Method: POST
-            Auth:
-              Authorizer: CognitoAuthorizer
+            # Auth:
+            #   Authorizer: CognitoAuthorizer
+            # Auth:
+            #   Authorizer: CustomAuthorizer
         GetMerchant:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /get-merchant-config
             Method: GET
-            Auth:
-              Authorizer: CognitoAuthorizer
+            # Auth:
+            #   Authorizer: CognitoAuthorizer
 
   CognitoEventHandlerFunction:
     Type: AWS::Serverless::Function
+    Metadata:
+      SkipBuild: true
     Properties:
       FunctionName: CognitoEventHandler
       CodeUri: ../kotlin/lambda/cognito-handler/build/libs/lambda.jar
@@ -828,6 +414,8 @@ Resources:
 
   TransferTableEventHandler:
     Type: 'AWS::Serverless::Function'
+    Metadata:
+      SkipBuild: true
     Properties:
       FunctionName: TransferTableEventHandler
       Handler: com.zenobiapay.transfertableevent.handlers.TransferTableEventHandler::handleRequest
