@@ -95,3 +95,9 @@ docker/dynamodb/shared-local-instance.db
 .amplify
 amplify_outputs*
 amplifyconfiguration*
+
+# terraform
+terraform/.terraform/*
+terraform/terraform.tfvars
+terraform/.tfvars
+
