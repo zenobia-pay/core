@@ -3,8 +3,6 @@ Transform: AWS::Serverless-2016-10-31
 Description: Stack to store DDB tables
 
 Parameters:
-  IdentityPoolId:
-    Type: String
   Stage:
     Type: String
     Description: Stage this code is being deployed to (dev, beta, gamma, prod)

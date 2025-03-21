@@ -17,19 +17,24 @@ Resources:
     Properties:
       TemplateURL: ./sam/vpc-stack.yml
 
-  AuthStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: ./sam/auth-stack.yml
-
   TableStack:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: ./sam/storage-stack.yml
       Parameters:
-        IdentityPoolId: !GetAtt AuthStack.Outputs.IdentityPoolId
         Stage: !Ref Stage
         UniqueIdentifier: !Ref UniqueIdentifier
+
+  AuthStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./sam/auth-stack.yml
+      Parameters:
+        SecurityGroupId: !GetAtt VpcStack.Outputs.SecurityGroupId
+        SubnetId1: !GetAtt VpcStack.Outputs.PrivateSubnetId1
+        SubnetId2: !GetAtt VpcStack.Outputs.PrivateSubnetId2
+        UserTableName: !GetAtt TableStack.Outputs.UserTableName
+        UserKeyId: !GetAtt TableStack.Outputs.UserKeyId
 
   LambdaStack:
     Type: AWS::CloudFormation::Stack

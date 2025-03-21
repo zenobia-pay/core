@@ -95,6 +95,7 @@ Resources:
         Variables:
           AUTH_DOMAIN: dev-u0ert1rxhkdmhwy8.us.auth0.com
           AUDIENCE: https://zenobiapay.com
+          AUTH0_CLIENT_ID: MBxUwuO3ApyissWpYzT74gBGW0FbC9nn
 
   ApiGatewayLogGroup:
     Type: AWS::Logs::LogGroup
@@ -346,18 +347,16 @@ Resources:
             Path: /get-merchant-config
             Method: GET
 
-  CognitoEventHandlerFunction:
+  UserSignUpHandlerFunction:
     Type: AWS::Serverless::Function
     Metadata:
       SkipBuild: true
     Properties:
-      FunctionName: CognitoEventHandler
+      FunctionName: CustomerSignUpHandler
       CodeUri: ../kotlin/lambda/cognito-handler/build/libs/lambda.jar
-      Handler: com.zenobiapay.cognito.handlers.CognitoEventHandler::handleRequest
-      Environment:
-        Variables:
-          USER_TABLE_NAME: !Ref UserTableName
-          COGNITO_USER_POOL_ARN: !Ref UserPoolArn
+      Handler: com.zenobiapay.cognito.handlers.CustomerSignupEventHandler::handleRequest
+      SnapStart:
+        ApplyOn: None
       Policies:
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
@@ -368,20 +367,13 @@ Resources:
             KeyId: !Ref UserKeyId
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:orum/sandbox/credentials-VS6HFc" # TODO dont hardcode
-        - Statement:
-            - Effect: Allow
-              Action:
-                - cognito-idp:AdminAddUserToGroup
-              Resource: !Ref UserPoolArn
-
-  CognitoEventHandlerInvokePermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref CognitoEventHandlerFunction
-      Action: lambda:InvokeFunction
-      Principal: "cognito-idp.amazonaws.com"
-      SourceAccount: !Sub "${AWS::AccountId}"
-      SourceArn: !Ref UserPoolArn
+      Events:
+        RegisterUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /register-user
+            Method: POST
 
   TransferTableEventHandler:
     Type: 'AWS::Serverless::Function'

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"net/url"
 	"os"
 	"time"
@@ -13,15 +14,24 @@ import (
 // CustomClaims contains custom data we want from the token.
 type CustomClaims struct {
 	Scope string `json:"scope"`
+	Azp   string `json:"azp"`
 }
 
-// Validate does nothing for this example, but we need
-// it to satisfy validator.CustomClaims interface.
+// Validates that azp is auth0 app client
 func (c CustomClaims) Validate(ctx context.Context) error {
+	auth0ClientId, found := os.LookupEnv("AUTH0_CLIENT_ID")
+	if !found {
+		println("Did not find auth0 client env var")
+		return errors.New("did not find AUTH0_CLIENT_ID")
+	}
+	if c.Azp != auth0ClientId {
+		return errors.New("auth 0 client id did not match azp")
+	}
 	return nil
 }
 
-var jwtValidator *validator.Validator
+var basicJwtValidator *validator.Validator
+var auth0ActionJwtValidator *validator.Validator
 var provider *jwks.CachingProvider
 
 func init() {
@@ -41,7 +51,19 @@ func init() {
 	}
 
 	provider = jwks.NewCachingProvider(issuerURL, 5*time.Minute)
-	jwtValidator, err = validator.New(
+	basicJwtValidator, err = validator.New(
+		provider.KeyFunc,
+		validator.RS256,
+		issuerURL.String(),
+		[]string{audience},
+		validator.WithAllowedClockSkew(time.Minute),
+	)
+
+	if err != nil {
+		panic("Failed to set up the jwt validator " + err.Error())
+	}
+
+	auth0ActionJwtValidator, err = validator.New(
 		provider.KeyFunc,
 		validator.RS256,
 		issuerURL.String(),
@@ -60,6 +82,11 @@ func init() {
 
 // EnsureValidToken is a middleware that will check the validity of our JWT.
 func EnsureValidToken(ctx context.Context, token string) bool {
-	_, err := jwtValidator.ValidateToken(ctx, token)
+	_, err := basicJwtValidator.ValidateToken(ctx, token)
+	return err == nil
+}
+
+func EnsureValidAuth0ActionToken(ctx context.Context, token string) bool {
+	_, err := auth0ActionJwtValidator.ValidateToken(ctx, token)
 	return err == nil
 }

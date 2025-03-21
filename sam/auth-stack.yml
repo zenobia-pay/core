@@ -1,6 +1,35 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Authentication stack.
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: java17
+    Architectures:
+      - x86_64
+    AutoPublishAlias: prod
+    SnapStart:
+      ApplyOn: PublishedVersions
+    AutoPublishAliasAllProperties: true
+    VpcConfig:
+      SecurityGroupIds:
+        - !Ref SecurityGroupId
+      SubnetIds:
+        - !Ref SubnetId1
+        - !Ref SubnetId2
+
+Parameters:
+  UserTableName:
+    Type: String
+  UserKeyId:
+    Type: String
+  SecurityGroupId:
+    Type: String
+  SubnetId1:
+    Type: String
+  SubnetId2:
+    Type: String
 
 Resources:
   # Cognito Resources

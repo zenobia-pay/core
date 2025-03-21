@@ -61,19 +61,9 @@ tasks.test {
     useJUnitPlatform()
 }
 
-tasks.register("parseYaml", Exec::class) {
-    commandLine(
-        "sh",
-        "-c",
-        "yq .Resources.ZenobiaApi.Properties.DefinitionBody ../../../sam/lambda-stack.yml | " +
-                "sed -E 's/!Sub //g' > " +
-                "openapi.yml"
-    )
-}
-
 openApiGenerate {
     generatorName.set("kotlin")
-    inputSpec.set("$projectDir/openapi.yml")
+    inputSpec.set("$rootDir/openapi.yml")
     outputDir.set(layout.buildDirectory.dir("generated").get().toString())
     packageName.set("com.zenobiapay.api.generated")
 
@@ -86,10 +76,6 @@ openApiGenerate {
 
 sourceSets.main {
     kotlin.srcDir(layout.buildDirectory.dir("generated/src/main/kotlin"))
-}
-
-tasks.named("openApiGenerate") {
-    dependsOn("parseYaml")
 }
 
 tasks.named("build") {

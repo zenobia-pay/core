@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -9,13 +10,16 @@ import (
 )
 
 func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
+	println("Got path " + event.Path)
 	token := extractToken(event.Headers["Authorization"])
-	isValid := EnsureValidToken(ctx, token)
-
-	if isValid {
-		return generatePolicy("user", "Allow", event.MethodArn), nil
+	if event.Path == "/register-user" {
+		println("Validating auth0 token")
+		isValid := EnsureValidAuth0ActionToken(ctx, token)
+		return generatePolicyResponse(isValid, event.MethodArn), nil
 	} else {
-		return generatePolicy("user", "Deny", "*"), nil
+		println("Validating auth0 user")
+		isValid := EnsureValidToken(ctx, token)
+		return generatePolicyResponse(isValid, event.MethodArn), nil
 	}
 }
 
@@ -25,6 +29,14 @@ func extractToken(authHeader string) string {
 		return parts[1]
 	}
 	return ""
+}
+
+func generatePolicyResponse(isValid bool, methodArn string) events.APIGatewayCustomAuthorizerResponse {
+	if isValid {
+		return generatePolicy("user", "Allow", methodArn)
+	} else {
+		return generatePolicy("user", "Deny", "*")
+	}
 }
 
 func generatePolicy(principalID, effect, resource string) events.APIGatewayCustomAuthorizerResponse {
@@ -44,5 +56,9 @@ func generatePolicy(principalID, effect, resource string) events.APIGatewayCusto
 }
 
 func main() {
+	if len(os.Args) > 1 {
+		isValid := EnsureValidAuth0ActionToken(context.Background(), os.Args[1])
+		println("Got value", isValid)
+	}
 	lambda.Start(handler)
 }
