@@ -21,16 +21,16 @@ class UpdateMerchantConfigOperation @Inject constructor(
     private val objectMapper: ObjectMapper
 ) : Operation() {
 
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
+    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any {
         val request = objectMapper.readValue(input.body, UpdateMerchantConfigRequest::class.java)
         logger.info { "Got request $request" }
         if (request.bankAccountId != null) {
             // Validate bank id exists
             logger.info { "Fetching bank account ${request.bankAccountId}" }
-            bankDao.getBankAccount(userId, request.bankAccountId!!) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
+            bankDao.getBankAccount(userId!!, request.bankAccountId!!) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
         }
         // TODO: do in one ddb call
-        val merchantItem = userDao.getMerchant(userId)
+        val merchantItem = userDao.getMerchant(userId!!)
         logger.info { "Got current item $merchantItem" }
         userDao.updateMerchant(
             userId,

@@ -8,14 +8,15 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 
-class NoSubFoundException(e: String) : Exception(e)
-
-fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserId(objectMapper: ObjectMapper): String {
+fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserId(objectMapper: ObjectMapper): String? {
     logger.info { "Got authorizer $authorizer and values ${authorizer.keys}" }
     val claims = this.authorizer["claims"]
+
+    if (claims == null) return null
+
     val claimsMap = objectMapper.convertValue(claims, object : TypeReference<Map<String, String>>() {})
 
-    return claimsMap["sub"] ?: throw NoSubFoundException("Could not find sub key in claims map")
+    return claimsMap["sub"]
 }
 
 fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserPoolGroups(): List<UserPoolGroup> {

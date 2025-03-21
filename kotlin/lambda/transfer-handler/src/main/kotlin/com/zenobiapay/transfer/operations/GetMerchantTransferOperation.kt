@@ -11,11 +11,11 @@ import com.zenobiapay.table.transfer.dao.TransferDao
 import javax.inject.Inject
 
 class GetMerchantTransferOperation @Inject constructor(private val objectMapper: ObjectMapper, private val transferDao: TransferDao) : Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
+    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any {
         val request = GetTransferRequest.from(input.queryStringParameters, objectMapper)
 
         val transferItem = transferDao.getMerchantTransfer(
-            merchantId = userId,
+            merchantId = userId!!,
             transferRequestId = request.id
         )
         return GetMerchantTransfer200Response(

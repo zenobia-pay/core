@@ -6,7 +6,7 @@ import com.zenobiapay.api.exception.UnauthorizedException
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 
 abstract class Operation {
-    abstract fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any
+    abstract fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any
 
     abstract fun getUserPoolAllowList(): List<UserPoolGroup>
 

@@ -21,13 +21,13 @@ class CreateTransferRequestOperation @Inject constructor(
     private val objectMapper: ObjectMapper,
     private val cognitoUtil: CognitoUtil
 ): Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
+    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any {
         val request = objectMapper.readValue<CreateTransferRequestRequest>(input.body)
 
         request.amount ?: throw InvalidRequestException("Amount not specified")
 
         val requestId = input.requestContext.requestId
-        val merchantName = userDao.getMerchant(userId)!!.data.displayName ?: cognitoUtil.getUserFullName(userId)
+        val merchantName = userDao.getMerchant(userId!!)!!.data.displayName ?: cognitoUtil.getUserFullName(userId)
         transferDao.putTransferRequest(
             userId,
             requestId,

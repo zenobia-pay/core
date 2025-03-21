@@ -10,8 +10,8 @@ import com.zenobiapay.table.transfer.dao.TransferDao
 import javax.inject.Inject
 
 class ListCustomerTransfersOperation @Inject constructor(private val transferDao: TransferDao) : Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): ListCustomerTransfers200Response {
-        val transfers = transferDao.listCustomerTransfers(userId)
+    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): ListCustomerTransfers200Response {
+        val transfers = transferDao.listCustomerTransfers(userId!!)
         return ListCustomerTransfers200Response(
             items = transfers.map {
                 ListCustomerTransfers200ResponseItemsInner(

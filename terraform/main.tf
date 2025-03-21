@@ -2,7 +2,7 @@ terraform {
   required_providers {
     auth0 = {
       source  = "auth0/auth0"
-      version = ">= 1.0"
+      version = "~> 1.0"
     }
   }
 }
@@ -33,6 +33,46 @@ resource "auth0_resource_server" "zenobia_api" {
   identifier           = "https://zenobiapay.com"
   signing_alg          = "RS256"
   token_lifetime       = 36000
+}
+
+resource "auth0_action" "user_login_webhook" {
+  name = "User-Login-Webhook"
+  runtime = "node22"
+  deploy = true
+  supported_triggers {
+    id      = "post-login"
+    version = "v3"
+  }
+  secrets {
+    name = "AUTH0_DOMAIN"
+    value = var.auth0_domain
+  }
+  secrets {
+    name = "CLIENT_ID"
+    value = var.auth0_action_client_id
+  }
+  secrets {
+    name = "CLIENT_SECRET"
+    value = var.auth0_action_client_secret
+  }
+  secrets {
+    name = "ZENOBIA_ENDPOINT"
+    value = var.zenobia_endpoint
+  }
+  dependencies {
+    name = "axios"
+    version = "latest"
+  }
+  code = file("${path.module}/auth0/actions/post-login.js")
+}
+
+resource "auth0_trigger_actions" "bind_post_user_registration" {
+  trigger = "post-login"
+
+  actions {
+    id           = auth0_action.user_login_webhook.id
+    display_name = auth0_action.user_login_webhook.name
+  }
 }
 
 output "client_id" {

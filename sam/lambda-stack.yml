@@ -357,6 +357,9 @@ Resources:
       Handler: com.zenobiapay.cognito.handlers.CustomerSignupEventHandler::handleRequest
       SnapStart:
         ApplyOn: None
+      Environment:
+        Variables:
+          USER_TABLE_NAME: !Ref UserTableName
       Policies:
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:

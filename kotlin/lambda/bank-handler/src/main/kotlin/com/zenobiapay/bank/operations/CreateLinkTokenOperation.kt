@@ -9,8 +9,8 @@ import com.zenobiapay.plaid.PlaidWrapper
 import javax.inject.Inject
 
 class CreateLinkTokenOperation @Inject constructor(private val plaidWrapper: PlaidWrapper) : Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): CreateLinkToken200Response {
-        val response = plaidWrapper.createLinkToken(userId)
+    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): CreateLinkToken200Response {
+        val response = plaidWrapper.createLinkToken(userId!!)
         context.logger.log("Got plaid response $response")
 
         return CreateLinkToken200Response(linkToken = response.linkToken)

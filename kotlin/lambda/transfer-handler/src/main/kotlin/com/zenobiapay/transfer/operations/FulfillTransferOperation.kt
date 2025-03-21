@@ -39,7 +39,7 @@ class FulfillTransferOperation @Inject constructor(
     private val objectMapper: ObjectMapper,
     private val cognitoUtil: CognitoUtil
 ) : Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): FulfillTransfer200Response {
+    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): FulfillTransfer200Response {
         val request = objectMapper.readValue(input.body, FulfillTransferRequest::class.java)
         val transferRequestId = request.transferRequestId ?: throw InvalidRequestException("Parameter transferRequestId not passed")
         val merchantId = request.merchantId ?: throw InvalidRequestException("Parameter merchantId not passed")
@@ -51,7 +51,7 @@ class FulfillTransferOperation @Inject constructor(
             throw TransferStatusException("Transfer status is no longer in NOT_STARTED state.")
         }
         logger.info { "Fetching bank item from userId $userId, accountId $bankAccountId" }
-        bankDao.getBankAccount(userId, bankAccountId) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
+        bankDao.getBankAccount(userId!!, bankAccountId) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
         val merchantItem = userDao.getMerchant(merchantId) ?: throw ResourceNotFoundException("MERCHANT")
 
         val transferAmount = transferRequestItem.amount!!

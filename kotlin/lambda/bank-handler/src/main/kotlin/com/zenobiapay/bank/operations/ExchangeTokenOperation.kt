@@ -25,10 +25,10 @@ class ExchangeTokenOperation @Inject constructor(
     private val objectMapper: ObjectMapper,
     private val bankDao: BankDao
 ) : Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): ApiResponse {
+    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): ApiResponse {
         logger.info { "Got input body ${input.body}" }
         val request = ExchangeTokenRequest.from(input.body, objectMapper)
-        val exchangeResponse = plaidWrapper.exchangeLinkToken(userId, request.linkToken)
+        val exchangeResponse = plaidWrapper.exchangeLinkToken(userId!!, request.linkToken)
         logger.info { "Got exchange response $exchangeResponse" }
 
         val accountsToAch = plaidWrapper.getZippedAccountsAndAch(exchangeResponse.accessToken)

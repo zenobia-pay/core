@@ -12,12 +12,12 @@ import com.zenobiapay.table.bank.dao.BankDao
 import javax.inject.Inject
 
 class ListBanksOperation @Inject constructor(private val objectMapper: ObjectMapper, private val bankDao: BankDao) : Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
+    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any {
         context.logger.log("Got path parameter keys ${input.pathParameters?.keys}")
         val request = ListBanksRequest.from(input.pathParameters, objectMapper)
         context.logger.log("Got request $request")
 
-        val bankItems = bankDao.listBankAccounts(userId, request.continuationToken)
+        val bankItems = bankDao.listBankAccounts(userId!!, request.continuationToken)
         context.logger.log("Got bank items $bankItems")
         return ListBankAccounts200Response(
             items = bankItems.map {

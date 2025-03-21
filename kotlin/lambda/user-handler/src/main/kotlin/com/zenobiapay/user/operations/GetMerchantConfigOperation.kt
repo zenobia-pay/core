@@ -10,8 +10,8 @@ import com.zenobiapay.table.user.dao.UserDao
 import javax.inject.Inject
 
 class GetMerchantConfigOperation @Inject constructor(private val userDao: UserDao) : Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
-        val merchantItem = userDao.getMerchant(userId)
+    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any {
+        val merchantItem = userDao.getMerchant(userId!!)
 
         if (merchantItem == null) {
             return GetMerchantConfig200Response(

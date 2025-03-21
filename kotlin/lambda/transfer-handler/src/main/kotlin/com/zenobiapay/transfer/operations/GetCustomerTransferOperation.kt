@@ -14,9 +14,9 @@ class GetCustomerTransferOperation @Inject constructor(
     private val transferDao: TransferDao,
     private val objectMapper: ObjectMapper
 ) : Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String): Any {
+    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any {
         val request = GetTransferRequest.from(input.queryStringParameters, objectMapper)
-        val transfer = transferDao.getCustomerTransfer(userId, request.id) ?: throw ResourceNotFoundException("Transfer")
+        val transfer = transferDao.getCustomerTransfer(userId!!, request.id) ?: throw ResourceNotFoundException("Transfer")
         return transfer
     }
 

@@ -25,7 +25,7 @@ class RegisterUserOperation @Inject constructor(
     override fun run(
         input: APIGatewayProxyRequestEvent,
         context: Context,
-        userId: String
+        userId: String?
     ): Any {
         val request = objectMapper.readValue(input.body, RegisterUserRequest::class.java)
 
