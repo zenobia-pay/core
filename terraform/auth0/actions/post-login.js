@@ -1,14 +1,19 @@
 
 const CUSTOMER_ROLE = "customer"
+const MERCHANT_ROLE = "merchant"
 
 exports.onExecutePostLogin = async (event, api) => {
     const audience = 'https://zenobiapay.com';
+    const merchantClientId = event.secrets.merchantClientId
 
     if (event.stats.logins_count === 1) { // Run only on initial login
-        await registerUser(event, api, audience)
+        const role = (event.clientId === merchantClientId) ? MERCHANT_ROLE : CUSTOMER_ROLE
+        console.log(`Got role ${role}`)
+
+        await registerUser(event, api, audience, role)
         console.log("Setting custom claims manually for initial login")
-        api.idToken.setCustomClaim(`${audience}/role`, CUSTOMER_ROLE);
-        api.accessToken.setCustomClaim(`${audience}/role`, CUSTOMER_ROLE);
+        api.idToken.setCustomClaim(`${audience}/role`, role);
+        api.accessToken.setCustomClaim(`${audience}/role`, role);
     } else {
         const userRole = event.user.app_metadata?.role;
         if (userRole) {
@@ -21,7 +26,7 @@ exports.onExecutePostLogin = async (event, api) => {
     }
 };
 
-async function registerUser(event, api, audience) {
+async function registerUser(event, api, audience, role) {
     console.log('Initial login. Running set up.')
     const axios = require('axios');
     const clientId = event.secrets.CLIENT_ID;
@@ -31,8 +36,8 @@ async function registerUser(event, api, audience) {
     const zenobiaEndpoint = event.secrets.ZENOBIA_ENDPOINT
 
     try {
-        console.log('Adding user to customer role')
-        api.user.setAppMetadata("role", CUSTOMER_ROLE);
+        console.log(`Adding user to role ${role}`)
+        await setRole(event, role)
 
         console.log(`Authenticating oauth to call /register-user using token url ${tokenUrl}`)
         const tokenResponse = await axios.post(tokenUrl, {
@@ -64,5 +69,43 @@ async function registerUser(event, api, audience) {
     } catch (err) {
         console.error('API call failed', err);
         // Optionally fail the registration or just log
+    }
+}
+
+async function setRole(event, role) {
+    const axios = require('axios');
+    const auth0Domain = event.secrets.AUTH0_DOMAIN;
+    const auth0ClientId = event.secrets.AUTH0_CLIENT_ID;
+    const auth0Secret = event.secrets.AUTH0_CLIENT_SECRET;
+
+    console.log("Fetching auth0 token")
+    const managementApiToken = await axios.post(`https://${auth0Domain}/oauth/token`, {
+        grant_type: 'client_credentials',
+        client_id: auth0ClientId,
+        client_secret: auth0Secret,
+        audience: `https://${auth0Domain}/api/v2/`,
+    }).then(response => response.data.access_token);
+
+    // Add role to user
+    const userId = event.user.user_id; // Auth0 user ID
+    const roleId = getRoleId(event, role)
+    console.log(`Setting role ${role} with id ${roleId} for user ${userId}`)
+    await axios.post(`https://${auth0Domain}/api/v2/users/${userId}/roles`, 
+    {
+        roles: [roleId]
+    },
+    {
+        headers: {
+            Authorization: `Bearer ${managementApiToken}`
+        }
+    }
+    );
+}
+
+function getRoleId(event, roleName) {
+    if (roleName == CUSTOMER_ROLE) {
+        return event.secrets.CUSTOMER_ROLE_ID
+    } else if (roleName == MERCHANT_ROLE) {
+        return event.secrets.MERCHANT_ROLE_ID
     }
 }

@@ -20,6 +20,23 @@ resource "auth0_client" "zenobia_app" {
   allowed_logout_urls = ["https://zenobiapay.com/logout", "http://localhost:5173/admin"]
 }
 
+resource "auth0_client" "zenobia_merchant_app" {
+  name            = "Zenobia Merchant Client"
+  app_type        = "spa"
+  callbacks       = ["https://zenobiapay.com/callback", "http://localhost:5173/admin",  "http://localhost:5173", "http://localhost:5173/login", "http://localhost:3000"]
+  allowed_logout_urls = ["https://zenobiapay.com/logout", "http://localhost:5173/admin", "http://localhost:3000"]
+}
+
+resource "auth0_role" "merchant" {
+  name        = "merchant"
+  description = "Merchant role that allows requesting transfers"
+}
+
+resource "auth0_role" "customer" {
+  name        = "customer"
+  description = "Standard customer role that can authorize pushes"
+}
+
 resource "auth0_client" "auth0_action_app" {
   name            = "auth0-action-app"
   description     = "Used by Auth0 Actions to call API Gateway"
@@ -56,8 +73,32 @@ resource "auth0_action" "user_login_webhook" {
     value = var.auth0_action_client_secret
   }
   secrets {
+    name = "AUTH0_CLIENT_ID"
+    value = var.auth0_client_id
+  }
+  secrets {
+    name = "AUTH0_CLIENT_SECRET"
+    value = var.auth0_client_secret
+  }
+  secrets {
     name = "ZENOBIA_ENDPOINT"
     value = var.zenobia_endpoint
+  }
+  secrets {
+    name = "MERCHANT_CLIENT_ID"
+    value = var.merchant_client_id
+  }
+  secrets {
+    name = "CUSTOMER_CLIENT_ID"
+    value = var.customer_client_id
+  }
+  secrets {
+    name = "MERCHANT_ROLE_ID"
+    value = auth0_role.merchant.id
+  }
+  secrets {
+    name = "CUSTOMER_ROLE_ID"
+    value = auth0_role.customer.id
   }
   dependencies {
     name = "axios"
@@ -77,6 +118,10 @@ resource "auth0_trigger_actions" "bind_post_user_registration" {
 
 output "client_id" {
   value = auth0_client.zenobia_app.client_id
+}
+
+output "merchant_client_id" {
+  value = auth0_client.zenobia_merchant_app.client_id
 }
 
 output "api_identifier" {
