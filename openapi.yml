@@ -67,6 +67,11 @@ components:
           type: number
         longitude:
           type: number
+x-amazon-apigateway-request-validators:
+  basic:
+    validateRequestParameters: true
+    validateRequestBody: true
+x-amazon-apigateway-request-validator: basic
 paths:
   /create-link-token:
     get:
@@ -99,6 +104,8 @@ paths:
               properties:
                 linkToken:
                   type: string
+              required:
+                - linkToken
       responses:
         '200':
           description: "Successful response"
@@ -110,6 +117,7 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-request-validator: body
       x-amazon-apigateway-integration:
         uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
         httpMethod: POST
@@ -159,9 +167,14 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - amount
+                - bankAccountId
               properties:
                 amount:
                   type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
                 bankAccountId:
                   type: string
                 statementItems:
@@ -202,6 +215,10 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - transferRequestId
+                - merchantId
+                - bankAccountId
               properties:
                 transferRequestId:
                   type: string

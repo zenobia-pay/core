@@ -14,6 +14,9 @@ kotlin:
 	echo "Building gradle"
 	./gradlew build
 
+openapi:
+	yq eval '.Resources.ZenobiaApi.Properties.DefinitionBody' sam/lambda-stack.yml | sed -E 's/!Sub //g' > openapi.yml
+
 clean:
 	echo "Cleaning kotlin"
 	./gradlew clean
