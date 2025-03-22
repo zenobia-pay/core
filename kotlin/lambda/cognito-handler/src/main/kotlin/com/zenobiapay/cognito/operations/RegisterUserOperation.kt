@@ -3,10 +3,10 @@ package com.zenobiapay.cognito.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.api.generated.models.RegisterUserRequest
 import com.zenobiapay.api.model.EmptyApiResponse
 import com.zenobiapay.api.model.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
-import com.zenobiapay.cognito.model.RegisterUserRequest
 import com.zenobiapay.orum.OrumException
 import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.orum.model.Contact

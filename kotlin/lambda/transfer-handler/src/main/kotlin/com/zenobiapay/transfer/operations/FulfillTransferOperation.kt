@@ -41,9 +41,9 @@ class FulfillTransferOperation @Inject constructor(
 ) : Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): FulfillTransfer200Response {
         val request = objectMapper.readValue(input.body, FulfillTransferRequest::class.java)
-        val transferRequestId = request.transferRequestId ?: throw InvalidRequestException("Parameter transferRequestId not passed")
-        val merchantId = request.merchantId ?: throw InvalidRequestException("Parameter merchantId not passed")
-        val bankAccountId = request.bankAccountId ?: throw InvalidRequestException("Parameter bankAccountId not passed")
+        val transferRequestId = request.transferRequestId
+        val merchantId = request.merchantId
+        val bankAccountId = request.bankAccountId
 
         val date = LocalDate.now(ZoneOffset.UTC).also { logger.info { "Using date $it" } }
         val transferRequestItem = transferDao.getMerchantTransfer(merchantId = merchantId, transferRequestId = transferRequestId)
