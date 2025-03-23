@@ -104,6 +104,10 @@ resource "auth0_action" "user_login_webhook" {
     name = "axios"
     version = "latest"
   }
+  dependencies {
+    name = "auth0"
+    version = "latest"
+  }
   code = file("${path.module}/auth0/actions/post-login.js")
 }
 

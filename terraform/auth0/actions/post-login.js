@@ -1,3 +1,4 @@
+const { ManagementClient } = require('auth0');
 
 const CUSTOMER_ROLE = "customer"
 const MERCHANT_ROLE = "merchant"
@@ -6,73 +7,33 @@ exports.onExecutePostLogin = async (event, api) => {
     const audience = 'https://zenobiapay.com';
     const merchantClientId = event.secrets.merchantClientId
 
-    if (event.stats.logins_count === 1) { // Run only on initial login
-        const role = (event.clientId === merchantClientId) ? MERCHANT_ROLE : CUSTOMER_ROLE
-        console.log(`Got role ${role}`)
+    try {
+        if (event.stats.logins_count === 1) { // Run only on initial login
+            console.log('Initial login. Running set up.')
+            const role = (event.clientId === merchantClientId) ? MERCHANT_ROLE : CUSTOMER_ROLE
+            console.log(`Got role ${role}`)
 
-        await registerUser(event, api, audience, role)
-        console.log("Setting custom claims manually for initial login")
-        api.idToken.setCustomClaim(`${audience}/role`, role);
-        api.accessToken.setCustomClaim(`${audience}/role`, role);
-    } else {
-        const userRole = event.user.app_metadata?.role;
-        if (userRole) {
-            console.log(`Found user role ${userRole}, adding to claims`)
-            api.idToken.setCustomClaim(`${audience}/role`, userRole);
-            api.accessToken.setCustomClaim(`${audience}/role`, userRole);
+            await setupAuth0Configuration(event, role)
+            await registerUser(event, api, audience, role)
+            console.log("Setting custom claims manually for initial login")
+            api.idToken.setCustomClaim(`${audience}/role`, role);
+            api.accessToken.setCustomClaim(`${audience}/role`, role);
         } else {
-            console.log("No user role found, skipping adding to claim")
+            const userRole = event.user.app_metadata?.role;
+            if (userRole) {
+                console.log(`Found user role ${userRole}, adding to claims`)
+                api.idToken.setCustomClaim(`${audience}/role`, userRole);
+                api.accessToken.setCustomClaim(`${audience}/role`, userRole);
+            } else {
+                console.log("No user role found, skipping adding to claim")
+            }
         }
+    } catch (err) {
+        console.log("Got err: " + err)
     }
 };
 
-async function registerUser(event, api, audience, role) {
-    console.log('Initial login. Running set up.')
-    const axios = require('axios');
-    const clientId = event.secrets.CLIENT_ID;
-    const clientSecret = event.secrets.CLIENT_SECRET;
-    const auth0Domain = event.secrets.AUTH0_DOMAIN;
-    const tokenUrl = `https://${auth0Domain}/oauth/token`;
-    const zenobiaEndpoint = event.secrets.ZENOBIA_ENDPOINT
-
-    try {
-        console.log(`Adding user to role ${role}`)
-        await setRole(event, role)
-
-        console.log(`Authenticating oauth to call /register-user using token url ${tokenUrl}`)
-        const tokenResponse = await axios.post(tokenUrl, {
-            client_id: clientId,
-            client_secret: clientSecret,
-            audience: audience,
-            grant_type: 'client_credentials'
-        }, {
-            headers: { 'Content-Type': 'application/json' }
-        });
-        console.log("Got token response")
-
-        const accessToken = tokenResponse.data.access_token;
-        console.log(`Registering user using endpoint ${zenobiaEndpoint}`)
-
-        await axios.post(`${zenobiaEndpoint}register-user`, {
-            sub: event.user.user_id,
-            email: event.user.email,
-            firstName: event.user.given_name,
-            lastName: event.user.family_name
-        },
-        {
-            headers: {
-                Authorization: "Bearer " + accessToken
-            }
-        }
-        );
-        console.log("Successfully called zenobia /register-user")
-    } catch (err) {
-        console.error('API call failed', err);
-        // Optionally fail the registration or just log
-    }
-}
-
-async function setRole(event, role) {
+async function setupAuth0Configuration(event, role) {
     const axios = require('axios');
     const auth0Domain = event.secrets.AUTH0_DOMAIN;
     const auth0ClientId = event.secrets.AUTH0_CLIENT_ID;
@@ -85,6 +46,17 @@ async function setRole(event, role) {
         client_secret: auth0Secret,
         audience: `https://${auth0Domain}/api/v2/`,
     }).then(response => response.data.access_token);
+    setRole(event, role, managementApiToken)
+
+    if (role == MERCHANT_ROLE) {
+        createOrganization(event, managementApiToken)
+    }
+}
+
+async function setRole(event, role, managementApiToken) {
+    console.log(`Adding user to role ${role}`)
+    const axios = require('axios');
+    const auth0Domain = event.secrets.AUTH0_DOMAIN;
 
     // Add role to user
     const userId = event.user.user_id; // Auth0 user ID
@@ -108,4 +80,64 @@ function getRoleId(event, roleName) {
     } else if (roleName == MERCHANT_ROLE) {
         return event.secrets.MERCHANT_ROLE_ID
     }
+}
+
+async function createOrganization(event, managementApiToken) {
+    console.log("Creating organization")
+    const management = new ManagementClient({
+        token: managementApiToken,
+        domain: event.secrets.AUTH0_DOMAIN
+    });
+    
+    try {
+        // Create an organization
+        const organization = await management.organizations.create({
+            name: `org-${event.user.user_id.replace(/[^a-zA-Z0-9]/g, '_')}`,
+            display_name: `Organization for ${event.user.email}`,
+            metadata: {
+                custom_field: 'value'
+            }
+        });
+
+        console.log('Organization created:', organization);
+    } catch (error) {
+        console.error('Error creating organization:', error);
+    }
+}
+
+async function registerUser(event, api, audience) {
+    const axios = require('axios');
+    const clientId = event.secrets.CLIENT_ID;
+    const clientSecret = event.secrets.CLIENT_SECRET;
+    const auth0Domain = event.secrets.AUTH0_DOMAIN;
+    const tokenUrl = `https://${auth0Domain}/oauth/token`;
+    const zenobiaEndpoint = event.secrets.ZENOBIA_ENDPOINT
+
+    console.log(`Authenticating oauth to call /register-user using token url ${tokenUrl}`)
+    const tokenResponse = await axios.post(tokenUrl, {
+        client_id: clientId,
+        client_secret: clientSecret,
+        audience: audience,
+        grant_type: 'client_credentials'
+    }, {
+        headers: { 'Content-Type': 'application/json' }
+    });
+    console.log("Got token response")
+
+    const accessToken = tokenResponse.data.access_token;
+    console.log(`Registering user using endpoint ${zenobiaEndpoint}`)
+
+    await axios.post(`${zenobiaEndpoint}register-user`, {
+        sub: event.user.user_id,
+        email: event.user.email,
+        firstName: event.user.given_name,
+        lastName: event.user.family_name
+    },
+    {
+        headers: {
+            Authorization: "Bearer " + accessToken
+        }
+    }
+    );
+    console.log("Successfully called zenobia /register-user")
 }
