@@ -1,0 +1,59 @@
+package com.zenobiapay.m2mhandler.di
+
+import com.auth0.client.auth.AuthAPI
+import com.auth0.client.mgmt.ManagementAPI
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.m2mhandler.model.Auth0ManagementSecret
+import dagger.Module
+import dagger.Provides
+import io.github.oshai.kotlinlogging.KotlinLogging
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
+import javax.inject.Named
+import javax.inject.Singleton
+
+private val logger = KotlinLogging.logger {}
+
+@Module
+class M2MModule {
+    companion object {
+        const val AUTH_MANAGEMENT_TOKEN = "AUTH_MANAGEMENT_TOKEN"
+    }
+    @Provides
+    fun provideSecretsManagerClient(): SecretsManagerClient {
+        return SecretsManagerClient.create()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuth0ManagementSecret(secretsManager: SecretsManagerClient, objectMapper: ObjectMapper): Auth0ManagementSecret {
+        val secrets = secretsManager.getSecretValue {
+            it.secretId("auth0/secrets")
+        }.secretString()
+        return objectMapper.readValue(secrets, Auth0ManagementSecret::class.java)
+    }
+
+    @Provides
+    fun provideAuthApi(auth0ManagementSecret: Auth0ManagementSecret): AuthAPI {
+        return AuthAPI.newBuilder(
+            auth0ManagementSecret.domain,
+            auth0ManagementSecret.clientId,
+            auth0ManagementSecret.clientSecret
+        ).build()
+    }
+
+    @Provides
+    @Named(AUTH_MANAGEMENT_TOKEN)
+    fun provideAuthManagementToken(authAPI: AuthAPI, secret: Auth0ManagementSecret): String {
+        return authAPI.requestToken(secret.audience).execute().body.accessToken
+    }
+
+    @Provides
+    fun provideManagementAPI(
+        auth0ManagementSecret: Auth0ManagementSecret,
+        @Named(AUTH_MANAGEMENT_TOKEN) authManagementToken: String
+    ): ManagementAPI {
+        return ManagementAPI
+            .newBuilder(auth0ManagementSecret.domain, authManagementToken)
+            .build()
+    }
+}

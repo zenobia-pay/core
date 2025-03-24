@@ -584,7 +584,68 @@ Resources:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSignUpHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
                 type: aws_proxy
-  
+
+          /create-m2m-credentials:
+            get:
+              summary: "Creates m2m credentials for a merchant"
+              operationId: "CreateM2mCredentials"
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          clientId:
+                            type: string
+                          clientSecret:
+                            type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+#              x-amazon-apigateway-integration:
+#                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSignUpHandlerFunction.Arn}:prod/invocations
+#                httpMethod: POST
+#                type: aws_proxy
+
+          /list-m2m-credentials:
+            get:
+              summary: "Lists m2m credentials. Only returns client id"
+              operationId: "ListM2MCredentials"
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          credentials:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                clientId:
+                                  type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+#              x-amazon-apigateway-integration:
+#                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSignUpHandlerFunction.Arn}:prod/invocations
+#                httpMethod: POST
+#                type: aws_proxy
+
   CustomAuthorizerFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -851,6 +912,27 @@ Resources:
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /get-merchant-config
+            Method: GET
+
+  M2MHandlerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      SkipBuild: true
+    Properties:
+      FunctionName: UserHandler
+      CodeUri: ../kotlin/lambda/m2m-handler/build/libs/lambda.jar
+      Handler: com.zenobiapay.m2mhandler.handlers.M2MHandler::handleRequest
+      MemorySize: 2048
+      Policies:
+        - AWSLambdaVPCAccessExecutionRole
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:auth0/secrets-Zc3U8o" # TODO dont hardcode
+      Events:
+        CreateM2MCredentials:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /create-m2m-credentials
             Method: GET
 
   UserSignUpHandlerFunction:

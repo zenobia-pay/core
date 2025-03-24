@@ -48,6 +48,9 @@ javax-inject = { module = "javax.inject:javax.inject", version = "1" }
 # Plaid
 plaid = { module = "com.plaid:plaid-java", version = "30.1.0" }
 
+# Auth0
+auth0 = { module = "com.auth0:auth0", version = "2.18.0" }
+
 # Testing
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version = "2.1.10"}
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }

@@ -16,5 +16,6 @@ include(
     "kotlin:lambda:user-handler",
     "kotlin:lambda:payout-handler",
     "kotlin:lambda:cognito-handler",
-    "kotlin:lambda:transfer-event-handler"
+    "kotlin:lambda:transfer-event-handler",
+    "kotlin:lambda:m2m-handler"
 )
