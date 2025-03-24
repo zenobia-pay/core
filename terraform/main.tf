@@ -15,16 +15,27 @@ provider "auth0" {
 
 resource "auth0_client" "zenobia_app" {
   name            = "Zenobia Web Client Sandbox"
-  app_type        = "spa"
-  callbacks       = ["https://zenobiapay.com/callback", "http://localhost:5173/admin",  "http://localhost:5173", "http://localhost:5173/login"]
-  allowed_logout_urls = ["https://zenobiapay.com/logout", "http://localhost:5173/admin"]
+  app_type        = "regular_web"
+  callbacks       = ["https://zenobiapay.com/callback", "http://localhost:3000/admin",  "http://localhost:3000", "http://localhost:3000/login"]
+  allowed_logout_urls = ["https://zenobiapay.com/logout", "http://localhost:3000/admin"]
+}
+
+resource "auth0_client_credentials" "zenobia_app_credentials" {
+  client_id = auth0_client.zenobia_app.id
+  authentication_method = "none"
 }
 
 resource "auth0_client" "zenobia_merchant_app" {
   name            = "Zenobia Merchant Client"
-  app_type        = "spa"
-  callbacks       = ["https://zenobiapay.com/callback", "http://localhost:5173/admin",  "http://localhost:5173", "http://localhost:5173/login", "http://localhost:3000"]
-  allowed_logout_urls = ["https://zenobiapay.com/logout", "http://localhost:5173/admin", "http://localhost:3000"]
+  app_type        = "regular_web"
+  logo_uri = "https://zenobiapay.com/android-chrome-192x192.png"
+  callbacks       = ["https://zenobiapay.com/callback", "http://localhost:3000/admin",  "http://localhost:3000", "http://localhost:3000/login"]
+  allowed_logout_urls = ["https://zenobiapay.com/logout", "http://localhost:3000/admin", "http://localhost:3000"]
+}
+
+resource "auth0_client_credentials" "zenobia_merchant_credentials" {
+  client_id = auth0_client.zenobia_merchant_app.id
+  authentication_method = "none"
 }
 
 resource "auth0_role" "merchant" {

@@ -11,7 +11,7 @@ exports.onExecutePostLogin = async (event, api) => {
         if (event.stats.logins_count === 1) { // Run only on initial login
             console.log('Initial login. Running set up.')
             const role = (event.clientId === merchantClientId) ? MERCHANT_ROLE : CUSTOMER_ROLE
-            console.log(`Got role ${role}`)
+            console.log(`Got role=${role} from clientId ${event.clientId}, expected merchant client id`)
 
             await setupAuth0Configuration(event, role)
             await registerUser(event, api, audience, role)
@@ -49,7 +49,12 @@ async function setupAuth0Configuration(event, role) {
     setRole(event, role, managementApiToken)
 
     if (role == MERCHANT_ROLE) {
-        createOrganization(event, managementApiToken)
+        const management = new ManagementClient({
+            token: managementApiToken,
+            domain: event.secrets.AUTH0_DOMAIN
+        });
+        const org_id = await createOrganization(event, management)
+        addUserToOrganization(event.user.user_id, org_id, management)
     }
 }
 
@@ -82,27 +87,29 @@ function getRoleId(event, roleName) {
     }
 }
 
-async function createOrganization(event, managementApiToken) {
+async function createOrganization(event, management) {
     console.log("Creating organization")
-    const management = new ManagementClient({
-        token: managementApiToken,
-        domain: event.secrets.AUTH0_DOMAIN
-    });
     
     try {
         // Create an organization
         const organization = await management.organizations.create({
             name: `org-${event.user.user_id.replace(/[^a-zA-Z0-9]/g, '_')}`,
-            display_name: `Organization for ${event.user.email}`,
+            display_name: `${event.user.email} Organization`,
             metadata: {
                 custom_field: 'value'
             }
         });
 
         console.log('Organization created:', organization);
+        return organization.data.id
     } catch (error) {
         console.error('Error creating organization:', error);
     }
+}
+
+async function addUserToOrganization(user_id, org_id, management) {
+    console.log(`Adding user ${user_id} to organization ${org_id}`)
+    await management.organizations.addMembers({id: org_id}, { members: [user_id] })
 }
 
 async function registerUser(event, api, audience) {

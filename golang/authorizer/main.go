@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
@@ -15,10 +16,12 @@ func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequest
 	if event.Path == "/register-user" {
 		println("Validating auth0 token")
 		isValid := EnsureValidAuth0ActionToken(ctx, token)
+		println(fmt.Sprintf("Got isValidAuth0ActionToken: %t", isValid))
 		return generatePolicyResponse(isValid, event.MethodArn), nil
 	} else {
 		println("Validating auth0 user")
 		isValid := EnsureValidToken(ctx, token)
+		println(fmt.Sprintf("Got isValidApiToken: %t", isValid))
 		return generatePolicyResponse(isValid, event.MethodArn), nil
 	}
 }
@@ -57,6 +60,7 @@ func generatePolicy(principalID, effect, resource string) events.APIGatewayCusto
 
 func main() {
 	if len(os.Args) > 1 {
+		println("Got arguments with invocation. Running in local mode. Should not run this in prod!")
 		isValid := EnsureValidAuth0ActionToken(context.Background(), os.Args[1])
 		println("Got value", isValid)
 	}

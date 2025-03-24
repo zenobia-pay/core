@@ -24,12 +24,15 @@ class CreateM2MCredentialsOperation @Inject constructor(private val managementAP
         val client = Client("${userId}_${UUID.randomUUID()}")
         client.description = "M2M Client to act on behalf of merchant $userId"
         client.appType = "non_interactive"
+        client.clientMetadata = mapOf("merchantSub" to userId)
 
         val createClientResponse = managementAPI.clients().create(client).execute()
-        if (createClientResponse.statusCode >= 300) { // Auth0 returns 201 instead of 200
+        if (createClientResponse.statusCode >= 400) { // Auth0 returns 201 instead of 200
             logger.error { "Got error code ${createClientResponse.statusCode}, ${createClientResponse.body}"}
             throw Auth0Exception("Failed to create new m2m client")
         }
+
+        logger.info { "Successfully created m2m client with name ${createClientResponse.body.name}" }
         return CreateM2mCredentials200Response(
             clientId = createClientResponse.body.clientId,
             clientSecret = createClientResponse.body.clientSecret
