@@ -16,7 +16,8 @@ provider "auth0" {
 resource "auth0_client" "zenobia_app" {
   name            = "Zenobia Web Client Sandbox"
   app_type        = "regular_web"
-  callbacks       = ["https://zenobiapay.com/callback", "http://localhost:3000/admin",  "http://localhost:3000", "http://localhost:3000/login"]
+  logo_uri = "https://zenobiapay.com/android-chrome-192x192.png"
+  callbacks       = ["https://zenobiapay.com/callback", "http://localhost:3000/admin",  "http://localhost:3000", "http://localhost:3000/login", "http://zenobiapay.com/login", "http:zenobiapay.com/admin"]
   allowed_logout_urls = ["https://zenobiapay.com/logout", "http://localhost:3000/admin"]
 }
 

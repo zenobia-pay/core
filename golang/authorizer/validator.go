@@ -80,13 +80,30 @@ func init() {
 	}
 }
 
-// EnsureValidToken is a middleware that will check the validity of our JWT.
-func EnsureValidToken(ctx context.Context, token string) bool {
-	_, err := basicJwtValidator.ValidateToken(ctx, token)
-	return err == nil
+// GetValidatedUserClaims is a middleware that will check the validity of our JWT.
+func GetValidatedUserClaims(ctx context.Context, token string) (*validator.ValidatedClaims, error) {
+	claims, err := basicJwtValidator.ValidateToken(ctx, token)
+	if err != nil {
+		println("Validation threw err", err.Error())
+		return nil, err
+	}
+	return getCastClaims(claims)
 }
 
-func EnsureValidAuth0ActionToken(ctx context.Context, token string) bool {
-	_, err := auth0ActionJwtValidator.ValidateToken(ctx, token)
-	return err == nil
+func GetValidatedAuth0ActionClaims(ctx context.Context, token string) (*validator.ValidatedClaims, error) {
+	claims, err := auth0ActionJwtValidator.ValidateToken(ctx, token)
+	if err != nil {
+		println("Auth0 action validation threw err", err.Error())
+		return nil, err
+	}
+	return getCastClaims(claims)
+}
+
+func getCastClaims(claims interface{}) (*validator.ValidatedClaims, error) {
+	if castClaims, ok := claims.(*validator.ValidatedClaims); ok {
+		return castClaims, nil
+	} else {
+		println("Failed to cast claim")
+		return nil, errors.New("could not cast claim")
+	}
 }

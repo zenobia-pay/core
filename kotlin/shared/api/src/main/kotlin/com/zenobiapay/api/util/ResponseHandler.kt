@@ -18,7 +18,7 @@ private val logger = KotlinLogging.logger {}
 class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper) {
     fun returnApiGwResponse(operation: Operation, input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
         return wrapOperation {
-            val userId = input.requestContext.getUserId(objectMapper)
+            val userId = input.requestContext.getUserId()
             operation.run(input, context, userId)
         }
     }

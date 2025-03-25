@@ -56,6 +56,7 @@ Resources:
     Properties:
       Auth:
         DefaultAuthorizer: CustomAuthorizer
+        AddDefaultAuthorizerToCorsPreflight: false
         Authorizers:
           CustomAuthorizer:
             FunctionPayloadType: REQUEST
@@ -585,62 +586,62 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
-          /create-m2m-credentials:
-            get:
-              summary: "Creates m2m credentials for a merchant"
-              operationId: "CreateM2mCredentials"
-              responses:
-                '200':
-                  description: "Successful response"
-                  content:
-                    application/json:
-                      schema:
-                        type: object
-                        properties:
-                          clientId:
-                            type: string
-                          clientSecret:
-                            type: string
-                "400":
-                  $ref: "#/components/responses/BadRequest"
-                "403":
-                  $ref: "#/components/responses/Forbidden"
-                "404":
-                  $ref: "#/components/responses/NotFound"
-                "500":
-                  $ref: "#/components/responses/InternalServerError"
+#          /create-m2m-credentials:
+#            get:
+#              summary: "Creates m2m credentials for a merchant"
+#              operationId: "CreateM2mCredentials"
+#              responses:
+#                '200':
+#                  description: "Successful response"
+#                  content:
+#                    application/json:
+#                      schema:
+#                        type: object
+#                        properties:
+#                          clientId:
+#                            type: string
+#                          clientSecret:
+#                            type: string
+#                "400":
+#                  $ref: "#/components/responses/BadRequest"
+#                "403":
+#                  $ref: "#/components/responses/Forbidden"
+#                "404":
+#                  $ref: "#/components/responses/NotFound"
+#                "500":
+#                  $ref: "#/components/responses/InternalServerError"
 #              x-amazon-apigateway-integration:
 #                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSignUpHandlerFunction.Arn}:prod/invocations
 #                httpMethod: POST
 #                type: aws_proxy
 
-          /list-m2m-credentials:
-            get:
-              summary: "Lists m2m credentials. Only returns client id"
-              operationId: "ListM2MCredentials"
-              responses:
-                '200':
-                  description: "Successful response"
-                  content:
-                    application/json:
-                      schema:
-                        type: object
-                        properties:
-                          credentials:
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                clientId:
-                                  type: string
-                "400":
-                  $ref: "#/components/responses/BadRequest"
-                "403":
-                  $ref: "#/components/responses/Forbidden"
-                "404":
-                  $ref: "#/components/responses/NotFound"
-                "500":
-                  $ref: "#/components/responses/InternalServerError"
+#          /list-m2m-credentials:
+#            get:
+#              summary: "Lists m2m credentials. Only returns client id"
+#              operationId: "ListM2MCredentials"
+#              responses:
+#                '200':
+#                  description: "Successful response"
+#                  content:
+#                    application/json:
+#                      schema:
+#                        type: object
+#                        properties:
+#                          credentials:
+#                            type: array
+#                            items:
+#                              type: object
+#                              properties:
+#                                clientId:
+#                                  type: string
+#                "400":
+#                  $ref: "#/components/responses/BadRequest"
+#                "403":
+#                  $ref: "#/components/responses/Forbidden"
+#                "404":
+#                  $ref: "#/components/responses/NotFound"
+#                "500":
+#                  $ref: "#/components/responses/InternalServerError"
 #              x-amazon-apigateway-integration:
 #                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSignUpHandlerFunction.Arn}:prod/invocations
 #                httpMethod: POST
@@ -919,7 +920,7 @@ Resources:
     Metadata:
       SkipBuild: true
     Properties:
-      FunctionName: UserHandler
+      FunctionName: M2MHandler
       CodeUri: ../kotlin/lambda/m2m-handler/build/libs/lambda.jar
       Handler: com.zenobiapay.m2mhandler.handlers.M2MHandler::handleRequest
       MemorySize: 2048

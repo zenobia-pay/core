@@ -15,15 +15,16 @@ exports.onExecutePostLogin = async (event, api) => {
 
             await setupAuth0Configuration(event, role)
             await registerUser(event, api, audience, role)
+            api.user.setAppMetadata('role', role)
             console.log("Setting custom claims manually for initial login")
-            api.idToken.setCustomClaim(`${audience}/role`, role);
-            api.accessToken.setCustomClaim(`${audience}/role`, role);
+            api.idToken.setCustomClaim('role', role);
+            api.accessToken.setCustomClaim('role', role);
         } else {
             const userRole = event.user.app_metadata?.role;
             if (userRole) {
                 console.log(`Found user role ${userRole}, adding to claims`)
-                api.idToken.setCustomClaim(`${audience}/role`, userRole);
-                api.accessToken.setCustomClaim(`${audience}/role`, userRole);
+                api.idToken.setCustomClaim('role', userRole);
+                api.accessToken.setCustomClaim('role', userRole);
             } else {
                 console.log("No user role found, skipping adding to claim")
             }

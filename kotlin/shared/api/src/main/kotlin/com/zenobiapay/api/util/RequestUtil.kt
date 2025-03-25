@@ -1,22 +1,14 @@
 package com.zenobiapay.api.util
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 
-fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserId(objectMapper: ObjectMapper): String? {
+fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserId(): String? {
     logger.info { "Got authorizer $authorizer and values ${authorizer.keys}" }
-    val claims = this.authorizer["claims"]
-
-    if (claims == null) return null
-
-    val claimsMap = objectMapper.convertValue(claims, object : TypeReference<Map<String, String>>() {})
-
-    return claimsMap["sub"]
+    return this.authorizer["sub"] as String
 }
 
 fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserPoolGroups(): List<UserPoolGroup> {
