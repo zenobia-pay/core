@@ -63,6 +63,7 @@ pids
 gradle-app.setting
 !gradle-wrapper.jar
 !gradle-wrapper.properties
+!gradle/wrapper/gradle-wrapper.jar
 .gradletasknamecache
 .project
 .classpath
