@@ -15,16 +15,10 @@ jobs:
 
     - name: Install Go
       run: |
-        wget https://golang.org/dl/go1.18.5.linux-amd64.tar.gz
+        wget -q https://golang.org/dl/go1.18.5.linux-amd64.tar.gz
         sudo tar -C /usr/local -xzf go1.18.5.linux-amd64.tar.gz
         echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.bashrc
         source ~/.bashrc
-
-    - name: Install Gradle
-      run: |
-        wget https://services.gradle.org/distributions/gradle-7.3.3-bin.zip
-        sudo unzip gradle-7.3.3-bin.zip -d /opt
-        sudo ln -s /opt/gradle-7.3.3/bin/gradle /usr/local/bin/gradle
 
     - name: Install yq
       run: |
@@ -32,10 +26,8 @@ jobs:
         chmod +x yq_linux_amd64
         sudo mv yq_linux_amd64 /usr/local/bin/yq
 
-    # Step 4: Build Go artifacts
     - name: Build Go artifacts
       run: make go
 
-    # Step 5: Build Kotlin artifacts using Gradle, using yq as part of the process
     - name: Build Kotlin artifacts
       run: make kotlin
