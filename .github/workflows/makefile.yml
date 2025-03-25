@@ -14,6 +14,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - uses: actions/setup-python@v3
+    - uses: aws-actions/setup-sam@v2
 
     - name: Install Go
       run: |
@@ -33,12 +35,6 @@ jobs:
 
     - name: Build Kotlin artifacts
       run: make kotlin
-        
-    - name: Install AWS SAM CLI
-      run: |
-        wget https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip
-        unzip aws-sam-cli-linux-x86_64.zip -d sam-installation
-        sudo ./sam-installation/install
 
     - name: Configure aws credentials
       uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
