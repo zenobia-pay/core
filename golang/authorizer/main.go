@@ -14,7 +14,6 @@ import (
 func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 	println("Got path " + event.Path)
 	token := extractToken(event.Headers["Authorization"])
-	println("TOKEN new: " + token) // TODO: please for the love that is all holy remove this line
 	if event.Path == "/register-user" {
 		println("Validating auth0 token")
 		claims, err := GetValidatedAuth0ActionClaims(ctx, token)
@@ -49,9 +48,14 @@ func generatePolicyResponse(isValid bool, claims *validator.ValidatedClaims, met
 func generatePolicy(principalID, effect, resource string, claims *validator.ValidatedClaims) events.APIGatewayCustomAuthorizerResponse {
 	var context map[string]interface{} = nil
 	if claims != nil {
+		var role *string = nil
+		if castCustomClaims, ok := claims.CustomClaims.(CustomClaims); ok {
+			role = &castCustomClaims.Role
+			println("Got role: " + *role)
+		}
 		context = map[string]interface{}{
-			"sub": claims.RegisteredClaims.Subject,
-			// "roles": roles, // TODO: implement roles
+			"sub":  claims.RegisteredClaims.Subject,
+			"role": role,
 		}
 	}
 

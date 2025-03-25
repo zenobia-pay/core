@@ -10,12 +10,16 @@ exports.onExecutePostLogin = async (event, api) => {
     try {
         if (event.stats.logins_count === 1) { // Run only on initial login
             console.log('Initial login. Running set up.')
-            const role = (event.clientId === merchantClientId) ? MERCHANT_ROLE : CUSTOMER_ROLE
-            console.log(`Got role=${role} from clientId ${event.clientId}, expected merchant client id`)
+            const role = (event.client.id === merchantClientId) ? MERCHANT_ROLE : CUSTOMER_ROLE
+            console.log(`Setting app metadata ${role}`)
+            api.user.setAppMetadata('role', role)
+
+            // TODO: client id are both returning undefined, fix 
+            console.log(`Got role=${role} from clientId ${event.client.id}, expected merchant client id ${merchantClientId}`)
 
             await setupAuth0Configuration(event, role)
             await registerUser(event, api, audience, role)
-            api.user.setAppMetadata('role', role)
+
             console.log("Setting custom claims manually for initial login")
             api.idToken.setCustomClaim('role', role);
             api.accessToken.setCustomClaim('role', role);

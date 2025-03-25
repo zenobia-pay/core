@@ -15,6 +15,7 @@ import (
 type CustomClaims struct {
 	Scope string `json:"scope"`
 	Azp   string `json:"azp"`
+	Role  string `json:"role"`
 }
 
 // Validates that azp is auth0 app client
