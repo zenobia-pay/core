@@ -55,6 +55,12 @@ jobs:
     - name: Terraform Init
       run: terraform init
       working-directory: terraform
+    - name: List env vars
+      run: env | grep TF_VAR_
+      env:
+        TF_VAR_AUTH0_DOMAIN: ${{ vars.TF_VAR_AUTH0_DOMAIN}}
+        TF_VAR_AUTH0_CLIENT_ID: ${{ vars.TF_VAR_AUTH0_CLIENT_ID }}
+        TF_VAR_ZENOBIA_ENDPOINT: ${{ vars.TF_VAR_ZENOBIA_ENDPOINT}}
     - name: Terraform Plan
       run: terraform plan
       working-directory: terraform
