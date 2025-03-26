@@ -66,7 +66,7 @@ jobs:
         TF_VAR_ZENOBIA_ENDPOINT: ${{ vars.TF_VAR_ZENOBIA_ENDPOINT}}
 
   gradle-dependency-check:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
     runs-on: ubuntu-latest
     steps:
     - name: Checkout sources
@@ -79,14 +79,49 @@ jobs:
     - name: Generate and submit dependency graph
       uses: gradle/actions/dependency-submission@v4
 
+  deploy-beta-tf:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v3
+    - name: Terraform Init
+      run: terraform init
+      working-directory: terraform
+    - name: Terraform Plan
+      run: terraform plan
+      working-directory: terraform
+      env:
+        TF_VAR_AUTH0_DOMAIN: ${{ vars.TF_VAR_AUTH0_DOMAIN}}
+        TF_VAR_AUTH0_CLIENT_ID: ${{ secrets.TF_VAR_AUTH0_CLIENT_ID }}
+        TF_VAR_AUTH0_CLIENT_SECRET: ${{ secrets.TF_VAR_AUTH0_CLIENT_SECRET }}
+        TF_VAR_AUTH0_ACTION_CLIENT_SECRET: ${{ secrets.TF_VAR_AUTH0_ACTION_CLIENT_SECRET }}
+        TF_VAR_ZENOBIA_ENDPOINT: ${{ vars.TF_VAR_ZENOBIA_ENDPOINT}}
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
+      working-directory: terraform
+      env:
+        TF_VAR_AUTH0_DOMAIN: ${{ vars.TF_VAR_AUTH0_DOMAIN}}
+        TF_VAR_AUTH0_CLIENT_ID: ${{ secrets.TF_VAR_AUTH0_CLIENT_ID }}
+        TF_VAR_AUTH0_CLIENT_SECRET: ${{ secrets.TF_VAR_AUTH0_CLIENT_SECRET }}
+        TF_VAR_AUTH0_ACTION_CLIENT_SECRET: ${{ secrets.TF_VAR_AUTH0_ACTION_CLIENT_SECRET }}
+        TF_VAR_ZENOBIA_ENDPOINT: ${{ vars.TF_VAR_ZENOBIA_ENDPOINT}}
+
 
   deploy-beta:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v3
     - uses: aws-actions/setup-sam@v2
+    - name: Configure aws credentials
+      uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+      with:
+        role-to-assume: arn:aws:iam::045667251056:role/GithubActionsDeploymentRole
+        role-session-name: github-actions-${{ github.workflow }}-${{ github.run_id }}
+        aws-region: us-east-1
 
     - name: Install Go
       run: |
@@ -106,12 +141,6 @@ jobs:
       uses: gradle/actions/setup-gradle@v4
     - name: Build Kotlin artifacts
       run: make kotlin
-    - name: Configure aws credentials
-      uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
-      with:
-        role-to-assume: arn:aws:iam::045667251056:role/GithubActionsDeploymentRole
-        role-session-name: github-actions-${{ github.workflow }}-${{ github.run_id }}
-        aws-region: us-east-1
     - name: Deploy sam
       run: |
         sam deploy --no-confirm-changeset --parameter-overrides Stage=beta
