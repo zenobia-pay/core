@@ -19,6 +19,8 @@ jobs:
         curl -LJO https://github.com/mikefarah/yq/releases/download/v4.15.1/yq_linux_amd64
         chmod +x yq_linux_amd64
         sudo mv yq_linux_amd64 /usr/local/bin/yq
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
     - name: Build Kotlin artifacts
       run: make kotlin
 
@@ -59,6 +61,8 @@ jobs:
         sudo mv yq_linux_amd64 /usr/local/bin/yq
     - name: Build Go artifacts
       run: make go
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
     - name: Build Kotlin artifacts
       run: make kotlin
     - name: Configure aws credentials
