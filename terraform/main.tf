@@ -17,7 +17,7 @@ resource "auth0_client" "zenobia_app" {
   name            = "Zenobia Web Client Sandbox"
   app_type        = "regular_web"
   logo_uri = "https://zenobiapay.com/android-chrome-192x192.png"
-  callbacks       = ["https://zenobiapay.com/callback", "http://localhost:3000/admin",  "http://localhost:3000", "http://localhost:3000/login", "http://zenobiapay.com/login", "http:zenobiapay.com/admin"]
+  callbacks       = ["https://zenobiapay.com/callback", "http://localhost:3000/admin",  "http://localhost:3000", "http://localhost:3000/login", "https://zenobiapay.com/login", "http:zenobiapay.com/admin"]
   allowed_logout_urls = ["https://zenobiapay.com/logout", "http://localhost:3000/admin"]
 }
 
@@ -92,7 +92,7 @@ resource "auth0_action" "user_login_webhook" {
   }
   secrets {
     name = "CLIENT_ID"
-    value = var.auth0_action_client_id
+    value = auth0_client.auth0_action_app.client_id
   }
   secrets {
     name = "CLIENT_SECRET"
@@ -112,11 +112,11 @@ resource "auth0_action" "user_login_webhook" {
   }
   secrets {
     name = "MERCHANT_CLIENT_ID"
-    value = var.merchant_client_id
+    value = auth0_client.zenobia_merchant_app.client_id
   }
   secrets {
     name = "CUSTOMER_CLIENT_ID"
-    value = var.customer_client_id
+    value = auth0_client.zenobia_app.client_id
   }
   secrets {
     name = "MERCHANT_ROLE_ID"
