@@ -9,7 +9,20 @@ permissions:
   id-token: write   # This is required for requesting the JWT
   contents: read    # This is required for actions/checkout
 jobs:
-  build:
+  build-kotlin:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install yq
+      run: |
+        curl -LJO https://github.com/mikefarah/yq/releases/download/v4.15.1/yq_linux_amd64
+        chmod +x yq_linux_amd64
+        sudo mv yq_linux_amd64 /usr/local/bin/yq
+    - name: Build Kotlin artifacts
+      run: make kotlin
+
+  build-go:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
@@ -21,17 +34,8 @@ jobs:
         echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.bashrc
         source ~/.bashrc
 
-    - name: Install yq
-      run: |
-        curl -LJO https://github.com/mikefarah/yq/releases/download/v4.15.1/yq_linux_amd64
-        chmod +x yq_linux_amd64
-        sudo mv yq_linux_amd64 /usr/local/bin/yq
-
     - name: Build Go artifacts
       run: make go
-
-    - name: Build Kotlin artifacts
-      run: make kotlin
 
   deploy-beta:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
