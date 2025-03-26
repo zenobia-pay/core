@@ -85,10 +85,20 @@ jobs:
     environment: beta
     steps:
     - uses: actions/checkout@v4
+    - name: Configure aws credentials
+      uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+      with:
+        role-to-assume: arn:aws:iam::039319543506:role/GithubActionsBeta
+        role-session-name: github-actions-${{ github.workflow }}-${{ github.run_id }}
+        aws-region: us-east-1
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v3
     - name: Terraform Init
-      run: terraform init
+      run: |
+        terraform init \
+        -backend-config="bucket=zenobia-beta-terraform-deployment-bucket" \
+        -backend-config="key=envs/beta/terraform.tfstate" \
+        -backend-config="region=us-east-1"
       working-directory: terraform
     - name: Terraform Plan
       run: terraform plan

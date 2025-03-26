@@ -5,6 +5,9 @@ terraform {
       version = "~> 1.0"
     }
   }
+  backend "s3" {
+    use_lockfile = true
+  }
 }
 
 provider "auth0" {
