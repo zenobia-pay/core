@@ -10,8 +10,8 @@ Globals:
     Architectures:
       - x86_64
     AutoPublishAlias: prod
-    SnapStart:
-      ApplyOn: PublishedVersions
+    # SnapStart:
+    #   ApplyOn: PublishedVersions
     AutoPublishAliasAllProperties: true
     VpcConfig:
       SecurityGroupIds:
@@ -44,10 +44,6 @@ Parameters:
   SubnetId1:
     Type: String
   SubnetId2:
-    Type: String
-  UserPoolArn:
-    Type: String
-  IdentityPoolId: 
     Type: String
 
 Resources:
@@ -701,53 +697,6 @@ Resources:
                   - logs:FilterLogEvents
                 Resource: "*"
 
-  UnauthenticatedRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Principal:
-              Federated: 'cognito-identity.amazonaws.com'
-            Action: 'sts:AssumeRoleWithWebIdentity'
-            Condition:
-              StringEquals:
-                cognito-identity.amazonaws.com:aud: !Ref IdentityPoolId
-
-  AuthenticatedRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Principal:
-              Federated: 'cognito-identity.amazonaws.com'
-            Action: 'sts:AssumeRoleWithWebIdentity'
-            Condition:
-              StringEquals:
-                cognito-identity.amazonaws.com:aud: !Ref IdentityPoolId
-      Policies:
-        - PolicyName: 'AuthenticatedPolicy'
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: 'Allow'
-                Action: 'lambda:InvokeFunction'
-                Resource: 
-                  - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${BankHandlerFunction}'
-                  - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${TransferHandlerFunction}'
-
-
-  CognitoIdentityPoolRoleAttachment:
-    Type: 'AWS::Cognito::IdentityPoolRoleAttachment'
-    Properties:
-      IdentityPoolId: !Ref IdentityPoolId
-      Roles:
-        authenticated: !GetAtt AuthenticatedRole.Arn
-        unauthenticated: !GetAtt UnauthenticatedRole.Arn
-
   BankHandlerFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -806,18 +755,12 @@ Resources:
           TRANSFER_TABLE_NAME: !Ref TransferTableName
           BANK_TABLE_NAME: !Ref BankTableName
           USER_TABLE_NAME: !Ref UserTableName
-          COGNITO_USER_POOL_ARN: !Ref UserPoolArn
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:plaid/sandbox/credentials-cRPbpD" # TODO dont hardcode
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:orum/sandbox/credentials-VS6HFc" # TODO dont hardcode
         - AWSLambdaVPCAccessExecutionRole
-        - Statement:
-          - Effect: Allow
-            Action:
-              - cognito-idp:AdminGetUser  # This grants access to get user details
-            Resource: !Ref UserPoolArn
         - DynamoDBCrudPolicy:
             TableName: !Ref TransferTableName
         - DynamoDBReadPolicy:
@@ -883,18 +826,12 @@ Resources:
         Variables:
           USER_TABLE_NAME: !Ref UserTableName
           BANK_TABLE_NAME: !Ref BankTableName
-          COGNITO_USER_POOL_ARN: !Ref UserPoolArn
       Policies:
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref UserTableName
         - DynamoDBReadPolicy:
             TableName: !Ref BankTableName
-        - Statement: # TODO: remove after switching away cognito util
-            - Effect: Allow
-              Action:
-                - cognito-idp:AdminGetUser  # This grants access to get user details
-              Resource: !Ref UserPoolArn
         - KMSEncryptPolicy:
             KeyId: !Ref UserKeyId
         - KMSDecryptPolicy:
