@@ -25,17 +25,6 @@ Resources:
         Stage: !Ref Stage
         UniqueIdentifier: !Ref UniqueIdentifier
 
-  AuthStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: ./sam/auth-stack.yml
-      Parameters:
-        SecurityGroupId: !GetAtt VpcStack.Outputs.SecurityGroupId
-        SubnetId1: !GetAtt VpcStack.Outputs.PrivateSubnetId1
-        SubnetId2: !GetAtt VpcStack.Outputs.PrivateSubnetId2
-        UserTableName: !GetAtt TableStack.Outputs.UserTableName
-        UserKeyId: !GetAtt TableStack.Outputs.UserKeyId
-
   LambdaStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -44,8 +33,6 @@ Resources:
         SecurityGroupId: !GetAtt VpcStack.Outputs.SecurityGroupId
         SubnetId1: !GetAtt VpcStack.Outputs.PrivateSubnetId1
         SubnetId2: !GetAtt VpcStack.Outputs.PrivateSubnetId2
-        UserPoolArn: !GetAtt AuthStack.Outputs.UserPoolArn
-        IdentityPoolId: !GetAtt AuthStack.Outputs.IdentityPoolId
         BankTableName: !GetAtt TableStack.Outputs.BankTableName
         UserTableName: !GetAtt TableStack.Outputs.UserTableName
         TransferTableName: !GetAtt TableStack.Outputs.TransferTableName
@@ -61,7 +48,6 @@ Resources:
     Properties:
       TemplateURL: ./sam/payout-stack.yml
       Parameters:
-        UserPoolArn: !GetAtt AuthStack.Outputs.UserPoolArn
         TransferTableName: !GetAtt TableStack.Outputs.TransferTableName
 
 Outputs:

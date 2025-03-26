@@ -1,18 +1,19 @@
-name: Makefile CI
+name: PR
 
 on:
   push:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-
+permissions:
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
 jobs:
   build:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
-
     - name: Install Go
       run: |
         wget -q https://golang.org/dl/go1.18.5.linux-amd64.tar.gz
@@ -31,3 +32,37 @@ jobs:
 
     - name: Build Kotlin artifacts
       run: make kotlin
+
+  deploy-beta:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v3
+    - uses: aws-actions/setup-sam@v2
+
+    - name: Install Go
+      run: |
+        wget -q https://golang.org/dl/go1.18.5.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go1.18.5.linux-amd64.tar.gz
+        echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.bashrc
+        source ~/.bashrc
+
+    - name: Install yq
+      run: |
+        curl -LJO https://github.com/mikefarah/yq/releases/download/v4.15.1/yq_linux_amd64
+        chmod +x yq_linux_amd64
+        sudo mv yq_linux_amd64 /usr/local/bin/yq
+    - name: Build Go artifacts
+      run: make go
+    - name: Build Kotlin artifacts
+      run: make kotlin
+    - name: Configure aws credentials
+      uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+      with:
+        role-to-assume: arn:aws:iam::045667251056:role/GithubActionsDeploymentRole
+        role-session-name: github-actions-${{ github.workflow }}-${{ github.run_id }}
+        aws-region: us-east-1
+    - name: Deploy sam
+      run: |
+        sam deploy --no-confirm-changeset --parameter-overrides Stage=beta
