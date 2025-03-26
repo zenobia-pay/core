@@ -8,9 +8,9 @@ terraform {
 }
 
 provider "auth0" {
-  domain        = var.auth0_domain
-  client_id     = var.auth0_client_id
-  client_secret = var.auth0_client_secret
+  domain        = var.AUTH0_DOMAIN
+  client_id     = var.AUTH0_CLIENT_ID
+  client_secret = var.AUTH0_CLIENT_SECRET
 }
 
 resource "auth0_client" "zenobia_app" {
@@ -88,7 +88,7 @@ resource "auth0_action" "user_login_webhook" {
   }
   secrets {
     name = "AUTH0_DOMAIN"
-    value = var.auth0_domain
+    value = var.AUTH0_DOMAIN
   }
   secrets {
     name = "CLIENT_ID"
@@ -96,19 +96,19 @@ resource "auth0_action" "user_login_webhook" {
   }
   secrets {
     name = "CLIENT_SECRET"
-    value = var.auth0_action_client_secret
+    value = var.AUTH0_ACTION_CLIENT_SECRET
   }
   secrets {
     name = "AUTH0_CLIENT_ID"
-    value = var.auth0_client_id
+    value = var.AUTH0_CLIENT_ID
   }
   secrets {
     name = "AUTH0_CLIENT_SECRET"
-    value = var.auth0_client_secret
+    value = var.AUTH0_CLIENT_SECRET
   }
   secrets {
     name = "ZENOBIA_ENDPOINT"
-    value = var.zenobia_endpoint
+    value = var.ZENOBIA_ENDPOINT
   }
   secrets {
     name = "MERCHANT_CLIENT_ID"
