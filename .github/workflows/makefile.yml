@@ -58,6 +58,12 @@ jobs:
     - name: Terraform Plan
       run: terraform plan
       working-directory: terraform
+      env:
+        TF_VAR_AUTH0_DOMAIN: ${{ vars.TF_VAR_AUTH0_DOMAIN}}
+        TF_VAR_AUTH0_CLIENT_ID: ${{ vars.TF_VAR_AUTH0_CLIENT_ID }}
+        TF_VAR_AUTH0_CLIENT_SECRET: ${{ vars.TF_VAR_AUTH0_CLIENT_SECRET }}
+        TF_VAR_AUTH0_ACTION_CLIENT_SECRET: ${{ vars.TF_VAR_AUTH0_ACTION_CLIENT_SECRET }}
+        TF_VAR_ZENOBIA_ENDPOINT: ${{ vars.TF_VAR_ZENOBIA_ENDPOINT}}
 
   gradle-dependency-check:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
