@@ -12,7 +12,7 @@ go:
 
 kotlin:
 	echo "Building gradle"
-	./gradlew build
+	./gradlew build --parallel
 
 openapi:
 	yq eval '.Resources.ZenobiaApi.Properties.DefinitionBody' sam/lambda-stack.yml | sed -E 's/!Sub //g' > openapi.yml
