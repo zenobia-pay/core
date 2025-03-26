@@ -59,6 +59,19 @@ jobs:
     - name: Build Go artifacts
       run: make go
 
+  terraform-plan:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v3
+    - name: Terraform Init
+      run: terraform init
+      working-directory: terraform
+    - name: Terraform Plan
+      run: terraform plan
+      working-directory: terraform
+
   deploy-beta:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
