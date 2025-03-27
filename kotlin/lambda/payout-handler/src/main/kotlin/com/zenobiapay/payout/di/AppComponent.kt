@@ -1,6 +1,5 @@
 package com.zenobiapay.payout.di
 
-import com.zenobiapay.cognito.di.CognitoModule
 import com.zenobiapay.di.SharedModule
 import com.zenobiapay.orum.di.OrumModule
 import com.zenobiapay.payout.handlers.PayoutDispatcher
@@ -12,7 +11,6 @@ import dagger.Component
     OrumModule::class,
     SharedModule::class,
     TableModule::class,
-    CognitoModule::class,
     PayoutModule::class,
 ])
 interface AppComponent {

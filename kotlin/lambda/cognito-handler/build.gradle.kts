@@ -30,7 +30,6 @@ dependencies {
     api(project(":kotlin:shared"))
     api(project(":kotlin:shared:api"))
     api(project(":kotlin:shared:orum"))
-    api(project(":kotlin:shared:cognito"))
     api(project(":kotlin:shared:table"))
     api(project(":kotlin:shared:table:user"))
 

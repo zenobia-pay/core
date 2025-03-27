@@ -44,27 +44,6 @@ jobs:
     - name: Build Go artifacts
       run: make go
 
-  terraform-plan:
-    if: github.event_name == 'pull_request'
-    environment: beta
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Terraform
-      uses: hashicorp/setup-terraform@v3
-    - name: Terraform Init
-      run: terraform init
-      working-directory: terraform
-    - name: Terraform Plan
-      run: terraform plan
-      working-directory: terraform
-      env:
-        TF_VAR_AUTH0_DOMAIN: ${{ vars.TF_VAR_AUTH0_DOMAIN}}
-        TF_VAR_AUTH0_CLIENT_ID: ${{ secrets.TF_VAR_AUTH0_CLIENT_ID }}
-        TF_VAR_AUTH0_CLIENT_SECRET: ${{ secrets.TF_VAR_AUTH0_CLIENT_SECRET }}
-        TF_VAR_AUTH0_ACTION_CLIENT_SECRET: ${{ secrets.TF_VAR_AUTH0_ACTION_CLIENT_SECRET }}
-        TF_VAR_ZENOBIA_ENDPOINT: ${{ vars.TF_VAR_ZENOBIA_ENDPOINT}}
-
   gradle-dependency-check:
     if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
     runs-on: ubuntu-latest
