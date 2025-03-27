@@ -74,7 +74,7 @@ Resources:
       StageName: Prod
       AccessLogSetting:
         DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
-        Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","responseLatency":"$context.responseLatency","userAgent":"$context.identity.userAgent","requestTime":"$context.requestTime"}'
+        Format: '{"requestId":"$context.requestId","resourcePath": "$context.resourcePath","path":"$context.path","ip":"$context.identity.sourceIp","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","responseLatency":"$context.responseLatency","userAgent":"$context.identity.userAgent","requestTime":"$context.requestTime"}'
       MethodSettings:
         - LoggingLevel: INFO
           DataTraceEnabled: true
