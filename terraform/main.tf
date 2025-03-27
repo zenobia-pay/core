@@ -20,8 +20,8 @@ resource "auth0_client" "zenobia_app" {
   name            = "Zenobia Web Client Sandbox"
   app_type        = "regular_web"
   logo_uri = "https://zenobiapay.com/android-chrome-192x192.png"
-  callbacks       = ["https://zenobiapay.com/callback", "http://localhost:3000/admin",  "http://localhost:3000", "http://localhost:3000/login", "https://zenobiapay.com/login", "http:zenobiapay.com/admin"]
-  allowed_logout_urls = ["https://zenobiapay.com/logout", "http://localhost:3000/admin"]
+  callbacks       = ["https://dashboard.zenobiapay.com/callback", "http://localhost:3000/admin",  "http://localhost:3000", "http://localhost:3000/login", "https://dashboard.zenobiapay.com/login"]
+  allowed_logout_urls = ["https://dashboard.zenobiapay.com/logout", "http://localhost:3000/admin"]
 }
 
 resource "auth0_client_credentials" "zenobia_app_credentials" {
@@ -33,8 +33,8 @@ resource "auth0_client" "zenobia_merchant_app" {
   name            = "Zenobia Merchant Client"
   app_type        = "regular_web"
   logo_uri = "https://zenobiapay.com/android-chrome-192x192.png"
-  callbacks       = ["https://zenobiapay.com/callback", "http://localhost:3000/admin",  "http://localhost:3000", "http://localhost:3000/login"]
-  allowed_logout_urls = ["https://zenobiapay.com/logout", "http://localhost:3000/admin", "http://localhost:3000"]
+  callbacks       = ["https://dashboard.zenobiapay.com/callback", "http://localhost:3000/admin",  "http://localhost:3000", "http://localhost:3000/login", "https://dashboard.zenobiapay.com/login"]
+  allowed_logout_urls = ["https://dashboard.zenobiapay.com/logout", "http://localhost:3000/admin", "http://localhost:3000"]
 }
 
 resource "auth0_client_credentials" "zenobia_merchant_credentials" {
@@ -76,7 +76,7 @@ resource "auth0_client_grant" "aws_auth0_management_client_grant" {
 
 resource "auth0_resource_server" "zenobia_api" {
   name                 = "Zenobia API Sandbox"
-  identifier           = "https://zenobiapay.com"
+  identifier           = "https://dashboard.zenobiapay.com"
   signing_alg          = "RS256"
   token_lifetime       = 36000
 }
