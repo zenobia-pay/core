@@ -21,7 +21,7 @@ resource "auth0_client" "zenobia_app" {
   app_type        = "regular_web"
   logo_uri = "https://zenobiapay.com/android-chrome-192x192.png"
   callbacks       = ["https://dashboard.zenobiapay.com/callback", "http://localhost:3000/admin",  "http://localhost:3000", "http://localhost:3000/login", "https://dashboard.zenobiapay.com/login"]
-  allowed_logout_urls = ["https://dashboard.zenobiapay.com/logout", "http://localhost:3000/admin"]
+  allowed_logout_urls = ["https://dashboard.zenobiapay.com", "http://localhost:3000"]
 }
 
 resource "auth0_client_credentials" "zenobia_app_credentials" {
