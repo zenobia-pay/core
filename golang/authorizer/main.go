@@ -39,7 +39,7 @@ func extractToken(authHeader string) string {
 
 func generatePolicyResponse(isValid bool, claims *validator.ValidatedClaims, methodArn string) events.APIGatewayCustomAuthorizerResponse {
 	if isValid && claims != nil {
-		return generatePolicy("user", "Allow", methodArn, claims)
+		return generatePolicy("user", "Allow", wildcardArn(methodArn), claims)
 	} else {
 		return generatePolicy("user", "Deny", "*", nil)
 	}
@@ -73,6 +73,21 @@ func generatePolicy(principalID, effect, resource string, claims *validator.Vali
 		},
 		Context: context,
 	}
+}
+
+func wildcardArn(methodArn string) string {
+	// TODO: blocker! use restricted wildcard
+	// Example: arn:aws:execute-api:us-east-1:123456789012:abc123/prod/GET/resource
+	println("Got original method arn" + methodArn)
+	parts := strings.Split(methodArn, "/")
+
+	if len(parts) < 4 {
+		return methodArn
+	}
+	// Build: arn:aws:execute-api:{region}:{account}:{apiId}/{stage}/*/*
+	wildcardArn := fmt.Sprintf("%s/*/*", strings.Join(parts[:2], "/"))
+	println("Got wildcard arn " + wildcardArn)
+	return wildcardArn
 }
 
 func main() {
