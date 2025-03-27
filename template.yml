@@ -10,6 +10,15 @@ Parameters:
     Type: String
     Default: ""
     Description: Unique identifier to avoid resource naming conflicts. Should only be needed for dev sandbox accounts
+  PlaidSecretsArn:
+    Type: String
+    Description: Plaid secrets manager arn that stores client id and client secret
+  OrumSecretsArn:
+    Type: String
+    Description: Orum secrets manager arn that stores client id and client secret
+  Auth0SecretsArn:
+    Type: String
+    Description: Auth0 secrets manager arn that stores client id and client secret
 
 Resources:
   VpcStack:
@@ -42,6 +51,9 @@ Resources:
         UserKeyId: !GetAtt TableStack.Outputs.UserKeyId
         CredentialsKeyId: !GetAtt TableStack.Outputs.CredentialsKeyId
         TransferTableStreamArn: !GetAtt TableStack.Outputs.TransferTableStreamArn
+        PlaidSecretsArn: !Ref PlaidSecretsArn
+        OrumSecretsArn: !Ref OrumSecretsArn
+        Auth0SecretsArn: !Ref Auth0SecretsArn
 
   PayoutStack:
     Type: AWS::CloudFormation::Stack

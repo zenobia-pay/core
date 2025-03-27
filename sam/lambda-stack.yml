@@ -45,6 +45,12 @@ Parameters:
     Type: String
   SubnetId2:
     Type: String
+  PlaidSecretsArn:
+    Type: String
+  OrumSecretsArn:
+    Type: String
+  Auth0SecretsArn:
+    Type: String
 
 Resources:
   ZenobiaApi:
@@ -711,9 +717,9 @@ Resources:
           BANK_TABLE_NAME: !Ref BankTableName
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:plaid/sandbox/credentials-cRPbpD" # TODO dont hardcode
+            SecretArn: !Ref PlaidSecretsArn
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:orum/sandbox/credentials-VS6HFc" # TODO dont hardcode
+            SecretArn: !Ref OrumSecretsArn
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref BankTableName
@@ -757,9 +763,9 @@ Resources:
           USER_TABLE_NAME: !Ref UserTableName
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:plaid/sandbox/credentials-cRPbpD" # TODO dont hardcode
+            SecretArn: !Ref PlaidSecretsArn
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:orum/sandbox/credentials-VS6HFc" # TODO dont hardcode
+            SecretArn: !Ref OrumSecretsArn
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref TransferTableName
@@ -864,7 +870,7 @@ Resources:
       Policies:
         - AWSLambdaVPCAccessExecutionRole
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:auth0/secrets-Zc3U8o" # TODO dont hardcode
+            SecretArn: !Ref Auth0SecretsArn
       Events:
         CreateM2MCredentials:
           Type: Api
@@ -895,7 +901,7 @@ Resources:
         - KMSDecryptPolicy:
             KeyId: !Ref UserKeyId
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:orum/sandbox/credentials-VS6HFc" # TODO dont hardcode
+            SecretArn: !Ref OrumSecretsArn
       Events:
         RegisterUser:
           Type: Api

@@ -102,6 +102,11 @@ jobs:
   deploy-beta:
     if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
     runs-on: ubuntu-latest
+    environment: beta
+    env:
+      AUTH0_SECRETS_ARN: ${{ vars.AUTH0_SECRETS_ARN }}
+      ORUM_SECRETS_ARN: ${{ vars.ORUM_SECRETS_ARN }}
+      PLAID_SECRETS_ARN: ${{ vars.PLAID_SECRET_ARN }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v3
@@ -133,4 +138,9 @@ jobs:
       run: make kotlin
     - name: Deploy sam
       run: |
-        sam deploy --no-confirm-changeset --parameter-overrides Stage=beta
+        sam deploy --no-confirm-changeset \
+          --parameter-overrides \
+          Stage=beta \
+          PlaidSecretsArn=$PLAID_SECRETS_ARN \
+          OrumSecretsArn=$ORUM_SECRETS_ARN \
+          Auth0SecretsArn=$AUTH0_SECRETS_ARN
