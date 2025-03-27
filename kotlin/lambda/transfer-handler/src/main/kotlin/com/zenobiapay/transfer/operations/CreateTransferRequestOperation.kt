@@ -19,7 +19,6 @@ class CreateTransferRequestOperation @Inject constructor(
     private val transferDao: TransferDao,
     private val userDao: UserDao,
     private val objectMapper: ObjectMapper,
-    private val cognitoUtil: CognitoUtil
 ): Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any {
         val request = objectMapper.readValue<CreateTransferRequestRequest>(input.body)
