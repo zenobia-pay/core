@@ -59,6 +59,7 @@ dependencies {
 
     // Plaid
     implementation(libs.plaid)
+    implementation(libs.json)
 
     // Testing
     testImplementation(libs.kotlin.test)

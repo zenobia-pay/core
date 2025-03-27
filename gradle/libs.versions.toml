@@ -48,6 +48,7 @@ javax-inject = { module = "javax.inject:javax.inject", version = "1" }
 
 # Plaid
 plaid = { module = "com.plaid:plaid-java", version = "30.1.0" }
+json = { module = "org.json:json", version="20250107"}
 
 # Auth0
 auth0 = { module = "com.auth0:auth0", version = "2.18.0" }
