@@ -3,7 +3,6 @@ package com.zenobiapay.payout.handlers
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.cognito.CognitoUtil
 import com.zenobiapay.payout.di.DaggerAppComponent
 import com.zenobiapay.payout.di.PAYOUT_QUEUE_URL
 import com.zenobiapay.payout.model.PayoutMessage
@@ -17,8 +16,6 @@ import javax.inject.Named
 private val logger = KotlinLogging.logger {}
 
 class PayoutDispatcher : RequestHandler<Map<String, Any>, Unit> {
-    @Inject
-    lateinit var cognitoUtil: CognitoUtil
 
     @Inject
     lateinit var sqsUtil: SqsUtil
@@ -36,14 +33,14 @@ class PayoutDispatcher : RequestHandler<Map<String, Any>, Unit> {
 
     override fun handleRequest(event: Map<String, Any>?, context: Context) {
         val date = LocalDateTime.now(ZoneOffset.UTC).minusDays(1) // TODO: fetch from eventbridge?
-        cognitoUtil.listMerchantUserIds().forEach {
-            logger.info { "Sending message to payout queue for merchant ${it.username()}" }
-            val message = PayoutMessage(it.username(), date.toString())
-            sqsUtil.sendMessage(
-                message = objectMapper.writeValueAsString(message),
-                queueUrl = payoutQueueUrl,
-                context.awsRequestId
-            )
-        }
+//        listOf().forEach {
+//            logger.info { "Sending message to payout queue for merchant " }
+//            val message = PayoutMessage(it.username(), date.toString())
+//            sqsUtil.sendMessage(
+//                message = objectMapper.writeValueAsString(message),
+//                queueUrl = payoutQueueUrl,
+//                context.awsRequestId
+//            )
+//        }
     }
 }

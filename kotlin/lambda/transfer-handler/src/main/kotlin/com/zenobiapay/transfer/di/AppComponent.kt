@@ -1,6 +1,5 @@
 package com.zenobiapay.transfer.di
 
-import com.zenobiapay.cognito.di.CognitoModule
 import com.zenobiapay.di.SharedModule
 import com.zenobiapay.orum.di.OrumModule
 import com.zenobiapay.table.di.TableModule
@@ -11,7 +10,6 @@ import dagger.Component
     SharedModule::class,
     OrumModule::class,
     TableModule::class,
-    CognitoModule::class,
     TransferModule::class,
 ])
 interface AppComponent {

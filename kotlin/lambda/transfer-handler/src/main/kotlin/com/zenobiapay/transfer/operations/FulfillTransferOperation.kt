@@ -10,13 +10,11 @@ import com.zenobiapay.table.bank.dao.BankDao
 import com.zenobiapay.orum.model.OrumCreateTransferRequest
 import com.zenobiapay.orum.model.OrumCreateTransferResponse
 import com.zenobiapay.orum.model.TransferParticipant
-import com.zenobiapay.api.exception.InvalidRequestException
 import com.zenobiapay.api.exception.ResourceNotFoundException
 import com.zenobiapay.api.exception.TransferFailedException
 import com.zenobiapay.api.exception.TransferStatusException
 import com.zenobiapay.api.model.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
-import com.zenobiapay.cognito.CognitoUtil
 import com.zenobiapay.orum.util.WaiterFailedException
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
@@ -37,7 +35,6 @@ class FulfillTransferOperation @Inject constructor(
     private val bankDao: BankDao,
     private val userDao: UserDao,
     private val objectMapper: ObjectMapper,
-    private val cognitoUtil: CognitoUtil
 ) : Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): FulfillTransfer200Response {
         val request = objectMapper.readValue(input.body, FulfillTransferRequest::class.java)
@@ -59,7 +56,7 @@ class FulfillTransferOperation @Inject constructor(
         val debtorId = transferRequestData.merchant!!
         val creditorId = PaymentParticipantIdentity(
             id = userId,
-            name = cognitoUtil.getUserFullName(userId),
+            name = "TODO", // TODO: fetch auth0 user name
             bankAccountId = bankAccountId
         )
         val fulfillRequestId = input.requestContext.requestId
