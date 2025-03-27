@@ -25,7 +25,8 @@ class CreateTransferRequestOperation @Inject constructor(
         val request = objectMapper.readValue<CreateTransferRequestRequest>(input.body)
 
         val requestId = input.requestContext.requestId
-        val merchantName = userDao.getMerchant(userId!!)!!.data.displayName ?: cognitoUtil.getUserFullName(userId)
+        val merchantName = userDao.getMerchant(userId!!)?.data?.displayName
+            ?: throw InvalidRequestException("Merchant display name not configured.")
         transferDao.putTransferRequest(
             userId,
             requestId,
