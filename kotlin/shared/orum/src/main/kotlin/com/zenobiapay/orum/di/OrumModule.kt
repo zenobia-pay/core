@@ -18,7 +18,7 @@ class OrumModule {
     @Provides
     fun provideOrumCredentials(secretsManagerClient: SecretsManagerClient, objectMapper: ObjectMapper): OrumCredentials {
         val secretString = secretsManagerClient.getSecretValue {
-            it.secretId("orum/sandbox/credentials")
+            it.secretId("orum/secrets")
         }.secretString()
         return objectMapper.readValue(secretString, OrumCredentials::class.java)
     }

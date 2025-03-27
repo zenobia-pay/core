@@ -45,6 +45,12 @@ Parameters:
     Type: String
   SubnetId2:
     Type: String
+  PlaidSecretsArn:
+    Type: String
+  OrumSecretsArn:
+    Type: String
+  Auth0SecretsArn:
+    Type: String
 
 Resources:
   ZenobiaApi:
@@ -64,11 +70,11 @@ Resources:
         AllowCredentials: true
         AllowMethods: "'GET,POST,OPTIONS'"
         AllowHeaders: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-        AllowOrigin: "'https://zenobiapay.com'"
+        AllowOrigin: "'https://dashboard.zenobiapay.com'"
       StageName: Prod
       AccessLogSetting:
         DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
-        Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","responseLatency":"$context.responseLatency","userAgent":"$context.identity.userAgent","requestTime":"$context.requestTime"}'
+        Format: '{"requestId":"$context.requestId","resourcePath": "$context.resourcePath","path":"$context.path","ip":"$context.identity.sourceIp","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","responseLatency":"$context.responseLatency","userAgent":"$context.identity.userAgent","requestTime":"$context.requestTime"}'
       MethodSettings:
         - LoggingLevel: INFO
           DataTraceEnabled: true
@@ -658,7 +664,7 @@ Resources:
       Environment:
         Variables:
           AUTH_DOMAIN: dev-u0ert1rxhkdmhwy8.us.auth0.com
-          AUDIENCE: https://zenobiapay.com
+          AUDIENCE: https://dashboard.zenobiapay.com
           AUTH0_CLIENT_ID: MBxUwuO3ApyissWpYzT74gBGW0FbC9nn
 
   ApiGatewayLogGroup:
@@ -711,9 +717,9 @@ Resources:
           BANK_TABLE_NAME: !Ref BankTableName
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:plaid/sandbox/credentials-cRPbpD" # TODO dont hardcode
+            SecretArn: !Ref PlaidSecretsArn
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:orum/sandbox/credentials-VS6HFc" # TODO dont hardcode
+            SecretArn: !Ref OrumSecretsArn
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref BankTableName
@@ -757,9 +763,9 @@ Resources:
           USER_TABLE_NAME: !Ref UserTableName
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:plaid/sandbox/credentials-cRPbpD" # TODO dont hardcode
+            SecretArn: !Ref PlaidSecretsArn
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:orum/sandbox/credentials-VS6HFc" # TODO dont hardcode
+            SecretArn: !Ref OrumSecretsArn
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref TransferTableName
@@ -864,7 +870,7 @@ Resources:
       Policies:
         - AWSLambdaVPCAccessExecutionRole
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:auth0/secrets-Zc3U8o" # TODO dont hardcode
+            SecretArn: !Ref Auth0SecretsArn
       Events:
         CreateM2MCredentials:
           Type: Api
@@ -895,7 +901,7 @@ Resources:
         - KMSDecryptPolicy:
             KeyId: !Ref UserKeyId
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:816069139448:secret:orum/sandbox/credentials-VS6HFc" # TODO dont hardcode
+            SecretArn: !Ref OrumSecretsArn
       Events:
         RegisterUser:
           Type: Api

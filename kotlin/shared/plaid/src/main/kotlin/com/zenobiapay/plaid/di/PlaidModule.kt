@@ -21,7 +21,7 @@ class PlaidModule {
     @Provides
     fun providePlaidCredentials(secretsManagerClient: SecretsManagerClient, objectMapper: ObjectMapper): PlaidCredentials {
         val secretString = secretsManagerClient.getSecretValue {
-            it.secretId("plaid/sandbox/credentials")
+            it.secretId("plaid/secrets")
         }.secretString()
         return objectMapper.readValue(secretString, PlaidCredentials::class.java)
     }

@@ -7,7 +7,11 @@ all: go kotlin
 go:
 	@for dir in $(GO_LAMBDA_DIRS); do \
 		echo "Building $$dir..."; \
-		cd golang/$$dir && GOOS=linux GOARCH=amd64 go build -o ./build/bootstrap . && cd build && zip function.zip bootstrap && cd ../../..; \
+		docker run --rm -v "$(PWD)":/app -w /app/golang/$$dir public.ecr.aws/amazonlinux/amazonlinux:2 \
+		bash -c 'yum install -y golang zip && \
+		         go build -buildvcs=false -o ./build/bootstrap . && \
+				 cd build && \
+		         zip function.zip bootstrap'; \
 	done
 
 kotlin:

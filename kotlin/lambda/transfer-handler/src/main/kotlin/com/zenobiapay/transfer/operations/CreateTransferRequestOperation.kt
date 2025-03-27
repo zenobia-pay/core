@@ -9,7 +9,6 @@ import com.zenobiapay.api.generated.models.CreateTransferRequestRequest
 import com.zenobiapay.api.exception.InvalidRequestException
 import com.zenobiapay.api.model.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
-import com.zenobiapay.cognito.CognitoUtil
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.StatementItem
 import com.zenobiapay.table.user.dao.UserDao
@@ -19,13 +18,13 @@ class CreateTransferRequestOperation @Inject constructor(
     private val transferDao: TransferDao,
     private val userDao: UserDao,
     private val objectMapper: ObjectMapper,
-    private val cognitoUtil: CognitoUtil
 ): Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any {
         val request = objectMapper.readValue<CreateTransferRequestRequest>(input.body)
 
         val requestId = input.requestContext.requestId
-        val merchantName = userDao.getMerchant(userId!!)!!.data.displayName ?: cognitoUtil.getUserFullName(userId)
+        val merchantName = userDao.getMerchant(userId!!)?.data?.displayName
+            ?: throw InvalidRequestException("Merchant display name not configured.")
         transferDao.putTransferRequest(
             userId,
             requestId,
