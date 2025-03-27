@@ -106,7 +106,7 @@ jobs:
     env:
       AUTH0_SECRETS_ARN: ${{ vars.AUTH0_SECRETS_ARN }}
       ORUM_SECRETS_ARN: ${{ vars.ORUM_SECRETS_ARN }}
-      PLAID_SECRETS_ARN: ${{ vars.PLAID_SECRET_ARN }}
+      PLAID_SECRETS_ARN: ${{ vars.PLAID_SECRETS_ARN }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v3
