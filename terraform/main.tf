@@ -17,7 +17,7 @@ provider "auth0" {
 }
 
 resource "auth0_client" "zenobia_app" {
-  name            = "Zenobia Web Client Sandbox"
+  name            = "Zenobia Web Client Sandbox (TF Managed)"
   app_type        = "regular_web"
   logo_uri = "https://zenobiapay.com/android-chrome-192x192.png"
   callbacks       = ["https://dashboard.zenobiapay.com/callback", "http://localhost:3000/admin",  "http://localhost:3000", "http://localhost:3000/login", "https://dashboard.zenobiapay.com/login"]
@@ -30,7 +30,7 @@ resource "auth0_client_credentials" "zenobia_app_credentials" {
 }
 
 resource "auth0_client" "zenobia_merchant_app" {
-  name            = "Zenobia Merchant Client"
+  name            = "Zenobia Merchant Client (TF Managed)"
   app_type        = "regular_web"
   logo_uri = "https://zenobiapay.com/android-chrome-192x192.png"
   callbacks       = ["https://dashboard.zenobiapay.com/callback", "http://localhost:3000/admin",  "http://localhost:3000", "http://localhost:3000/login", "https://dashboard.zenobiapay.com/login"]
@@ -53,7 +53,7 @@ resource "auth0_role" "customer" {
 }
 
 resource "auth0_client" "auth0_action_app" {
-  name            = "auth0-action-app"
+  name            = "auth0-action-app-tf"
   description     = "Used by Auth0 Actions to call API Gateway"
   app_type        = "non_interactive"
   grant_types     = ["client_credentials"]
@@ -61,7 +61,7 @@ resource "auth0_client" "auth0_action_app" {
 }
 
 resource "auth0_client" "aws_auth0_management_app" {
-  name            = "aws-auth0-management-app"
+  name            = "aws-auth0-management-app-tf"
   description     = "Used by Zenobia AWS service to manage client credentials for merchants"
   app_type        = "non_interactive"
   grant_types     = ["client_credentials"]
