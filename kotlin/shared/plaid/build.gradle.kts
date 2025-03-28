@@ -51,6 +51,7 @@ dependencies {
 
     // Plaid
     implementation(libs.plaid)
+    implementation(libs.json)
 
     // Testing
     testImplementation(libs.mockk)

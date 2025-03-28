@@ -47,6 +47,7 @@ dependencies {
 
     // Logging
     implementation(libs.kotlin.logging)
+    implementation(libs.log4j)
     runtimeOnly(libs.slf4j)
 
     // Testing

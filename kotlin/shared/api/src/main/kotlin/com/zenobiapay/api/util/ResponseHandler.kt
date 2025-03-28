@@ -11,19 +11,21 @@ import com.zenobiapay.api.exception.ZenobiaExternalException
 import com.zenobiapay.api.generated.models.ErrorResponse
 import com.zenobiapay.api.model.Operation
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.apache.logging.log4j.ThreadContext
 import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
 class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper) {
     fun returnApiGwResponse(operation: Operation, input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
+        setLoggingContext(input.requestContext.requestId, input.requestContext.getUserId())
         return wrapOperation {
             val userId = input.requestContext.getUserId()
             operation.run(input, context, userId)
         }
     }
 
-    fun wrapOperation(body: () -> Any): APIGatewayProxyResponseEvent {
+    private fun wrapOperation(body: () -> Any): APIGatewayProxyResponseEvent {
         return try {
             generateSuccessResponse(body())
         } catch (e: Exception) {
@@ -54,6 +56,11 @@ class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper
                     ErrorResponse(message = status, error = getErrorString(errorCode))
                 )
             )
+    }
+
+    private fun setLoggingContext(requestId: String?, sub: String?) {
+        requestId?.let { ThreadContext.put("requestId", it) }
+        sub?.let { ThreadContext.put("sub", it) }
     }
 
     private fun getErrorString(statusCode: Int): String {

@@ -74,7 +74,7 @@ Resources:
       StageName: Prod
       AccessLogSetting:
         DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
-        Format: '{"requestId":"$context.requestId","resourcePath": "$context.resourcePath","path":"$context.path","ip":"$context.identity.sourceIp","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","responseLatency":"$context.responseLatency","userAgent":"$context.identity.userAgent","requestTime":"$context.requestTime"}'
+        Format: '{"requestId":"$context.requestId","sub":"$context.authorizer.sub","resourcePath": "$context.resourcePath","path":"$context.path","ip":"$context.identity.sourceIp","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","responseLatency":"$context.responseLatency","userAgent":"$context.identity.userAgent","requestTime":"$context.requestTime"}'
       MethodSettings:
         - LoggingLevel: INFO
           DataTraceEnabled: true
@@ -190,6 +190,10 @@ Resources:
                       properties:
                         linkToken:
                           type: string
+                        deviceId:
+                          type: string
+                        deviceCertificate:
+                          type: string
                       required:
                         - linkToken
               responses:
@@ -211,9 +215,18 @@ Resources:
                 type: aws_proxy
 
           /list-bank-accounts:
-            get:
+            post:
               summary: "Lists all bank accounts associated with account"
               operationId: "ListBankAccounts"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        deviceId:
+                          type: string
               responses:
                 '200':
                   description: "Successful response"
@@ -309,12 +322,17 @@ Resources:
                         - transferRequestId
                         - merchantId
                         - bankAccountId
+                        # TODO: device and signature should be required
                       properties:
                         transferRequestId:
                           type: string
                         merchantId:
                           type: string
                         bankAccountId:
+                          type: string
+                        deviceId:
+                          type: string
+                        signature:
                           type: string
               responses:
                 '200':
@@ -664,6 +682,7 @@ Resources:
       Environment:
         Variables:
           AUTH_DOMAIN: dev-u0ert1rxhkdmhwy8.us.auth0.com
+          ZENOBIA_ISSUER: https://accounts.zenobiapay.com/
           AUDIENCE: https://dashboard.zenobiapay.com
           AUTH0_CLIENT_ID: MBxUwuO3ApyissWpYzT74gBGW0FbC9nn
 

@@ -11,8 +11,8 @@ exports.onExecutePostLogin = async (event, api) => {
     if (event.stats.logins_count === 1) {
       // Run only on initial login
       console.log("Initial login. Running set up.");
-      const role =
-        event.client.id === merchantClientId ? MERCHANT_ROLE : CUSTOMER_ROLE;
+      // TODO: determine base on form login 
+      const role = MERCHANT_ROLE
       console.log(`Setting app metadata ${role}`);
       api.user.setAppMetadata("role", role);
 
@@ -58,15 +58,6 @@ async function setupAuth0Configuration(event, role) {
     })
     .then((response) => response.data.access_token);
   setRole(event, role, managementApiToken);
-
-  if (role == MERCHANT_ROLE) {
-    const management = new ManagementClient({
-      token: managementApiToken,
-      domain: event.secrets.AUTH0_DOMAIN,
-    });
-    const org_id = await createOrganization(event, management);
-    addUserToOrganization(event.user.user_id, org_id, management);
-  }
 }
 
 async function setRole(event, role, managementApiToken) {
@@ -99,34 +90,6 @@ function getRoleId(event, roleName) {
   }
 }
 
-async function createOrganization(event, management) {
-  console.log("Creating organization");
-
-  try {
-    // Create an organization
-    const organization = await management.organizations.create({
-      name: `org-${event.user.user_id.replace(/[^a-zA-Z0-9]/g, "_")}`,
-      display_name: `${event.user.email} Organization`,
-      metadata: {
-        custom_field: "value",
-      },
-    });
-
-    console.log("Organization created:", organization);
-    return organization.data.id;
-  } catch (error) {
-    console.error("Error creating organization:", error);
-  }
-}
-
-async function addUserToOrganization(user_id, org_id, management) {
-  console.log(`Adding user ${user_id} to organization ${org_id}`);
-  await management.organizations.addMembers(
-    { id: org_id },
-    { members: [user_id] }
-  );
-}
-
 async function registerUser(event, api, audience) {
   const axios = require("axios");
   const clientId = event.secrets.CLIENT_ID;
@@ -136,7 +99,7 @@ async function registerUser(event, api, audience) {
   const zenobiaEndpoint = event.secrets.ZENOBIA_ENDPOINT;
 
   console.log(
-    `Authenticating oauth to call /register-user using token url ${tokenUrl}`
+    `Authenticating oauth to call /register-user using token url ${tokenUrl} using client id ${clientId} and audience ${audience}`
   );
   const tokenResponse = await axios.post(
     tokenUrl,
@@ -154,14 +117,18 @@ async function registerUser(event, api, audience) {
 
   const accessToken = tokenResponse.data.access_token;
   console.log(`Registering user using endpoint ${zenobiaEndpoint}`);
+  console.log(`Got sub ${event.user.user_id}`)
+  console.log(`Got email ${event.user.email}`)
+  console.log(`Got firstName ${event.user.given_name}`)
+  console.log(`Got lastName ${event.user.family_name}`)
 
   await axios.post(
     `${zenobiaEndpoint}register-user`,
     {
       sub: event.user.user_id,
       email: event.user.email,
-      firstName: event.user.given_name,
-      lastName: event.user.family_name,
+      firstName: 'John',
+      lastName: 'Smith',
     },
     {
       headers: {
