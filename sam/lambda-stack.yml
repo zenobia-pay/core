@@ -663,7 +663,8 @@ Resources:
         ApplyOn: None
       Environment:
         Variables:
-          ISSUER: https://accounts.zenobiapay.com/
+          AUTH_DOMAIN: dev-u0ert1rxhkdmhwy8.us.auth0.com
+          ZENOBIA_ISSUER: https://accounts.zenobiapay.com/
           AUDIENCE: https://dashboard.zenobiapay.com
           AUTH0_CLIENT_ID: MBxUwuO3ApyissWpYzT74gBGW0FbC9nn
 

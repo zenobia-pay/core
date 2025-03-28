@@ -36,26 +36,35 @@ var auth0ActionJwtValidator *validator.Validator
 var provider *jwks.CachingProvider
 
 func init() {
-	issuer := os.Getenv("ISSUER")
+	domain := os.Getenv("AUTH_DOMAIN")
+	issuer := os.Getenv("ZENOBIA_ISSUER")
 	audience := os.Getenv("AUDIENCE")
 
-	if issuer == "" {
+	if domain == "" {
 		panic("Did not retrieve env var AUTH_DOMAIN")
+	}
+	if issuer == "" {
+		panic("Did not retrieve env var ZENOBIA_ISSUER")
 	}
 	if audience == "" {
 		panic("Did not retrieve env var AUDIENCE")
 	}
 
-	issuerURL, err := url.Parse(issuer)
+	zenobiaIssuerUrl, err := url.Parse(issuer)
 	if err != nil {
-		panic("Failed to parse the issuer url " + err.Error())
+		panic("Failed to parse the zenobia issuer url " + err.Error())
 	}
 
-	provider = jwks.NewCachingProvider(issuerURL, 5*time.Minute)
+	auth0IssuerUrl, err := url.Parse("https://" + domain + "/")
+	if err != nil {
+		panic("Failed to parse the zenobia issuer url " + err.Error())
+	}
+
+	provider = jwks.NewCachingProvider(zenobiaIssuerUrl, 5*time.Minute)
 	basicJwtValidator, err = validator.New(
 		provider.KeyFunc,
 		validator.RS256,
-		issuerURL.String(),
+		zenobiaIssuerUrl.String(),
 		[]string{audience},
 		validator.WithAllowedClockSkew(time.Minute),
 	)
@@ -67,7 +76,7 @@ func init() {
 	auth0ActionJwtValidator, err = validator.New(
 		provider.KeyFunc,
 		validator.RS256,
-		issuerURL.String(),
+		auth0IssuerUrl.String(),
 		[]string{audience},
 		validator.WithCustomClaims(
 			func() validator.CustomClaims {
