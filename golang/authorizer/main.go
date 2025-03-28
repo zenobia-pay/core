@@ -31,11 +31,16 @@ func extractToken(authHeader string) string {
 
 func getUserContext(claims *validator.ValidatedClaims) map[string]interface{} {
 	if userCustomClaims, ok := claims.CustomClaims.(*UserCustomClaims); ok {
-		return map[string]interface{}{
+		context := map[string]interface{}{
+			"sub":   claims.RegisteredClaims.Subject,
 			"email": userCustomClaims.Email,
 			"role":  userCustomClaims.Role,
 		}
+		print("Got context: ")
+		fmt.Println(context)
+		return context
 	}
+	print("Could not cast claims to user custom claims")
 	return map[string]interface{}{}
 }
 
