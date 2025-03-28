@@ -53,6 +53,8 @@ class UserDao @Inject constructor(
                 data = UserItemData(
                     orumPersonId = orumPersonId,
                     isApproved = isApproved,
+                    firstName = firstName,
+                    lastName = lastName,
                     merchantData = merchantData,
                 ),
                 userType = userType,
