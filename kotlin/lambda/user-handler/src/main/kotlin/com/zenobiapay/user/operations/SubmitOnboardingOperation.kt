@@ -17,6 +17,7 @@ import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.table.user.model.MerchantData
 import com.zenobiapay.table.user.model.UserType as DdbUserType
 import io.github.oshai.kotlinlogging.KotlinLogging
+import java.util.UUID
 import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
@@ -43,7 +44,7 @@ class SubmitOnboardingOperation @Inject constructor(
             firstName = request.firstName,
             lastName = request.lastName,
             socialSecurityNumber = null,
-            contacts = listOf() // TODO: fetch email
+            contacts = listOf(Contact(type = "email", value = "${UUID.randomUUID()}@gmail.com")) // TODO: fetch email
         )
 
         val person = try {
