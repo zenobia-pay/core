@@ -9,6 +9,7 @@ import com.zenobiapay.api.generated.models.UserType
 import com.zenobiapay.api.model.EmptyApiResponse
 import com.zenobiapay.api.model.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
+import com.zenobiapay.api.util.getEmail
 import com.zenobiapay.orum.OrumException
 import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.orum.model.Contact
@@ -38,13 +39,14 @@ class SubmitOnboardingOperation @Inject constructor(
         if (userDao.getUserItem(userId) != null) {
             throw InvalidRequestException("User has already onboarded")
         }
+        val email = input.requestContext.getEmail() ?: throw Exception("email not found")
 
         val createPersonRequest = OrumCreatePersonRequest(
             customerReferenceId = userId,
             firstName = request.firstName,
             lastName = request.lastName,
             socialSecurityNumber = null,
-            contacts = listOf(Contact(type = "email", value = "${UUID.randomUUID()}@gmail.com")) // TODO: fetch email
+            contacts = listOf(Contact(type = "email", value = email))
         )
 
         val person = try {

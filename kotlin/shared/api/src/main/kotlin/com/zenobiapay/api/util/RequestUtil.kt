@@ -8,7 +8,11 @@ private val logger = KotlinLogging.logger {}
 
 fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserId(): String? {
     logger.info { "Got authorizer $authorizer and values ${authorizer.keys}" }
-    return this.authorizer["sub"] as String
+    return this.authorizer["sub"] as String?
+}
+
+fun APIGatewayProxyRequestEvent.ProxyRequestContext.getEmail(): String? {
+    return this.authorizer["email"] as String?
 }
 
 fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserPoolGroups(): List<UserPoolGroup> {
