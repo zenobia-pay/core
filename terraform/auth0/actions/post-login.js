@@ -127,8 +127,8 @@ async function registerUser(event, api, audience) {
     {
       sub: event.user.user_id,
       email: event.user.email,
-      firstName: 'Auth0FirstName',
-      lastName: 'Auth0LastName',
+      firstName: 'John',
+      lastName: 'Smith',
     },
     {
       headers: {
