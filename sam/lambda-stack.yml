@@ -154,6 +154,12 @@ Resources:
             UserType:
               type: string
               enum: [ MERCHANT, CUSTOMER, UNKNOWN ]
+            CertificateType:
+              type: string
+              enum: [ EC ]
+            SignatureType:
+              type: string
+              enum: [ SHA256_WITH_ECDSA ]
 
         x-amazon-apigateway-request-validators:
           basic:
@@ -196,7 +202,12 @@ Resources:
                         deviceId:
                           type: string
                         deviceCertificate:
-                          type: string
+                          type: object
+                          properties:
+                            certificateType:
+                              $ref: "#/components/schemas/CertificateType"
+                            certificateValue: # in base64
+                              type: string
                       required:
                         - linkToken
               responses:
@@ -336,7 +347,12 @@ Resources:
                         deviceId:
                           type: string
                         signature:
-                          type: string
+                          type: object
+                          properties:
+                            signatureType:
+                              $ref: "#/components/schemas/SignatureType"
+                            signatureValue:
+                              type: string
               responses:
                 '200':
                   description: "Successful response"

@@ -76,13 +76,9 @@ class OrumWrapper(
         val accessToken = getAccessToken(orumCredentials)
         val body = objectMapper.writeValueAsString(
             createTransferRequest.copy(
-                source = if (createTransferRequest.source != null) {
-                    createTransferRequest.source.copy(
-                        customerReferenceId = createTransferRequest.source.customerReferenceId
-                    )
-                } else {
-                    null
-                }
+                source = createTransferRequest.source?.copy(
+                    customerReferenceId = createTransferRequest.source.customerReferenceId
+                )
             )
         ).toRequestBody(JSON_MEDIA_TYPE)
         logger.info { "Creating transfer with request $createTransferRequest" }

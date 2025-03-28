@@ -70,6 +70,12 @@ components:
     UserType:
       type: string
       enum: [MERCHANT, CUSTOMER, UNKNOWN]
+    CertificateType:
+      type: string
+      enum: [EC]
+    SignatureType:
+      type: string
+      enum: [SHA256_WITH_ECDSA]
 x-amazon-apigateway-request-validators:
   basic:
     validateRequestParameters: true
@@ -110,7 +116,12 @@ paths:
                 deviceId:
                   type: string
                 deviceCertificate:
-                  type: string
+                  type: object
+                  properties:
+                    certificateType:
+                      $ref: "#/components/schemas/CertificateType"
+                    certificate: # in base64
+                      type: string
               required:
                 - linkToken
       responses:
@@ -246,7 +257,12 @@ paths:
                 deviceId:
                   type: string
                 signature:
-                  type: string
+                  type: object
+                  properties:
+                    signatureType:
+                      $ref: "#/components/schemas/SignatureType"
+                    data:
+                      type: string
       responses:
         '200':
           description: "Successful response"
@@ -562,7 +578,7 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
       x-amazon-apigateway-integration:
-        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSignUpHandlerFunction.Arn}:prod/invocations
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${M2MHandlerFunction.Arn}:prod/invocations
         httpMethod: POST
         type: aws_proxy
         #          /list-m2m-credentials:
