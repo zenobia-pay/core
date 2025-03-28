@@ -36,17 +36,17 @@ var auth0ActionJwtValidator *validator.Validator
 var provider *jwks.CachingProvider
 
 func init() {
-	domain := os.Getenv("AUTH_DOMAIN")
+	issuer := os.Getenv("ISSUER")
 	audience := os.Getenv("AUDIENCE")
 
-	if domain == "" {
+	if issuer == "" {
 		panic("Did not retrieve env var AUTH_DOMAIN")
 	}
 	if audience == "" {
 		panic("Did not retrieve env var AUDIENCE")
 	}
 
-	issuerURL, err := url.Parse("https://" + domain + "/")
+	issuerURL, err := url.Parse(issuer)
 	if err != nil {
 		panic("Failed to parse the issuer url " + err.Error())
 	}
