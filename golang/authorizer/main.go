@@ -14,19 +14,11 @@ import (
 func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 	println("Got path " + event.Path)
 	token := extractToken(event.Headers["Authorization"])
-	if event.Path == "/register-user" {
-		println("Validating auth0 token")
-		claims, err := GetValidatedAuth0ActionClaims(ctx, token)
-		isValid := err == nil
-		println(fmt.Sprintf("Got isValidAuth0ActionToken: %t", isValid))
-		return generatePolicyResponse(isValid, claims, event.MethodArn), nil
-	} else {
-		println("Validating auth0 user")
-		claims, err := GetValidatedUserClaims(ctx, token)
-		isValid := err == nil
-		println(fmt.Sprintf("Got isValidApiToken: %t", isValid))
-		return generatePolicyResponse(isValid, claims, event.MethodArn), nil
-	}
+	println("Validating auth0 user")
+	claims, err := GetValidatedUserClaims(ctx, token)
+	isValid := err == nil
+	println(fmt.Sprintf("Got isValidApiToken: %t", isValid))
+	return generatePolicyResponse(isValid, getUserContext(claims), event.MethodArn), nil
 }
 
 func extractToken(authHeader string) string {
@@ -37,32 +29,25 @@ func extractToken(authHeader string) string {
 	return ""
 }
 
-func generatePolicyResponse(isValid bool, claims *validator.ValidatedClaims, methodArn string) events.APIGatewayCustomAuthorizerResponse {
-	if isValid && claims != nil {
-		return generatePolicy("user", "Allow", wildcardArn(methodArn), claims)
+func getUserContext(claims *validator.ValidatedClaims) map[string]interface{} {
+	if userCustomClaims, ok := claims.CustomClaims.(*UserCustomClaims); ok {
+		return map[string]interface{}{
+			"email": userCustomClaims.Email,
+			"role":  userCustomClaims.Role,
+		}
+	}
+	return map[string]interface{}{}
+}
+
+func generatePolicyResponse(isValid bool, context map[string]interface{}, methodArn string) events.APIGatewayCustomAuthorizerResponse {
+	if isValid {
+		return generatePolicy("user", "Allow", wildcardArn(methodArn), context)
 	} else {
 		return generatePolicy("user", "Deny", "*", nil)
 	}
 }
 
-func generatePolicy(principalID, effect, resource string, claims *validator.ValidatedClaims) events.APIGatewayCustomAuthorizerResponse {
-	var context map[string]interface{} = nil
-	if claims != nil {
-		var role *string = nil
-		var email *string = nil
-		if castCustomClaims, ok := claims.CustomClaims.(UserCustomClaims); ok {
-			role = &castCustomClaims.Role
-			println("Got role: " + *role)
-			email = &castCustomClaims.Email
-			println("Got email: " + *email)
-		}
-		context = map[string]interface{}{
-			"sub":   claims.RegisteredClaims.Subject,
-			"role":  role,
-			"email": email,
-		}
-	}
-
+func generatePolicy(principalID, effect, resource string, context map[string]interface{}) events.APIGatewayCustomAuthorizerResponse {
 	return events.APIGatewayCustomAuthorizerResponse{
 		PrincipalID: principalID,
 		PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
@@ -97,7 +82,10 @@ func wildcardArn(methodArn string) string {
 func main() {
 	if len(os.Args) > 1 {
 		println("Got arguments with invocation. Running in local mode. Should not run this in prod!")
-		_, err := GetValidatedUserClaims(context.Background(), os.Args[1])
+		claims, err := GetValidatedUserClaims(context.Background(), os.Args[1])
+		fmt.Printf("Got claims: %+v\n", claims)
+		fmt.Printf("Context: %+v\n", getUserContext(claims))
+
 		println("Got value", err != nil)
 	}
 	lambda.Start(handler)

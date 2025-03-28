@@ -31,7 +31,7 @@ func (c MachineCustomClaims) Validate(ctx context.Context) error {
 	return nil
 }
 
-// MachineCustomClaims contains custom data we want from the token.
+// UserCustomClaims contains custom data we want from the token.
 type UserCustomClaims struct {
 	Role  string `json:"role"`
 	Email string `json:"email"`
@@ -68,7 +68,7 @@ func init() {
 
 	auth0IssuerUrl, err := url.Parse("https://" + domain + "/")
 	if err != nil {
-		panic("Failed to parse the zenobia issuer url " + err.Error())
+		panic("Failed to parse the auth0 issuer url " + err.Error())
 	}
 
 	provider = jwks.NewCachingProvider(zenobiaIssuerUrl, 5*time.Minute)
