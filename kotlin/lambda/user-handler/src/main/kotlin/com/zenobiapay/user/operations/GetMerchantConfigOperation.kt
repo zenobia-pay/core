@@ -11,8 +11,7 @@ import javax.inject.Inject
 
 class GetMerchantConfigOperation @Inject constructor(private val userDao: UserDao) : Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any {
-        val merchantItem = userDao.getMerchant(userId!!)
-
+        val merchantItem = userDao.getUserItem(userId!!)
         if (merchantItem == null) {
             return GetMerchantConfig200Response(
                 bankAccountId = null,
@@ -22,16 +21,17 @@ class GetMerchantConfigOperation @Inject constructor(private val userDao: UserDa
                 merchantLocation = null
             )
         }
+        val merchantData = merchantItem.data.merchantData
 
         return GetMerchantConfig200Response(
-            bankAccountId = merchantItem.data.bankAccountId,
-            merchantDisplayName = merchantItem.data.displayName,
-            merchantDescription = merchantItem.data.description,
-            webhookUrl = merchantItem.data.webhookUrl,
+            bankAccountId = merchantData?.bankAccountId,
+            merchantDisplayName = merchantData?.displayName,
+            merchantDescription = merchantData?.description,
+            webhookUrl = merchantData?.webhookUrl,
             merchantLocation = Location(
-                address = merchantItem.data.location?.address,
-                latitude = merchantItem.data.location?.latitude?.toBigDecimal(),
-                longitude = merchantItem.data.location?.longitude?.toBigDecimal()
+                address = merchantData?.location?.address,
+                latitude = merchantData?.location?.latitude?.toBigDecimal(),
+                longitude = merchantData?.location?.longitude?.toBigDecimal()
             )
         )
     }

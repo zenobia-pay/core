@@ -67,6 +67,9 @@ components:
           type: number
         longitude:
           type: number
+    UserType:
+      type: string
+      enum: [MERCHANT, CUSTOMER, UNKNOWN]
 x-amazon-apigateway-request-validators:
   basic:
     validateRequestParameters: true
@@ -466,10 +469,10 @@ paths:
         uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
         httpMethod: POST
         type: aws_proxy
-  /register-user:
+  /submit-onboarding:
     post:
-      summary: "Registers a user. Called by Auth0 only, not available to end customer"
-      operationId: "RegisterUser"
+      summary: "Onboards a user, adding user metadata and merchant info (if applicable). Only called on first login."
+      operationId: "SubmitOnboarding"
       requestBody:
         required: true
         content:
@@ -477,19 +480,18 @@ paths:
             schema:
               type: object
               required:
-                - sub
                 - firstName
                 - lastName
-                - email
+                - userType
               properties:
-                sub:
-                  type: string
                 firstName:
                   type: string
                 lastName:
                   type: string
-                email:
+                merchantDisplayName:
                   type: string
+                userType:
+                  $ref: '#/components/schemas/UserType'
       responses:
         '200':
           description: "Successful response"
@@ -502,7 +504,37 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
       x-amazon-apigateway-integration:
-        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSignUpHandlerFunction.Arn}:prod/invocations
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
+        httpMethod: POST
+        type: aws_proxy
+  /get-user-profile:
+    get:
+      summary: "Fetches user profile, including onboarding status, user type, etc"
+      operationId: "GetUserProfile"
+      responses:
+        '200':
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hasOnboarded:
+                    type: boolean
+                  userType:
+                    $ref: '#/components/schemas/UserType'
+                  isApproved:
+                    type: boolean
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
         httpMethod: POST
         type: aws_proxy
         #          /create-m2m-credentials:

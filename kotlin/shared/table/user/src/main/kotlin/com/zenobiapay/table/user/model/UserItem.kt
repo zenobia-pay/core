@@ -1,5 +1,7 @@
 package com.zenobiapay.table.user.model
 
+import com.zenobiapay.api.generated.models.Location as ApiLocation
+import com.zenobiapay.api.generated.models.UserType as ApiUserType
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
@@ -12,7 +14,8 @@ data class UserItem(
     @get:DynamoDbSortKey
     var sk: String = "",
     @get:DynamoDbAttribute("data")
-    var data: UserItemData = UserItemData()
+    var data: UserItemData = UserItemData(),
+    var userType: UserType? = null,
 ) {
     companion object {
         fun generatePk(sub: String) = "USER#id_$sub"
@@ -22,5 +25,57 @@ data class UserItem(
 
 @DynamoDbBean
 data class UserItemData(
-    var orumPersonId: String = ""
+    var orumPersonId: String = "",
+    var firstName: String = "",
+    var lastName: String = "",
+    var isApproved: Boolean = false,
+    var merchantData: MerchantData? = null,
 )
+
+enum class UserType {
+    MERCHANT,
+    CUSTOMER;
+
+    fun toApiUserType(): ApiUserType {
+        return when (this) {
+            MERCHANT -> ApiUserType.MERCHANT
+            CUSTOMER -> ApiUserType.CUSTOMER
+        }
+    }
+
+    companion object {
+        fun toDdbUserType(userType: ApiUserType): UserType {
+            return when (userType) {
+                ApiUserType.MERCHANT -> MERCHANT
+                ApiUserType.CUSTOMER -> CUSTOMER
+                ApiUserType.UNKNOWN -> throw IllegalArgumentException("Cannot store unknown user type")
+            }
+        }
+    }
+}
+
+@DynamoDbBean
+data class MerchantData(
+    var displayName: String? = null,
+    var description: String? = null,
+    var location: Location? = null,
+    var bankAccountId: String? = null,
+    var webhookUrl: String? = null
+)
+
+@DynamoDbBean
+data class Location(
+    var address: String? = null,
+    var latitude: Double? = null,
+    var longitude: Double? = null
+) {
+    companion object {
+        fun fromApiLocation(location: ApiLocation): Location {
+            return Location(
+                address = location.address,
+                latitude = location.latitude?.toDouble(),
+                longitude = location.longitude?.toDouble()
+            )
+        }
+    }
+}

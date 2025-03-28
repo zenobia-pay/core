@@ -151,6 +151,9 @@ Resources:
                   type: number
                 longitude:
                   type: number
+            UserType:
+              type: string
+              enum: [ MERCHANT, CUSTOMER, UNKNOWN ]
 
         x-amazon-apigateway-request-validators:
           basic:
@@ -566,10 +569,10 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
-          /register-user:
+          /submit-onboarding:
             post:
-              summary: "Registers a user. Called by Auth0 only, not available to end customer"
-              operationId: "RegisterUser"
+              summary: "Onboards a user, adding user metadata and merchant info (if applicable). Only called on first login."
+              operationId: "SubmitOnboarding"
               requestBody:
                 required: true
                 content:
@@ -577,19 +580,18 @@ Resources:
                     schema:
                       type: object
                       required:
-                        - sub 
                         - firstName
                         - lastName
-                        - email
+                        - userType
                       properties:
-                        sub:
-                          type: string
                         firstName:
                           type: string
                         lastName:
                           type: string
-                        email:
+                        merchantDisplayName:
                           type: string
+                        userType:
+                          $ref: '#/components/schemas/UserType'
               responses:
                 '200':
                   description: "Successful response"
@@ -602,7 +604,38 @@ Resources:
                 "500":
                   $ref: "#/components/responses/InternalServerError"
               x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSignUpHandlerFunction.Arn}:prod/invocations
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /get-user-profile:
+            get:
+              summary: "Fetches user profile, including onboarding status, user type, etc"
+              operationId: "GetUserProfile"
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          hasOnboarded:
+                            type: boolean
+                          userType:
+                            $ref: '#/components/schemas/UserType'
+                          isApproved:
+                            type: boolean
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
                 type: aws_proxy
 
@@ -863,6 +896,8 @@ Resources:
             KeyId: !Ref UserKeyId
         - KMSDecryptPolicy:
             KeyId: !Ref BankKeyId
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref OrumSecretsArn
       Events:
         UpdateMerchant:
           Type: Api
@@ -876,6 +911,18 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /get-merchant-config
             Method: GET
+        GetUserProfile:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /get-user-profile
+            Method: GET
+        SubmitOnboarding:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /submit-onboarding
+            Method: POST
 
   M2MHandlerFunction:
     Type: AWS::Serverless::Function
@@ -897,37 +944,6 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /create-m2m-credentials
             Method: GET
-
-  UserSignUpHandlerFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      SkipBuild: true
-    Properties:
-      FunctionName: CustomerSignUpHandler
-      CodeUri: ../kotlin/lambda/cognito-handler/build/libs/lambda.jar
-      Handler: com.zenobiapay.cognito.handlers.CustomerSignupEventHandler::handleRequest
-      SnapStart:
-        ApplyOn: None
-      Environment:
-        Variables:
-          USER_TABLE_NAME: !Ref UserTableName
-      Policies:
-        - AWSLambdaVPCAccessExecutionRole
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserTableName
-        - KMSEncryptPolicy:
-            KeyId: !Ref UserKeyId
-        - KMSDecryptPolicy:
-            KeyId: !Ref UserKeyId
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Ref OrumSecretsArn
-      Events:
-        RegisterUser:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ZenobiaApi
-            Path: /register-user
-            Method: POST
 
   TransferTableEventHandler:
     Type: 'AWS::Serverless::Function'

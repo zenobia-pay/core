@@ -29,12 +29,8 @@ class UpdateMerchantConfigOperation @Inject constructor(
             logger.info { "Fetching bank account ${request.bankAccountId}" }
             bankDao.getBankAccount(userId!!, request.bankAccountId!!) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
         }
-        // TODO: do in one ddb call
-        val merchantItem = userDao.getMerchant(userId!!)
-        logger.info { "Got current item $merchantItem" }
         userDao.updateMerchant(
-            userId,
-            merchantItem,
+            userId!!,
             request.bankAccountId,
             request.merchantDisplayName,
             request.merchantDescription,

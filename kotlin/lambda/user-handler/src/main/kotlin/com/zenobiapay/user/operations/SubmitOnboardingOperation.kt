@@ -1,9 +1,11 @@
-package com.zenobiapay.cognito.operations
+package com.zenobiapay.user.operations
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.api.generated.models.RegisterUserRequest
+import com.zenobiapay.api.exception.InvalidRequestException
+import com.zenobiapay.api.generated.models.SubmitOnboardingRequest
+import com.zenobiapay.api.generated.models.UserType
 import com.zenobiapay.api.model.EmptyApiResponse
 import com.zenobiapay.api.model.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
@@ -12,38 +14,45 @@ import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.orum.model.Contact
 import com.zenobiapay.orum.model.OrumCreatePersonRequest
 import com.zenobiapay.table.user.dao.UserDao
+import com.zenobiapay.table.user.model.MerchantData
+import com.zenobiapay.table.user.model.UserType as DdbUserType
 import io.github.oshai.kotlinlogging.KotlinLogging
-import jakarta.inject.Inject
+import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
-class RegisterUserOperation @Inject constructor(
+class SubmitOnboardingOperation @Inject constructor(
     private val objectMapper: ObjectMapper,
-    private val orumWrapper: OrumWrapper,
     private val userDao: UserDao,
+    private val orumWrapper: OrumWrapper,
 ): Operation() {
     override fun run(
         input: APIGatewayProxyRequestEvent,
         context: Context,
         userId: String?
     ): Any {
-        val request = objectMapper.readValue(input.body, RegisterUserRequest::class.java)
+        userId!!
+        val request = objectMapper.readValue(input.body, SubmitOnboardingRequest::class.java)
+
+        if (userDao.getUserItem(userId) != null) {
+            throw InvalidRequestException("User has already onboarded")
+        }
 
         val createPersonRequest = OrumCreatePersonRequest(
-            customerReferenceId = request.sub,
+            customerReferenceId = userId,
             firstName = request.firstName,
             lastName = request.lastName,
             socialSecurityNumber = null,
-            contacts = listOf(Contact("email", request.email))
+            contacts = listOf() // TODO: fetch email
         )
 
         val person = try {
             orumWrapper.createPerson(createPersonRequest).person.also {
-                logger.info { "Created Orum person with customer reference id ${request.sub}" }
+                logger.info { "Created Orum person with customer reference id $userId" }
             }
         } catch (e: OrumException) {
             if (e.isCreatePersonAlreadyExistsException()) {
-                logger.info { "Person ${request.sub} already exists. Updating pre-existing person with new info" }
+                logger.info { "Person $userId already exists. Updating pre-existing person with new info" }
                 orumWrapper.updatePerson(createPersonRequest).person
             } else {
                 throw e
@@ -51,12 +60,23 @@ class RegisterUserOperation @Inject constructor(
         }
 
         logger.info { "Got person $person" }
-//        userDao.putUser(request.sub, person.id)
+        val isAutoApproved = request.userType == UserType.CUSTOMER
+        userDao.putUser(
+            userId,
+            request.firstName,
+            request.lastName,
+            person.id,
+            DdbUserType.toDdbUserType(request.userType),
+            isAutoApproved,
+            MerchantData(
+                displayName = request.merchantDisplayName,
+            )
+        )
         logger.info { "Successfully put person into table" }
         return EmptyApiResponse()
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {
-        return listOf()
+        return listOf(UserPoolGroup.MERCHANT, UserPoolGroup.CUSTOMER)
     }
 }

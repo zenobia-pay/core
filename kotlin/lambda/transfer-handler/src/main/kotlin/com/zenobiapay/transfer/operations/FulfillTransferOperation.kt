@@ -49,7 +49,7 @@ class FulfillTransferOperation @Inject constructor(
         }
         logger.info { "Fetching bank item from userId $userId, accountId $bankAccountId" }
         bankDao.getBankAccount(userId!!, bankAccountId) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
-        val merchantItem = userDao.getMerchant(merchantId) ?: throw ResourceNotFoundException("MERCHANT")
+        val merchantItem = userDao.getUserItem(merchantId) ?: throw ResourceNotFoundException("MERCHANT")
 
         val transferAmount = transferRequestItem.amount!!
         val transferRequestData = transferRequestItem.data!!
@@ -75,7 +75,7 @@ class FulfillTransferOperation @Inject constructor(
             fulfillRequestId = fulfillRequestId,
             transferItem = transferRequestItem,
             timestamp = fulfillTimestamp,
-            webhookUrl = merchantItem.data.webhookUrl
+            webhookUrl = merchantItem.data.merchantData?.webhookUrl
         )
 
         return FulfillTransfer200Response(
