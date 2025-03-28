@@ -11,15 +11,15 @@ import (
 	"github.com/auth0/go-jwt-middleware/v2/validator"
 )
 
-// CustomClaims contains custom data we want from the token.
-type CustomClaims struct {
+// MachineCustomClaims contains custom data we want from the token.
+type MachineCustomClaims struct {
 	Scope string `json:"scope"`
 	Azp   string `json:"azp"`
 	Role  string `json:"role"`
 }
 
 // Validates that azp is auth0 app client
-func (c CustomClaims) Validate(ctx context.Context) error {
+func (c MachineCustomClaims) Validate(ctx context.Context) error {
 	auth0ClientId, found := os.LookupEnv("AUTH0_CLIENT_ID")
 	if !found {
 		println("Did not find auth0 client env var")
@@ -28,6 +28,17 @@ func (c CustomClaims) Validate(ctx context.Context) error {
 	if c.Azp != auth0ClientId {
 		return errors.New("auth 0 client id did not match azp")
 	}
+	return nil
+}
+
+// MachineCustomClaims contains custom data we want from the token.
+type UserCustomClaims struct {
+	Role  string `json:"role"`
+	Email string `json:"email"`
+}
+
+// Validates that azp is auth0 app client
+func (c UserCustomClaims) Validate(ctx context.Context) error {
 	return nil
 }
 
@@ -66,6 +77,11 @@ func init() {
 		validator.RS256,
 		zenobiaIssuerUrl.String(),
 		[]string{audience},
+		validator.WithCustomClaims(
+			func() validator.CustomClaims {
+				return &UserCustomClaims{}
+			},
+		),
 		validator.WithAllowedClockSkew(time.Minute),
 	)
 
@@ -80,7 +96,7 @@ func init() {
 		[]string{audience},
 		validator.WithCustomClaims(
 			func() validator.CustomClaims {
-				return &CustomClaims{}
+				return &MachineCustomClaims{}
 			},
 		),
 		validator.WithAllowedClockSkew(time.Minute),

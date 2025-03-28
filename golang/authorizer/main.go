@@ -49,7 +49,7 @@ func generatePolicy(principalID, effect, resource string, claims *validator.Vali
 	var context map[string]interface{} = nil
 	if claims != nil {
 		var role *string = nil
-		if castCustomClaims, ok := claims.CustomClaims.(CustomClaims); ok {
+		if castCustomClaims, ok := claims.CustomClaims.(MachineCustomClaims); ok {
 			role = &castCustomClaims.Role
 			println("Got role: " + *role)
 		}

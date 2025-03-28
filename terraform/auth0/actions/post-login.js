@@ -8,6 +8,9 @@ exports.onExecutePostLogin = async (event, api) => {
   const merchantClientId = event.secrets.merchantClientId;
 
   try {
+    console.log(`Setting email claim: ${event.user.email}`)
+    api.idToken.setCustomClaim("email", event.user.email)
+    api.accessToken.setCustomClaim("email", event.user.email)
     if (event.stats.logins_count === 1) {
       // Run only on initial login
       console.log("Initial login. Running set up.");
