@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.plaid.client.model.AccountSubtype
 import com.zenobiapay.api.model.ApiResponse
 import com.zenobiapay.api.model.EmptyApiResponse
-import com.zenobiapay.api.model.bank.ExchangeTokenRequest
 import com.zenobiapay.table.bank.dao.BankDao
 import com.zenobiapay.api.exception.InvalidRequestException
+import com.zenobiapay.api.generated.models.ExchangeTokenRequest
 import com.zenobiapay.api.model.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.orum.OrumWrapper
@@ -27,7 +27,7 @@ class ExchangeTokenOperation @Inject constructor(
 ) : Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): ApiResponse {
         logger.info { "Got input body ${input.body}" }
-        val request = ExchangeTokenRequest.from(input.body, objectMapper)
+        val request = objectMapper.readValue(input.body, ExchangeTokenRequest::class.java)
         val exchangeResponse = plaidWrapper.exchangeLinkToken(userId!!, request.linkToken)
         logger.info { "Got exchange response $exchangeResponse" }
 
