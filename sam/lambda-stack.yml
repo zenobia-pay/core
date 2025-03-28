@@ -664,7 +664,7 @@ Resources:
                 "500":
                   $ref: "#/components/responses/InternalServerError"
               x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSignUpHandlerFunction.Arn}:prod/invocations
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${M2MHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
                 type: aws_proxy
 
