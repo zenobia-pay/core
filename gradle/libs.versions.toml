@@ -6,6 +6,7 @@ dagger = "2.54"
 mockk = "1.13.16"
 junit = "5.10.1"
 okhttp = "4.12.0"
+bouncycastle = "1.80"
 
 [libraries]
 # Kotlin
@@ -52,6 +53,10 @@ json = { module = "org.json:json", version="20250107"}
 
 # Auth0
 auth0 = { module = "com.auth0:auth0", version = "2.18.0" }
+
+# Cryptography
+bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk15to18", version.ref = "bouncycastle" }
+bouncycastle-bcpkix = { module = "org.bouncycastle:bcpkix-jdk15to18", version.ref = "bouncycastle" }
 
 # Testing
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version = "2.1.10"}

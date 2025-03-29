@@ -14,7 +14,7 @@ import com.zenobiapay.api.exception.InvalidRequestException
 import com.zenobiapay.api.generated.models.ExchangeTokenRequest
 import com.zenobiapay.api.model.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
-import com.zenobiapay.bank.util.isValidCertificate
+import com.zenobiapay.cryptography.util.isCertificateValid
 import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.orum.model.OrumCreateExternalAccountRequest
 import com.zenobiapay.plaid.PlaidWrapper
@@ -28,13 +28,13 @@ class ExchangeTokenOperation @Inject constructor(
     private val plaidWrapper: PlaidWrapper,
     private val orumWrapper: OrumWrapper,
     private val objectMapper: ObjectMapper,
-    private val bankDao: BankDao
+    private val bankDao: BankDao,
 ) : Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): ApiResponse {
         logger.info { "Got input body ${input.body}" }
         val request = objectMapper.readValue(input.body, ExchangeTokenRequest::class.java)
 
-        if (request.deviceCertificate != null && !isValidCertificate(
+        if (request.deviceCertificate != null && !isCertificateValid(
                 request.deviceCertificate!!.certificateValue,
                 request.deviceCertificate!!.certificateType
             )
