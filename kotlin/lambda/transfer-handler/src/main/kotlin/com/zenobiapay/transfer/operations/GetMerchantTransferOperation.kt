@@ -3,6 +3,7 @@ package com.zenobiapay.transfer.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.api.exception.ResourceNotFoundException
 import com.zenobiapay.api.model.transfer.GetTransferRequest
 import com.zenobiapay.api.generated.models.GetMerchantTransfer200Response
 import com.zenobiapay.api.model.Operation
@@ -17,7 +18,7 @@ class GetMerchantTransferOperation @Inject constructor(private val objectMapper:
         val transferItem = transferDao.getMerchantTransfer(
             merchantId = userId!!,
             transferRequestId = request.id
-        )
+        ) ?: throw ResourceNotFoundException("TRANSFER")
         return GetMerchantTransfer200Response(
             transferRequestId = request.id,
             status = transferItem.status.toApiTransferStatus(),

@@ -45,10 +45,7 @@ class FulfillTransferOperation @Inject constructor(
 ) : Operation() {
     private val mixinObjectMapper = lazy {
         objectMapper.copy()
-            .addMixIn(FulfillTransferRequest::class.java, FulfillTransferRequestMixin::class.java).also {
-                it.serializationConfig
-                    .with(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
-            }
+            .addMixIn(FulfillTransferRequest::class.java, FulfillTransferRequestMixin::class.java)
     }
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): FulfillTransfer200Response {
         val request = objectMapper.readValue(input.body, FulfillTransferRequest::class.java)
@@ -58,6 +55,7 @@ class FulfillTransferOperation @Inject constructor(
 
         val date = LocalDate.now(ZoneOffset.UTC).also { logger.info { "Using date $it" } }
         val transferRequestItem = transferDao.getMerchantTransfer(merchantId = merchantId, transferRequestId = transferRequestId)
+            ?: throw ResourceNotFoundException("TRANSFER")
         if (transferRequestItem.status != TransferStatus.NOT_STARTED) {
             throw TransferStatusException("Transfer status is no longer in NOT_STARTED state.")
         }
@@ -110,14 +108,14 @@ class FulfillTransferOperation @Inject constructor(
     }
 
     private fun validateRequestSignature(request: FulfillTransferRequest, bankAccountItem: BankAccountItem) {
-        val body = mixinObjectMapper.value.writeValueAsBytes(request)
+        val body = mixinObjectMapper.value.writeValueAsString(request)
         val deviceCertificate = bankAccountItem.data.deviceCertificate
 
         if (deviceCertificate == null || bankAccountItem.data.bankPermissions != BankPermissions.SEND_ONLY) {
             throw InvalidRequestException("Bank account not allowed to send money")
         }
         val isValid = isSignatureValid(
-            data = body,
+            data = body.toByteArray(),
             certificate = deviceCertificate.certificateValue,
             base64Signature = request.signature.signatureValue,
             signatureType = request.signature.signatureType

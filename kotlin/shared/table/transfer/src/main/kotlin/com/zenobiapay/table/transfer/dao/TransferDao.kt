@@ -107,13 +107,17 @@ class TransferDao @Inject constructor(
         ).first().items().firstOrNull()
     }
 
-    fun getMerchantTransfer(merchantId: String, transferRequestId: String): TransferItem {
+    fun getMerchantTransfer(merchantId: String, transferRequestId: String): TransferItem? {
         val pk = TransferItem.generatePk(merchantId)
         val sk = TransferItem.generateSk(transferRequestId)
-        return transferTable.getItem {
-            it.key {
-                it.partitionValue(pk).sortValue(sk)
+        return try {
+            transferTable.getItem {
+                it.key {
+                    it.partitionValue(pk).sortValue(sk)
+                }
             }
+        } catch (e: ResourceNotFoundException) {
+            return null
         }
     }
 

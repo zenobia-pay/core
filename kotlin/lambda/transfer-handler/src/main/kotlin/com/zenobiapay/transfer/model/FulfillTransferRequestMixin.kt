@@ -1,9 +1,11 @@
 package com.zenobiapay.transfer.model
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import com.zenobiapay.api.generated.models.FulfillTransferRequestSignature
 
+@JsonPropertyOrder(alphabetic = true)
 abstract class FulfillTransferRequestMixin {
     @JsonIgnore
-    abstract fun getFulfillTransferRequestSignature(): FulfillTransferRequestSignature
+    abstract fun getSignature(): FulfillTransferRequestSignature
 }
