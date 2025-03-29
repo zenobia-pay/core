@@ -48,7 +48,6 @@ enum class UserType {
             return when (userType) {
                 ApiUserType.MERCHANT -> MERCHANT
                 ApiUserType.CUSTOMER -> CUSTOMER
-                ApiUserType.UNKNOWN -> throw IllegalArgumentException("Cannot store unknown user type")
             }
         }
     }

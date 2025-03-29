@@ -9,6 +9,7 @@ import com.zenobiapay.api.exception.UnknownPathException
 import com.zenobiapay.api.generated.models.SubmitOnboardingRequest
 import com.zenobiapay.api.util.ResponseHandler
 import com.zenobiapay.user.di.DaggerAppComponent
+import com.zenobiapay.user.operations.CreateM2MCredentialsOperation
 import com.zenobiapay.user.operations.GetMerchantConfigOperation
 import com.zenobiapay.user.operations.GetUserProfileOperation
 import com.zenobiapay.user.operations.SubmitOnboardingOperation
@@ -35,6 +36,9 @@ class UserHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
     lateinit var submitOnboardingOperation: SubmitOnboardingOperation
 
     @Inject
+    lateinit var createM2MCredentialsOperation: CreateM2MCredentialsOperation
+
+    @Inject
     lateinit var objectMapper: ObjectMapper
 
     init {
@@ -48,6 +52,7 @@ class UserHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
             "/get-merchant-config" -> getMerchantConfigOperation
             "/get-user-profile" -> getUserProfileOperation
             "/submit-onboarding" -> submitOnboardingOperation
+            "/create-m2m-credentials" -> createM2MCredentialsOperation
             else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
         }
         return responseHandler.returnApiGwResponse(operation, input, context!!)

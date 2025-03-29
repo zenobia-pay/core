@@ -67,7 +67,7 @@ resource "auth0_client_grant" "auth0_action_client_grant" {
 }
 
 resource "auth0_client" "aws_auth0_management_app" {
-  name            = "aws-auth0-management-app-tf"
+  name            = "Auth0 M2M Management App"
   description     = "Used by Zenobia AWS service to manage client credentials for merchants"
   app_type        = "non_interactive"
   grant_types     = ["client_credentials"]
@@ -76,8 +76,16 @@ resource "auth0_client" "aws_auth0_management_app" {
 
 resource "auth0_client_grant" "aws_auth0_management_client_grant" {
   client_id = auth0_client.aws_auth0_management_app.id
-  audience  = "https://dev-u0ert1rxhkdmhwy8.us.auth0.com/api/v2/"
-  scopes    = ["create:clients", "update:clients", "delete:clients"]
+  audience  = "https://${var.AUTH0_DOMAIN}/api/v2/"
+  scopes    = ["create:clients", "update:clients", "delete:clients", "update:users_app_metadata"]
+}
+
+resource "auth0_client" "aws_auth0_management_role_app" {
+  name = "Auth0 Role Management App"
+  description     = "Used by Zenobia AWS service to manage auth0 roles"
+  app_type        = "non_interactive"
+  grant_types     = ["client_credentials"]
+  is_first_party  = true
 }
 
 resource "auth0_resource_server" "zenobia_api" {

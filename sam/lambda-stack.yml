@@ -153,7 +153,7 @@ Resources:
                   type: number
             UserType:
               type: string
-              enum: [ MERCHANT, CUSTOMER, UNKNOWN ]
+              enum: [ MERCHANT, CUSTOMER ]
             CertificateType:
               type: string
               enum: [ EC ]
@@ -689,7 +689,7 @@ Resources:
                 "500":
                   $ref: "#/components/responses/InternalServerError"
               x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${M2MHandlerFunction.Arn}:prod/invocations
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
                 type: aws_proxy
 
@@ -923,6 +923,8 @@ Resources:
             KeyId: !Ref BankKeyId
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref OrumSecretsArn
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref Auth0SecretsArn
       Events:
         UpdateMerchant:
           Type: Api
@@ -948,21 +950,6 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /submit-onboarding
             Method: POST
-
-  M2MHandlerFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      SkipBuild: true
-    Properties:
-      FunctionName: M2MHandler
-      CodeUri: ../kotlin/lambda/m2m-handler/build/libs/lambda.jar
-      Handler: com.zenobiapay.m2mhandler.handlers.M2MHandler::handleRequest
-      MemorySize: 2048
-      Policies:
-        - AWSLambdaVPCAccessExecutionRole
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Ref Auth0SecretsArn
-      Events:
         CreateM2MCredentials:
           Type: Api
           Properties:

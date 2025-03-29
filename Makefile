@@ -9,7 +9,7 @@ go:
 		echo "Building $$dir..."; \
 		docker run --rm -v "$(PWD)":/app -w /app/golang/$$dir public.ecr.aws/amazonlinux/amazonlinux:2 \
 		bash -c 'yum install -y golang zip && \
-		         go build -buildvcs=false -o ./build/bootstrap . && \
+		         GOOS=linux GOARCH=amd64 go build -buildvcs=false -o ./build/bootstrap . && \
 				 cd build && \
 		         zip function.zip bootstrap'; \
 	done

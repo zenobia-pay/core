@@ -22,7 +22,7 @@ class GetUserProfileOperation @Inject constructor(
         val hasOnboarded = user != null
         return GetUserProfile200Response(
             hasOnboarded = hasOnboarded,
-            userType = user?.userType?.toApiUserType() ?: UserType.UNKNOWN,
+            userType = user?.userType?.toApiUserType(),
             isApproved = user?.data?.isApproved == true
         )
     }

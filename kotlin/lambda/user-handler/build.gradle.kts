@@ -59,6 +59,9 @@ dependencies {
     api(libs.aws.dynamodb.enhanced)
     api(libs.aws.secretsmanager)
 
+    // Auth0
+    api(libs.auth0)
+
     // Testing
     testImplementation(libs.kotlin.test)
     testImplementation(libs.mockk)

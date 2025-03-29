@@ -16,6 +16,8 @@ import com.zenobiapay.orum.model.Contact
 import com.zenobiapay.orum.model.OrumCreatePersonRequest
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.table.user.model.MerchantData
+import com.zenobiapay.user.model.Auth0Permissions
+import com.zenobiapay.user.util.Auth0Wrapper
 import com.zenobiapay.table.user.model.UserType as DdbUserType
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
@@ -26,6 +28,7 @@ class SubmitOnboardingOperation @Inject constructor(
     private val objectMapper: ObjectMapper,
     private val userDao: UserDao,
     private val orumWrapper: OrumWrapper,
+    private val auth0Wrapper: Auth0Wrapper,
 ): Operation() {
     override fun run(
         input: APIGatewayProxyRequestEvent,
@@ -60,6 +63,10 @@ class SubmitOnboardingOperation @Inject constructor(
                 throw e
             }
         }
+
+        val permission = Auth0Permissions.fromUserType(request.userType)
+        logger.info { "Adding permission $permission to user $userId"}
+        auth0Wrapper.putPermissionsToUser(userId, listOf(permission))
 
         logger.info { "Got person $person" }
         val isAutoApproved = request.userType == UserType.CUSTOMER

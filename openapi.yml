@@ -69,7 +69,7 @@ components:
           type: number
     UserType:
       type: string
-      enum: [MERCHANT, CUSTOMER, UNKNOWN]
+      enum: [MERCHANT, CUSTOMER]
     CertificateType:
       type: string
       enum: [EC]
@@ -587,7 +587,7 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
       x-amazon-apigateway-integration:
-        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${M2MHandlerFunction.Arn}:prod/invocations
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
         httpMethod: POST
         type: aws_proxy
         #          /list-m2m-credentials:

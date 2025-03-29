@@ -5,8 +5,10 @@ import com.zenobiapay.orum.di.OrumModule
 import com.zenobiapay.table.di.TableModule
 import com.zenobiapay.user.handlers.UserHandler
 import dagger.Component
+import javax.inject.Singleton
 
-@Component(modules = [SharedModule::class, TableModule::class, OrumModule::class, UserModule::class])
+@Singleton
+@Component(modules = [SharedModule::class, TableModule::class, OrumModule::class, Auth0Module::class])
 interface AppComponent {
     fun inject(handler: UserHandler)
 }
