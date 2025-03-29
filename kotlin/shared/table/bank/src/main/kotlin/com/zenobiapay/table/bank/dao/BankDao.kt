@@ -3,6 +3,8 @@ package com.zenobiapay.table.bank.dao
 import com.zenobiapay.table.MAX_LIST_ITEMS
 import com.zenobiapay.table.bank.model.BankAccountItem
 import com.zenobiapay.table.bank.model.BankData
+import com.zenobiapay.table.bank.model.BankPermissions
+import com.zenobiapay.table.bank.model.DeviceCertificate
 import com.zenobiapay.table.di.BANK_TABLE_NAME
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
@@ -21,16 +23,27 @@ class BankDao @Inject constructor(
 ) {
     fun putBankAccount(
         userId: String,
+        deviceId: String?,
+        token: String,
         plaidItemId: String,
         bankAccountId: String,
         bankAccountName: String,
-        token: String,
         bankAccountType: String,
-        orumId: String
+        orumId: String,
+        deviceCertificate: DeviceCertificate?
     ) {
         val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankAccountItem::class.java))
-        val pk = BankAccountItem.generatePk(userId)
+        val pk = BankAccountItem.generatePk(userId, deviceId)
         val sk = BankAccountItem.generateSk(bankAccountId)
+
+        val bankPermissions = if (deviceId == null) {
+            logger.info { "Setting bank as receive only, no device id found" }
+            BankPermissions.RECEIVE_ONLY
+        } else {
+            logger.info { "Found device id. Setting bank as send only"}
+            BankPermissions.SEND_ONLY
+        }
+
         table.putItem(
             BankAccountItem(
                 pk = pk,
@@ -41,16 +54,18 @@ class BankDao @Inject constructor(
                     bankAccountName = bankAccountName,
                     bankAccountType = bankAccountType,
                     orumId = orumId,
-                    plaidItemId = plaidItemId
+                    plaidItemId = plaidItemId,
+                    bankPermissions = bankPermissions,
+                    deviceCertificate = deviceCertificate
                 )
             )
         )
     }
 
     // TODO: handle paging using continuation token
-    fun listBankAccounts(userId: String, continuationToken: String?): List<BankAccountItem> {
+    fun listBankAccounts(userId: String, deviceId: String?, continuationToken: String?): List<BankAccountItem> {
         val queryConditional = QueryConditional.keyEqualTo {
-            it.partitionValue(BankAccountItem.generatePk(userId))
+            it.partitionValue(BankAccountItem.generatePk(userId, deviceId))
         }
         val queryRequest = QueryEnhancedRequest.builder()
             .attributesToProject("pk", "sk", "data")
@@ -62,10 +77,10 @@ class BankDao @Inject constructor(
         return table.query(queryRequest).items().toList()
     }
 
-    fun getBankAccount(userId: String, bankAccountId: String): BankAccountItem? {
+    fun getBankAccount(userId: String, deviceId: String?, bankAccountId: String): BankAccountItem? {
         logger.info { "Fetch bank account from userId $userId, bankAccountId $bankAccountId" }
         val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankAccountItem::class.java))
-        val pk = BankAccountItem.generatePk(userId)
+        val pk = BankAccountItem.generatePk(userId, deviceId)
         val sk = BankAccountItem.generateSk(bankAccountId)
 
         return try {

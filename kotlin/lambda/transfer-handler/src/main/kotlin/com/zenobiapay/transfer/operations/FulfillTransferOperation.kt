@@ -47,8 +47,9 @@ class FulfillTransferOperation @Inject constructor(
         if (transferRequestItem.status != TransferStatus.NOT_STARTED) {
             throw TransferStatusException("Transfer status is no longer in NOT_STARTED state.")
         }
+
         logger.info { "Fetching bank item from userId $userId, accountId $bankAccountId" }
-        bankDao.getBankAccount(userId!!, bankAccountId) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
+        bankDao.getBankAccount(userId!!, request.deviceId, bankAccountId) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
         val merchantItem = userDao.getUserItem(merchantId) ?: throw ResourceNotFoundException("MERCHANT")
 
         val transferAmount = transferRequestItem.amount!!

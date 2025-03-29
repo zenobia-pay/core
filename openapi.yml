@@ -120,8 +120,11 @@ paths:
                   properties:
                     certificateType:
                       $ref: "#/components/schemas/CertificateType"
-                    certificate: # in base64
+                    certificateValue: # in base64
                       type: string
+                  required:
+                    - certificateType
+                    - certificateValue
               required:
                 - linkToken
       responses:
@@ -152,6 +155,8 @@ paths:
               type: object
               properties:
                 deviceId:
+                  type: string
+                continuationToken:
                   type: string
       responses:
         '200':
@@ -261,7 +266,7 @@ paths:
                   properties:
                     signatureType:
                       $ref: "#/components/schemas/SignatureType"
-                    data:
+                    signatureValue:
                       type: string
       responses:
         '200':

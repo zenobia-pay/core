@@ -27,7 +27,7 @@ class UpdateMerchantConfigOperation @Inject constructor(
         if (request.bankAccountId != null) {
             // Validate bank id exists
             logger.info { "Fetching bank account ${request.bankAccountId}" }
-            bankDao.getBankAccount(userId!!, request.bankAccountId!!) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
+            bankDao.getBankAccount(userId!!, null, request.bankAccountId!!) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
         }
         userDao.updateMerchant(
             userId!!,

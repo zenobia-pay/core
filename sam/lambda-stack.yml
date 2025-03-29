@@ -208,6 +208,9 @@ Resources:
                               $ref: "#/components/schemas/CertificateType"
                             certificateValue: # in base64
                               type: string
+                          required:
+                            - certificateType
+                            - certificateValue
                       required:
                         - linkToken
               responses:
@@ -240,6 +243,8 @@ Resources:
                       type: object
                       properties:
                         deviceId:
+                          type: string
+                        continuationToken:
                           type: string
               responses:
                 '200':
