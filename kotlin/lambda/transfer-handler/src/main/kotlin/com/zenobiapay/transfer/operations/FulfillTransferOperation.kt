@@ -3,6 +3,8 @@ package com.zenobiapay.transfer.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.api.exception.InvalidRequestException
+import com.zenobiapay.api.exception.InvalidSignatureException
 import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.api.generated.models.FulfillTransfer200Response
 import com.zenobiapay.api.generated.models.FulfillTransferRequest
@@ -13,14 +15,19 @@ import com.zenobiapay.orum.model.TransferParticipant
 import com.zenobiapay.api.exception.ResourceNotFoundException
 import com.zenobiapay.api.exception.TransferFailedException
 import com.zenobiapay.api.exception.TransferStatusException
+import com.zenobiapay.api.generated.models.CertificateType
 import com.zenobiapay.api.model.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.orum.util.WaiterFailedException
+import com.zenobiapay.table.bank.model.BankAccountItem
+import com.zenobiapay.table.bank.model.BankPermissions
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
 import com.zenobiapay.table.transfer.model.TransferItem
 import com.zenobiapay.table.transfer.model.TransferStatus
 import com.zenobiapay.table.user.dao.UserDao
+import com.zenobiapay.transfer.model.FulfillTransferRequestMixin
+import com.zenobiapay.transfer.util.validateSignature
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.Instant
 import java.time.LocalDate
@@ -36,6 +43,9 @@ class FulfillTransferOperation @Inject constructor(
     private val userDao: UserDao,
     private val objectMapper: ObjectMapper,
 ) : Operation() {
+    private val mixinObjectMapper = lazy {
+        objectMapper.copy().addMixIn(FulfillTransferRequest::class.java, FulfillTransferRequestMixin::class.java)
+    }
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): FulfillTransfer200Response {
         val request = objectMapper.readValue(input.body, FulfillTransferRequest::class.java)
         val transferRequestId = request.transferRequestId
@@ -49,8 +59,10 @@ class FulfillTransferOperation @Inject constructor(
         }
 
         logger.info { "Fetching bank item from userId $userId, accountId $bankAccountId" }
-        bankDao.getBankAccount(userId!!, request.deviceId, bankAccountId) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
+        val customerBankAccountItem = bankDao.getBankAccount(userId!!, request.deviceId, bankAccountId) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
         val merchantItem = userDao.getUserItem(merchantId) ?: throw ResourceNotFoundException("MERCHANT")
+
+        validateRequestSignature(request, customerBankAccountItem)
 
         val transferAmount = transferRequestItem.amount!!
         val transferRequestData = transferRequestItem.data!!
@@ -91,6 +103,26 @@ class FulfillTransferOperation @Inject constructor(
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {
         return listOf(UserPoolGroup.CUSTOMER)
+    }
+
+    private fun validateRequestSignature(request: FulfillTransferRequest, bankAccountItem: BankAccountItem) {
+        val body = mixinObjectMapper.value.writeValueAsBytes(request)
+        val deviceCertificate = bankAccountItem.data.deviceCertificate
+
+        if (deviceCertificate == null || bankAccountItem.data.bankPermissions != BankPermissions.SEND_ONLY) {
+            throw InvalidRequestException("Bank account not allowed to send money")
+        }
+        val certificateType = CertificateType.valueOf(deviceCertificate.certificateType)
+        val isValid = validateSignature(
+            data = body,
+            certificateValue = deviceCertificate.certificateValue,
+            certificateType = certificateType,
+            signatureValue = request.signature.signatureValue,
+            signatureType = request.signature.signatureType
+        )
+        if (!isValid) {
+            throw InvalidSignatureException()
+        }
     }
 
     private fun transferFunds(

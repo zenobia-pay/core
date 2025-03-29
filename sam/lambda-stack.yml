@@ -341,7 +341,8 @@ Resources:
                         - transferRequestId
                         - merchantId
                         - bankAccountId
-                        # TODO: device and signature should be required
+                        - deviceId
+                        - signature
                       properties:
                         transferRequestId:
                           type: string
@@ -358,6 +359,9 @@ Resources:
                               $ref: "#/components/schemas/SignatureType"
                             signatureValue:
                               type: string
+                          required:
+                            - signatureType
+                            - signatureValue
               responses:
                 '200':
                   description: "Successful response"
