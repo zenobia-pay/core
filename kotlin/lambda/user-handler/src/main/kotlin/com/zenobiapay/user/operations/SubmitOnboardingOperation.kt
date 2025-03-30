@@ -16,8 +16,8 @@ import com.zenobiapay.orum.model.Contact
 import com.zenobiapay.orum.model.OrumCreatePersonRequest
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.table.user.model.MerchantData
-import com.zenobiapay.user.model.Auth0Permissions
 import com.zenobiapay.user.util.Auth0Wrapper
+import com.zenobiapay.user.util.Auth0Wrapper.Companion.ROLE_KEY
 import com.zenobiapay.table.user.model.UserType as DdbUserType
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
@@ -64,9 +64,8 @@ class SubmitOnboardingOperation @Inject constructor(
             }
         }
 
-        val permission = Auth0Permissions.fromUserType(request.userType)
-        logger.info { "Adding permission $permission to user $userId"}
-        auth0Wrapper.putPermissionsToUser(userId, listOf(permission))
+        logger.info { "Adding role ${request.userType} to user $userId"}
+        auth0Wrapper.putAppMetadataOnUser(userId, mapOf(ROLE_KEY to request.userType.value))
 
         logger.info { "Got person $person" }
         val isAutoApproved = request.userType == UserType.CUSTOMER

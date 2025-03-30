@@ -2,9 +2,9 @@ package com.zenobiapay.user.util
 
 import com.auth0.client.mgmt.ManagementAPI
 import com.auth0.json.mgmt.client.Client
-import com.auth0.json.mgmt.permissions.Permission
+import com.auth0.json.mgmt.users.User
+import com.auth0.net.Response
 import com.zenobiapay.user.model.Auth0Exception
-import com.zenobiapay.user.model.Auth0Permissions
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.UUID
 import javax.inject.Inject
@@ -12,6 +12,9 @@ import javax.inject.Inject
 private val logger = KotlinLogging.logger {}
 
 class Auth0Wrapper @Inject constructor(private val managementAPI: ManagementAPI) {
+    companion object {
+        const val ROLE_KEY = "role"
+    }
     fun createClientCredentials(userId: String): Client {
         val client = Client("${userId}_${UUID.randomUUID()}")
         client.description = "M2M Client to act on behalf of merchant $userId"
@@ -19,21 +22,30 @@ class Auth0Wrapper @Inject constructor(private val managementAPI: ManagementAPI)
         client.clientMetadata = mapOf("merchantSub" to userId)
 
         val createClientResponse = managementAPI.clients().create(client).execute()
-        if (createClientResponse.statusCode >= 400) { // Auth0 returns 201 instead of 200
-            logger.error { "Got error code ${createClientResponse.statusCode}, ${createClientResponse.body}"}
-            throw Auth0Exception("Failed to create new m2m client")
+        return getBodyOrThrow(createClientResponse, "Failed to create new m2m client").also {
+            logger.info { "Successfully created m2m client with name ${it.name}" }
         }
-
-        logger.info { "Successfully created m2m client with name ${createClientResponse.body.name}" }
-        return createClientResponse.body
     }
 
-    fun putPermissionsToUser(userId: String, permissions: List<Auth0Permissions>) {
-        val castPermissions = permissions.map { permission ->
-            Permission().also {
-                it.name = permission.name
-            }
+    /**
+     * Note that this overwrites any existing metadata.
+     */
+    fun putAppMetadataOnUser(userId: String, metadata: Map<String, String>) {
+        val user = getUser(userId)
+        user.appMetadata.putAll(metadata)
+        managementAPI.users().update(userId, user)
+    }
+
+    private fun getUser(userId: String): User {
+        val user = getBodyOrThrow(managementAPI.users().get(userId, null).execute(), "Failed to get auth0 user")
+        return user
+    }
+
+    private fun <T> getBodyOrThrow(response: Response<T>, message: String): T {
+        if (response.statusCode >= 400) { // Auth0 returns 201 instead of 200
+            logger.error { "Got error code ${response.statusCode}, ${response.body}"}
+            throw Auth0Exception(message)
         }
-        managementAPI.users().addPermissions(userId, castPermissions)
+        return response.body
     }
 }
