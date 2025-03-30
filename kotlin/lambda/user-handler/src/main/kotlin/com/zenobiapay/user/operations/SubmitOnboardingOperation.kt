@@ -63,11 +63,10 @@ class SubmitOnboardingOperation @Inject constructor(
                 throw e
             }
         }
-
+        logger.info { "Got person $person" }
         logger.info { "Adding role ${request.userType} to user $userId"}
         auth0Wrapper.putAppMetadataOnUser(userId, mapOf(ROLE_KEY to request.userType.value))
 
-        logger.info { "Got person $person" }
         val isAutoApproved = request.userType == UserType.CUSTOMER
         userDao.putUser(
             userId,

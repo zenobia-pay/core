@@ -5,7 +5,7 @@
   "headers": {
     "Content-Type": "application/json"
   },
-  "body": "{\"firstName\":\"Teddy\",\"lastName\":\"Li\",\"email\":\"teddy@zenobiapay.com\",\"userType\":\"MERCHANT\"}",
+  "body": "{\"firstName\":\"Teddy\",\"lastName\":\"Li\",\"userType\":\"MERCHANT\"}",
   "isBase64Encoded": false,
   "requestContext": {
     "accountId": "123456789012",
@@ -17,10 +17,10 @@
     },
     "authorizer": {
       "principalId": "user123",
-      "sub": "user-abc-123",
+      "sub": "google-oauth2|107992810675119826229",
+      "email": "user@example.com",
+      "role": "admin",
       "claims": {
-        "email": "user@example.com",
-        "role": "admin",
         "scope": "read write"
       }
     }

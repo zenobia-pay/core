@@ -32,8 +32,10 @@ class Auth0Wrapper @Inject constructor(private val managementAPI: ManagementAPI)
      */
     fun putAppMetadataOnUser(userId: String, metadata: Map<String, String>) {
         val user = getUser(userId)
-        user.appMetadata.putAll(metadata)
-        managementAPI.users().update(userId, user)
+        val updatedUser = User().apply {
+            appMetadata = metadata + (user.appMetadata ?: mapOf<String, String>())
+        }
+        getBodyOrThrow(managementAPI.users().update(userId, updatedUser).execute(), "Failed to update app metadata")
     }
 
     private fun getUser(userId: String): User {
