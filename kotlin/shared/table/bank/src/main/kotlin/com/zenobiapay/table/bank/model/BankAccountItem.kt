@@ -44,6 +44,6 @@ enum class BankPermissions {
 
 @DynamoDbBean
 data class DeviceCertificate(
-    var certificateType: String,
-    var certificateValue: String,
+    var certificateType: String = "",
+    var certificateValue: String = "",
 )
