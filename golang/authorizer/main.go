@@ -48,7 +48,7 @@ func generatePolicyResponse(isValid bool, context map[string]interface{}, method
 	if isValid {
 		return generatePolicy("user", "Allow", wildcardArn(methodArn), context)
 	} else {
-		return generatePolicy("user", "Deny", "*", nil)
+		return generatePolicy("user", "Deny", "*", map[string]interface{}{})
 	}
 }
 
