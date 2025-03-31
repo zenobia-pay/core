@@ -11,15 +11,18 @@ exports.onExecutePostLogin = async (event, api) => {
     console.log(`Setting email claim: ${event.user.email}`)
     api.idToken.setCustomClaim("email", event.user.email)
     api.accessToken.setCustomClaim("email", event.user.email)
+    const userRole = event.user.app_metadata?.role;
+    if (userRole) {
+      console.log(`Found user role ${userRole}, adding to claims`);
+      api.idToken.setCustomClaim("role", userRole);
+      api.accessToken.setCustomClaim("role", userRole);
+    } else {
+      console.log("No user role found, skipping adding to claim");
+    }
+
     if (event.stats.logins_count === 1) {
       // Run only on initial login
       console.log("Initial login. Running set up.");
-      // TODO: determine base on form login 
-      const role = MERCHANT_ROLE
-      console.log(`Setting app metadata ${role}`);
-      api.user.setAppMetadata("role", role);
-
-      // TODO: client id are both returning undefined, fix
       console.log(
         `Got role=${role} from clientId ${event.client.id}, expected merchant client id ${merchantClientId}`
       );
@@ -30,15 +33,6 @@ exports.onExecutePostLogin = async (event, api) => {
       console.log("Setting custom claims manually for initial login");
       api.idToken.setCustomClaim("role", role);
       api.accessToken.setCustomClaim("role", role);
-    } else {
-      const userRole = event.user.app_metadata?.role;
-      if (userRole) {
-        console.log(`Found user role ${userRole}, adding to claims`);
-        api.idToken.setCustomClaim("role", userRole);
-        api.accessToken.setCustomClaim("role", userRole);
-      } else {
-        console.log("No user role found, skipping adding to claim");
-      }
     }
   } catch (err) {
     console.log("Got err: " + err);
