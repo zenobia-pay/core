@@ -21,6 +21,10 @@ class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper
         setLoggingContext(input.requestContext.requestId, input.requestContext.getUserId())
         return wrapOperation {
             val userId = input.requestContext.getUserId()
+            val role = input.requestContext.getUserRole()
+            if (role !in operation.getUserPoolAllowList()) {
+                throw UnauthorizedException()
+            }
             operation.run(input, context, userId)
         }
     }
