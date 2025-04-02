@@ -23,6 +23,7 @@ class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper
             val userId = input.requestContext.getUserId()
             val role = input.requestContext.getUserRole()
             if (role !in operation.getUserPoolAllowList()) {
+                logger.error { "Role $role not allowed for operation ${operation.javaClass.name} with allowed list ${operation.getUserPoolAllowList()}"}
                 throw UnauthorizedException()
             }
             operation.run(input, context, userId)

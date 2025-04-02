@@ -23,10 +23,6 @@ exports.onExecutePostLogin = async (event, api) => {
     if (event.stats.logins_count === 1) {
       // Run only on initial login
       console.log("Initial login. Running set up.");
-      console.log(
-        `Got role=${role} from clientId ${event.client.id}, expected merchant client id ${merchantClientId}`
-      );
-
       await setupAuth0Configuration(event, role);
       await registerUser(event, api, audience, role);
 
