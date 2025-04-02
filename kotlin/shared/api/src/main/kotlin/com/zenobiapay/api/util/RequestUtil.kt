@@ -20,3 +20,7 @@ fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserRole(): UserPoolGroup
     val role = this.authorizer["role"] as String
     return UserPoolGroup.fromString(role)
 }
+
+fun APIGatewayProxyRequestEvent.ProxyRequestContext.getSubForM2M(): String? {
+    return this.authorizer["sub"] as String?
+}

@@ -2,6 +2,7 @@ package com.zenobiapay.user.util
 
 import com.auth0.client.mgmt.ManagementAPI
 import com.auth0.json.mgmt.client.Client
+import com.auth0.json.mgmt.clientgrants.ClientGrant
 import com.auth0.json.mgmt.users.User
 import com.auth0.net.Response
 import com.zenobiapay.api.model.cognito.UserPoolGroup
@@ -15,10 +16,10 @@ private val logger = KotlinLogging.logger {}
 class Auth0Wrapper @Inject constructor(private val managementAPI: ManagementAPI) {
     companion object {
         const val ROLE_KEY = "role"
-        const val MERCHANT_M2M_ROLE = ""
+        const val ZENOBIA_AUDIENCE = "https://dashboard.zenobiapay.com"
     }
     fun createClientCredentials(userId: String): Client {
-        val client = Client("${userId}_${UUID.randomUUID()}")
+        val client = Client("${userId}#${UUID.randomUUID()}")
         client.description = "M2M Client to act on behalf of merchant $userId"
         client.appType = "non_interactive"
         client.clientMetadata = mapOf(
@@ -29,6 +30,13 @@ class Auth0Wrapper @Inject constructor(private val managementAPI: ManagementAPI)
         val createClientResponse = managementAPI.clients().create(client).execute()
         return getBodyOrThrow(createClientResponse, "Failed to create new m2m client").also {
             logger.info { "Successfully created m2m client with name ${it.name}" }
+        }
+    }
+
+    fun createClientGrant(client: Client, audience: String): ClientGrant {
+        val response = managementAPI.clientGrants().create(client.clientId, audience, arrayOf()).execute()
+        return getBodyOrThrow(response, "Failed to create new m2m client").also {
+            logger.info { "Successfully added client id ${client.clientId} to audience ${audience}" }
         }
     }
 

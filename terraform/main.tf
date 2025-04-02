@@ -77,7 +77,7 @@ resource "auth0_client" "aws_auth0_management_app" {
 resource "auth0_client_grant" "aws_auth0_management_client_grant" {
   client_id = auth0_client.aws_auth0_management_app.id
   audience  = "https://${var.AUTH0_DOMAIN}/api/v2/"
-  scopes    = ["create:clients", "update:clients", "delete:clients", "update:users_app_metadata", "read:users"]
+  scopes    = ["create:clients", "update:clients", "delete:clients", "update:users_app_metadata", "read:users", "create:client_grants"]
 }
 
 resource "auth0_client" "aws_auth0_management_role_app" {

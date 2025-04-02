@@ -9,6 +9,8 @@ import com.zenobiapay.api.generated.models.CreateTransferRequestRequest
 import com.zenobiapay.api.exception.InvalidRequestException
 import com.zenobiapay.api.model.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
+import com.zenobiapay.api.util.getSubForM2M
+import com.zenobiapay.api.util.getUserRole
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.StatementItem
 import com.zenobiapay.table.user.dao.UserDao
@@ -19,8 +21,13 @@ class CreateTransferRequestOperation @Inject constructor(
     private val userDao: UserDao,
     private val objectMapper: ObjectMapper,
 ): Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any {
+    override fun run(input: APIGatewayProxyRequestEvent, context: Context, sub: String?): Any {
         val request = objectMapper.readValue<CreateTransferRequestRequest>(input.body)
+        val userId = when (input.requestContext.getUserRole()) {
+            UserPoolGroup.MERCHANT -> sub!!
+            UserPoolGroup.MERCHANT_M2M -> input.requestContext.getSubForM2M()
+            UserPoolGroup.CUSTOMER, UserPoolGroup.UNKNOWN -> throw InvalidRequestException("Invalid role for transfer request")
+        }
 
         val requestId = input.requestContext.requestId
         val merchantName = userDao.getUserItem(userId!!)?.data?.merchantData?.displayName
@@ -42,6 +49,6 @@ class CreateTransferRequestOperation @Inject constructor(
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {
-        return listOf(UserPoolGroup.MERCHANT)
+        return listOf(UserPoolGroup.MERCHANT, UserPoolGroup.MERCHANT_M2M)
     }
 }
