@@ -4,8 +4,9 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.zenobiapay.api.model.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
+import javax.inject.Inject
 
-class ListM2MCredentialsOperation: Operation() {
+class ListM2MCredentialsOperation @Inject constructor(): Operation() {
     override fun run(
         input: APIGatewayProxyRequestEvent,
         context: Context,
