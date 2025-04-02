@@ -10,8 +10,10 @@ import com.zenobiapay.api.generated.models.SubmitOnboardingRequest
 import com.zenobiapay.api.util.ResponseHandler
 import com.zenobiapay.user.di.DaggerAppComponent
 import com.zenobiapay.user.operations.CreateM2MCredentialsOperation
+import com.zenobiapay.user.operations.DeleteM2MCredentialsOperation
 import com.zenobiapay.user.operations.GetMerchantConfigOperation
 import com.zenobiapay.user.operations.GetUserProfileOperation
+import com.zenobiapay.user.operations.ListM2MCredentialsOperation
 import com.zenobiapay.user.operations.SubmitOnboardingOperation
 import com.zenobiapay.user.operations.UpdateMerchantConfigOperation
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -39,6 +41,12 @@ class UserHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
     lateinit var createM2MCredentialsOperation: CreateM2MCredentialsOperation
 
     @Inject
+    lateinit var listM2MCredentialsOperation: ListM2MCredentialsOperation
+
+    @Inject
+    lateinit var deleteM2MCredentialsOperation: DeleteM2MCredentialsOperation
+
+    @Inject
     lateinit var objectMapper: ObjectMapper
 
     init {
@@ -53,6 +61,8 @@ class UserHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
             "/get-user-profile" -> getUserProfileOperation
             "/submit-onboarding" -> submitOnboardingOperation
             "/create-m2m-credentials" -> createM2MCredentialsOperation
+            "/list-m2m-credentials" -> listM2MCredentialsOperation
+            "/delete-m2m-credentials" -> deleteM2MCredentialsOperation
             else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
         }
         return responseHandler.returnApiGwResponse(operation, input, context!!)

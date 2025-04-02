@@ -19,6 +19,9 @@ Parameters:
   Auth0SecretsArn:
     Type: String
     Description: Auth0 secrets manager arn that stores client id and client secret
+  Auth0Domain:
+    Type: String
+    Description: Auth0 domain used for authentication
 
 Resources:
   VpcStack:
@@ -54,6 +57,7 @@ Resources:
         PlaidSecretsArn: !Ref PlaidSecretsArn
         OrumSecretsArn: !Ref OrumSecretsArn
         Auth0SecretsArn: !Ref Auth0SecretsArn
+        Auth0Domain: !Ref Auth0Domain
 
   PayoutStack:
     Type: AWS::CloudFormation::Stack

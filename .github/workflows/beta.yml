@@ -75,7 +75,7 @@ jobs:
     - name: Terraform Init
       run: |
         terraform init \
-        -backend-config="bucket=zenobia-beta-terraform-deployment-bucket" \
+        -backend-config="bucket=zenobia-terraform-bucket" \
         -backend-config="key=envs/beta/terraform.tfstate" \
         -backend-config="region=us-east-1"
       working-directory: terraform
@@ -104,6 +104,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: beta
     env:
+      AUTH0_DOMAIN: ${{ vars.AUTH0_DOMAIN }}
       AUTH0_SECRETS_ARN: ${{ vars.AUTH0_SECRETS_ARN }}
       ORUM_SECRETS_ARN: ${{ vars.ORUM_SECRETS_ARN }}
       PLAID_SECRETS_ARN: ${{ vars.PLAID_SECRETS_ARN }}
@@ -143,4 +144,5 @@ jobs:
           Stage=beta \
           PlaidSecretsArn=$PLAID_SECRETS_ARN \
           OrumSecretsArn=$ORUM_SECRETS_ARN \
-          Auth0SecretsArn=$AUTH0_SECRETS_ARN
+          Auth0SecretsArn=$AUTH0_SECRETS_ARN \
+          Auth0Domain=$AUTH0_DOMAIN

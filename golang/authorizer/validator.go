@@ -20,14 +20,6 @@ type MachineCustomClaims struct {
 
 // Validates that azp is auth0 app client
 func (c MachineCustomClaims) Validate(ctx context.Context) error {
-	auth0ClientId, found := os.LookupEnv("AUTH0_CLIENT_ID")
-	if !found {
-		println("Did not find auth0 client env var")
-		return errors.New("did not find AUTH0_CLIENT_ID")
-	}
-	if c.Azp != auth0ClientId {
-		return errors.New("auth 0 client id did not match azp")
-	}
 	return nil
 }
 

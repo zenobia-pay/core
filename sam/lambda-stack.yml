@@ -51,6 +51,9 @@ Parameters:
     Type: String
   Auth0SecretsArn:
     Type: String
+  Auth0Domain:
+    Type: String
+    Description: Auth0 domain used for authentication
 
 Resources:
   ZenobiaApi:
@@ -693,37 +696,64 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
-#          /list-m2m-credentials:
-#            get:
-#              summary: "Lists m2m credentials. Only returns client id"
-#              operationId: "ListM2MCredentials"
-#              responses:
-#                '200':
-#                  description: "Successful response"
-#                  content:
-#                    application/json:
-#                      schema:
-#                        type: object
-#                        properties:
-#                          credentials:
-#                            type: array
-#                            items:
-#                              type: object
-#                              properties:
-#                                clientId:
-#                                  type: string
-#                "400":
-#                  $ref: "#/components/responses/BadRequest"
-#                "403":
-#                  $ref: "#/components/responses/Forbidden"
-#                "404":
-#                  $ref: "#/components/responses/NotFound"
-#                "500":
-#                  $ref: "#/components/responses/InternalServerError"
-#              x-amazon-apigateway-integration:
-#                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSignUpHandlerFunction.Arn}:prod/invocations
-#                httpMethod: POST
-#                type: aws_proxy
+          /list-m2m-credentials:
+            post:
+              summary: "Lists m2m credentials. Only returns client id"
+              operationId: "ListM2MCredentials"
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          credentials:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                clientId:
+                                  type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /delete-m2m-credentials:
+            post:
+              summary: "Deletes m2m credentials."
+              operationId: "DeleteM2MCredentials"
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                         clientId:
+                           type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
 
   CustomAuthorizerFunction:
     Type: AWS::Serverless::Function
@@ -739,10 +769,9 @@ Resources:
         ApplyOn: None
       Environment:
         Variables:
-          AUTH_DOMAIN: dev-u0ert1rxhkdmhwy8.us.auth0.com
+          AUTH_DOMAIN: !Ref Auth0Domain
           ZENOBIA_ISSUER: https://accounts.zenobiapay.com/
           AUDIENCE: https://dashboard.zenobiapay.com
-          AUTH0_CLIENT_ID: MBxUwuO3ApyissWpYzT74gBGW0FbC9nn
 
   ApiGatewayLogGroup:
     Type: AWS::Logs::LogGroup

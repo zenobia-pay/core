@@ -22,5 +22,5 @@ fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserRole(): UserPoolGroup
 }
 
 fun APIGatewayProxyRequestEvent.ProxyRequestContext.getSubForM2M(): String? {
-    return this.authorizer["sub"] as String?
+    return this.authorizer["m2mSub"] as String?
 }

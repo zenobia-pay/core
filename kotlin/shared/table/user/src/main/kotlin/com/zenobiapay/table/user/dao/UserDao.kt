@@ -1,9 +1,12 @@
 package com.zenobiapay.table.user.dao
 
 import com.zenobiapay.api.exception.InvalidRequestException
+import com.zenobiapay.table.MAX_LIST_ITEMS
 import com.zenobiapay.table.di.USER_TABLE_NAME
 import com.zenobiapay.api.generated.models.Location as ApiLocation
 import com.zenobiapay.table.user.model.Location
+import com.zenobiapay.table.user.model.M2MCredentialsData
+import com.zenobiapay.table.user.model.M2MCredentialsItem
 import com.zenobiapay.table.user.model.MerchantData
 import com.zenobiapay.table.user.model.UserItem
 import com.zenobiapay.table.user.model.UserItemData
@@ -12,6 +15,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.Key
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException
 import javax.inject.Inject
@@ -24,6 +29,7 @@ class UserDao @Inject constructor(
     @Named(USER_TABLE_NAME) private val userTableName: String
 ) {
     private val userTable = client.table(userTableName, TableSchema.fromBean(UserItem::class.java))
+    private val m2mCredentialsTable = client.table(userTableName, TableSchema.fromBean(M2MCredentialsItem::class.java))
 
     fun getUserItem(sub: String): UserItem? {
         val pk = UserItem.generatePk(sub)
@@ -93,6 +99,60 @@ class UserDao @Inject constructor(
         userTable.updateItem(
             UpdateItemEnhancedRequest.builder(UserItem::class.java)
                 .item(updatedMerchantItem)
+                .build()
+        )
+    }
+
+    fun putM2MCredentials(
+        userId: String,
+        m2mClientId: String,
+        auth0ClientName: String
+    ) {
+        m2mCredentialsTable.putItem(
+            M2MCredentialsItem(
+                pk = M2MCredentialsItem.generatePk(userId),
+                sk = M2MCredentialsItem.generateSk(m2mClientId),
+                data = M2MCredentialsData(
+                    auth0ClientName = auth0ClientName
+                )
+            )
+        )
+    }
+
+    fun listM2MCredentials(
+        userId: String,
+    ): List<M2MCredentialsItem> {
+        val queryConditional = QueryConditional.keyEqualTo {
+            it.partitionValue(M2MCredentialsItem.generatePk(userId))
+        }
+        val queryRequest = QueryEnhancedRequest.builder()
+            .queryConditional(queryConditional)
+            .scanIndexForward(false)
+            .limit(MAX_LIST_ITEMS)
+            .build()
+
+        // TODO: handle pagination
+        val toReturn = mutableListOf<M2MCredentialsItem>()
+        m2mCredentialsTable.query(queryRequest)
+            .stream().forEach {
+                logger.info { "Got list response page ${it.items()}" }
+                toReturn += it.items()
+            }
+
+        logger.info { "Returning accumulated list $toReturn" }
+        return toReturn
+    }
+
+    fun deleteM2MCredentials(
+        userId: String,
+        clientId: String,
+    ) {
+        val pk = M2MCredentialsItem.generatePk(userId)
+        val sk = M2MCredentialsItem.generateSk(userId)
+        m2mCredentialsTable.deleteItem(
+            Key.builder()
+                .partitionValue(pk)
+                .sortValue(sk)
                 .build()
         )
     }
