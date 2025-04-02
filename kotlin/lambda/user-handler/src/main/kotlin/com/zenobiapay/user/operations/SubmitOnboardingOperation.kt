@@ -65,6 +65,11 @@ class SubmitOnboardingOperation @Inject constructor(
         }
         logger.info { "Got person $person" }
         logger.info { "Adding role ${request.userType} to user $userId"}
+        val role = UserPoolGroup.fromString(request.userType.value)
+        if (role == UserPoolGroup.UNKNOWN) {
+            logger.error { "Could not get role from request's usertype ${request.userType.value}"}
+            throw InvalidRequestException("Unknown role for submit onboarding")
+        }
         auth0Wrapper.putAppMetadataOnUser(userId, mapOf(ROLE_KEY to request.userType.value))
 
         val isAutoApproved = request.userType == UserType.CUSTOMER
@@ -84,6 +89,6 @@ class SubmitOnboardingOperation @Inject constructor(
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {
-        return listOf(UserPoolGroup.MERCHANT, UserPoolGroup.CUSTOMER)
+        return listOf(UserPoolGroup.UNKNOWN)
     }
 }
