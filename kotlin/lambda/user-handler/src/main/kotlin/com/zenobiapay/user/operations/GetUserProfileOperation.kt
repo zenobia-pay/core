@@ -27,6 +27,6 @@ class GetUserProfileOperation @Inject constructor(
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {
-        return listOf(UserPoolGroup.UNKNOWN)
+        return listOf(UserPoolGroup.UNKNOWN, UserPoolGroup.MERCHANT, UserPoolGroup.CUSTOMER)
     }
 }
