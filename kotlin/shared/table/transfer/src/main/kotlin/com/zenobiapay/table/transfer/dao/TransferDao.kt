@@ -1,5 +1,6 @@
 package com.zenobiapay.table.transfer.dao
 
+import com.zenobiapay.api.generated.models.UserType
 import com.zenobiapay.table.MAX_LIST_ITEMS
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
 import com.zenobiapay.model.ddb.transfer.PayoutData

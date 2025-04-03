@@ -13,11 +13,15 @@ import com.zenobiapay.table.user.model.UserItemData
 import com.zenobiapay.table.user.model.UserType
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
+import software.amazon.awssdk.enhanced.dynamodb.Expression
 import software.amazon.awssdk.enhanced.dynamodb.Key
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException
 import javax.inject.Inject
 import javax.inject.Named
@@ -101,6 +105,18 @@ class UserDao @Inject constructor(
                 .item(updatedMerchantItem)
                 .build()
         )
+    }
+
+    fun queryUsers(userType: UserType): PageIterable<UserItem>? {
+        val request = ScanEnhancedRequest.builder()
+            .filterExpression(
+                Expression.builder()
+                    .expression("userType = :userTypeVal")
+                    .expressionValues(mapOf(":userTypeVal" to AttributeValue.builder().s(UserType.MERCHANT.name).build()))
+                    .build()
+            )
+            .build()
+        return userTable.scan(request)
     }
 
     fun putM2MCredentials(

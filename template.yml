@@ -65,6 +65,10 @@ Resources:
       TemplateURL: ./sam/payout-stack.yml
       Parameters:
         TransferTableName: !GetAtt TableStack.Outputs.TransferTableName
+        UserTableName: !GetAtt TableStack.Outputs.UserTableName
+        TransferKeyId: !GetAtt TableStack.Outputs.TransferKeyId
+        UserKeyId: !GetAtt TableStack.Outputs.UserKeyId
+        OrumSecretsArn: !Ref OrumSecretsArn
 
 Outputs:
   WebEndpoint:

@@ -21,6 +21,11 @@ data class UserItem(
         fun generatePk(sub: String) = "USER#id_$sub"
         fun generateSk() = "DETAILS"
     }
+
+    fun getSub(): String {
+        val regex = """USER#id_(.*)""".toRegex()
+        return regex.find(this.pk)!!.groupValues[1]
+    }
 }
 
 @DynamoDbBean

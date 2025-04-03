@@ -13,6 +13,14 @@ Globals:
 Parameters:
   TransferTableName:
     Type: String
+  UserTableName:
+    Type: String
+  TransferKeyId:
+    Type: String
+  UserKeyId:
+    Type: String
+  OrumSecretsArn:
+    Type: String
 
 Resources:
   DailyPayoutRule:
@@ -39,9 +47,15 @@ Resources:
       Environment:
         Variables:
            PAYOUT_QUEUE_URL: !Ref PayoutQueue
+           USER_TABLE_NAME: !Ref UserTableName
       Policies:
         - SQSSendMessagePolicy:
             QueueName: !GetAtt PayoutQueue.QueueName
+        - DynamoDBReadPolicy:
+            TableName:
+              Ref: UserTableName
+        - KMSDecryptPolicy:
+            KeyId: !Ref UserKeyId
 
   PayoutProcessorFunction:
     Type: AWS::Serverless::Function
@@ -58,9 +72,13 @@ Resources:
         - SQSPollerPolicy:
             QueueName: !GetAtt PayoutQueue.QueueName
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: "arn:aws:secretsmanager:us-east-1:711387130962:secret:orum/sandbox/credentials-WyxcUb" # TODO dont hardcode
+            SecretArn: !Ref OrumSecretsArn
         - DynamoDBCrudPolicy:
             TableName: !Ref TransferTableName
+        - KMSDecryptPolicy:
+            KeyId: !Ref TransferKeyId
+        - KMSEncryptPolicy:
+            KeyId: !Ref TransferKeyId
       Events:
         SQSTrigger:
           Type: SQS

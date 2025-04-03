@@ -293,14 +293,11 @@ Resources:
                       type: object
                       required:
                         - amount
-                        - bankAccountId
                       properties:
                         amount:
                           type: integer
                           minimum: 0
                           exclusiveMinimum: true
-                        bankAccountId:
-                          type: string
                         statementItems:
                           type: array
                           items:
