@@ -770,7 +770,7 @@ Resources:
       Environment:
         Variables:
           AUTH_DOMAIN: !Ref Auth0Domain
-          ZENOBIA_ISSUER: https://accounts.zenobiapay.com/
+          ZENOBIA_ISSUER: https://dev-iols5y7cp32hlyr1.us.auth0.com/
           AUDIENCE: https://dashboard.zenobiapay.com
 
   ApiGatewayLogGroup:
