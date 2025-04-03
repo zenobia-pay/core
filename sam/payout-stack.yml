@@ -23,14 +23,6 @@ Parameters:
     Type: String
 
 Resources:
-  DailyPayoutRule:
-    Type: AWS::Events::Rule
-    Properties:
-      ScheduleExpression: "cron(0 16 * * ? *)"  # Trigger at 4 PM UTC daily (8 AM PST)
-      Targets:
-        - Arn: !GetAtt PayoutDispatcherFunction.Arn
-          Id: PayoutDispatcherFunction
-
   PayoutQueue:
     Type: AWS::SQS::Queue
     Properties:
@@ -56,6 +48,11 @@ Resources:
               Ref: UserTableName
         - KMSDecryptPolicy:
             KeyId: !Ref UserKeyId
+      Events: 
+        DailyTrigger:
+          Type: Schedule
+          Properties:
+            Schedule: "cron(0 16 * * ? *)"  # Trigger at 4 PM UTC daily (8 AM PST)
 
   PayoutProcessorFunction:
     Type: AWS::Serverless::Function
@@ -68,6 +65,7 @@ Resources:
       Environment:
         Variables:
           TRANSFER_TABLE_NAME: !Ref TransferTableName
+          USER_TABLE_NAME: !Ref UserTableName
       Policies:
         - SQSPollerPolicy:
             QueueName: !GetAtt PayoutQueue.QueueName
@@ -75,8 +73,15 @@ Resources:
             SecretArn: !Ref OrumSecretsArn
         - DynamoDBCrudPolicy:
             TableName: !Ref TransferTableName
+        - DynamoDBReadPolicy:
+            TableName:
+              Ref: UserTableName
         - KMSDecryptPolicy:
             KeyId: !Ref TransferKeyId
+        - KMSEncryptPolicy:
+            KeyId: !Ref TransferKeyId
+        - KMSDecryptPolicy:
+            KeyId: !Ref UserKeyId
         - KMSEncryptPolicy:
             KeyId: !Ref TransferKeyId
       Events:

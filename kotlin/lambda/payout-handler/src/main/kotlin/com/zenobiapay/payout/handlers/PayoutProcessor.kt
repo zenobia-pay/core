@@ -12,6 +12,8 @@ import com.zenobiapay.payout.di.DaggerAppComponent
 import com.zenobiapay.payout.model.PayoutMessage
 import com.zenobiapay.payout.util.getFee
 import com.zenobiapay.table.transfer.dao.TransferDao
+import com.zenobiapay.table.user.dao.UserDao
+import com.zenobiapay.table.user.model.UserType
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 
@@ -24,6 +26,9 @@ class PayoutProcessor : RequestHandler<SQSEvent, Unit> {
 
     @Inject
     lateinit var orumWrapper: OrumWrapper
+
+    @Inject
+    lateinit var userDao: UserDao
 
     @Inject
     lateinit var objectMapper: ObjectMapper
@@ -51,11 +56,20 @@ class PayoutProcessor : RequestHandler<SQSEvent, Unit> {
         }
 
         assert(payoutItem.data?.merchantPaid != true && payoutItem.data?.feePaid != true) {
-            "Payout item should not have merchant paid or fee paid!"
+            "Payout item pk=${payoutItem.pk}, sk=${payoutItem.sk} should not have merchant paid or fee paid!"
         }
 
         val fee = getFee(payoutItem.amount)
         val merchantPayout = payoutItem.amount - fee
+
+        val merchantData = userDao.getUserItem(message.merchantId)
+        assert(merchantData?.userType == UserType.MERCHANT) {
+            "Merchant data for merchant ${message.merchantId} does not exist or is not a merchant"
+        }
+        val merchantBankAccountId = merchantData?.data?.merchantData?.bankAccountId
+        assert(merchantBankAccountId != null) { "Merchant bank account id is not specified" }
+
+        // TODO: check the bank account is of correct type
 
         // TODO: handle payouts less than 10 cents
         val transferResponse = orumWrapper.createTransfer(
@@ -64,7 +78,7 @@ class PayoutProcessor : RequestHandler<SQSEvent, Unit> {
                 amount = merchantPayout,
                 destination = TransferParticipant(
                     customerReferenceId = message.merchantId,
-                    accountReferenceId = "K8EBv4d93qirXZwZjzwmH9bPoyLEWvtRKvXa9", // TODO: fetch merchants preferred account
+                    accountReferenceId = merchantData?.data?.merchantData?.bankAccountId!!,
                     statementDisplayName = "ZP_${message.date}"
                 )
             )
