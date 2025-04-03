@@ -23,4 +23,5 @@ data class M2MCredentialsItem(
 @DynamoDbBean
 data class M2MCredentialsData(
     var auth0ClientName: String = "",
+    var clientId: String = "",
 )

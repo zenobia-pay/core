@@ -114,7 +114,8 @@ class UserDao @Inject constructor(
                 pk = M2MCredentialsItem.generatePk(userId),
                 sk = M2MCredentialsItem.generateSk(m2mClientId),
                 data = M2MCredentialsData(
-                    auth0ClientName = auth0ClientName
+                    auth0ClientName = auth0ClientName,
+                    clientId = m2mClientId
                 )
             )
         )
