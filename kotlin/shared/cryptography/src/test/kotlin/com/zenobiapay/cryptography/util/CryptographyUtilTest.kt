@@ -1,5 +1,6 @@
 package com.zenobiapay.cryptography.util
 
+import com.zenobiapay.api.generated.models.CertificateType
 import com.zenobiapay.api.generated.models.SignatureType
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -14,6 +15,12 @@ class CryptographyUtilTest {
         -----END PUBLIC KEY-----
         """.trimIndent()
     val signature = "MEUCIQDbGzhiy/h5nh16qtWz8pf/HT3Ph96ZVfxq24FK99uz+QIgTxrUK9KMgGausbGx8xQmwP7Gvq4cTaRSuMkfH53bJKA="
+
+    @Test
+    fun `validates EC certificate`() {
+        assertTrue(isCertificateValid(certificate, CertificateType.EC))
+    }
+
     @Test
     fun `validate ECDSA signature success`() {
         val data = "test\n".toByteArray()

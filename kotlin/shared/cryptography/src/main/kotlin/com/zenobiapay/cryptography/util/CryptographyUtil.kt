@@ -3,6 +3,8 @@ package com.zenobiapay.cryptography.util
 import com.zenobiapay.api.generated.models.CertificateType
 import com.zenobiapay.api.generated.models.SignatureType
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
+import org.bouncycastle.asn1.x509.X509CertificateStructure
+import org.bouncycastle.cert.X509CertificateHolder
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openssl.PEMParser
 import java.io.StringReader
@@ -15,8 +17,9 @@ fun isCertificateValid(
     certificate: String,
     certificateType: CertificateType
 ): Boolean {
+    Security.addProvider(BouncyCastleProvider())
     val publicKey = getPublicKey(certificate)
-    return publicKey.algorithm == certificateType.value
+    return publicKey?.algorithm == certificateType.value
 }
 
 fun isSignatureValid(
@@ -35,8 +38,6 @@ private fun isSha256WithEcdsaSignatureValid(
     certificate: String,
     base64Signature: String,
 ): Boolean {
-    Security.addProvider(BouncyCastleProvider())
-
     val publicKey = getPublicKey(certificate)
 
     val verifier = Signature.getInstance("SHA256withECDSA", "BC").apply {
@@ -47,7 +48,9 @@ private fun isSha256WithEcdsaSignatureValid(
     return verifier.verify(Base64.getDecoder().decode(base64Signature))
 }
 
-private fun getPublicKey(certificate: String): PublicKey {
+private fun getPublicKey(certificate: String): PublicKey? {
+    Security.addProvider(BouncyCastleProvider())
+
     val reader = PEMParser(StringReader(certificate))
     val publicKeyInfo = reader.readObject() as SubjectPublicKeyInfo
     return BouncyCastleProvider.getPublicKey(publicKeyInfo)
