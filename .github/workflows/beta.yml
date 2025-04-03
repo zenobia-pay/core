@@ -98,7 +98,6 @@ jobs:
         TF_VAR_AUTH0_ACTION_CLIENT_SECRET: ${{ secrets.TF_VAR_AUTH0_ACTION_CLIENT_SECRET }}
         TF_VAR_ZENOBIA_ENDPOINT: ${{ vars.TF_VAR_ZENOBIA_ENDPOINT}}
 
-
   deploy-beta:
     if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
     runs-on: ubuntu-latest

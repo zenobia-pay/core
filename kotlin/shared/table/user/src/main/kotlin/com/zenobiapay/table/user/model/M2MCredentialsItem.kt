@@ -1,9 +1,11 @@
 package com.zenobiapay.table.user.model
 
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
 
+@DynamoDbBean
 data class M2MCredentialsItem(
     @get:DynamoDbPartitionKey
     var pk: String = "",
@@ -18,6 +20,7 @@ data class M2MCredentialsItem(
     }
 }
 
+@DynamoDbBean
 data class M2MCredentialsData(
     var auth0ClientName: String = "",
 )
