@@ -8,7 +8,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 private val logger = KotlinLogging.logger {}
 
 fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserId(): String? {
-    logger.info { "Got authorizer $authorizer and values ${authorizer.keys}" }
+    logger.info { "Got authorizer $authorizer" }
     return this.authorizer["sub"] as String?
 }
 

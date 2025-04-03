@@ -1,11 +1,12 @@
 package com.zenobiapay.table.transfer.dao
 
-import com.zenobiapay.api.generated.models.UserType
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.table.MAX_LIST_ITEMS
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
 import com.zenobiapay.model.ddb.transfer.PayoutData
 import com.zenobiapay.model.ddb.transfer.PayoutId
 import com.zenobiapay.model.ddb.transfer.PayoutItem
+import com.zenobiapay.table.model.ContinuationToken
 import com.zenobiapay.table.transfer.model.StatementItem
 import com.zenobiapay.table.transfer.model.TransferData
 import com.zenobiapay.table.transfer.model.TransferItem
@@ -34,7 +35,8 @@ class TransferDao @Inject constructor(
     private val client: DynamoDbEnhancedClient,
     private val lowLevelClient: DynamoDbClient,
     @Named(TRANSFER_TABLE_NAME)
-    private val transferTableName: String
+    private val transferTableName: String,
+    private val objectMapper: ObjectMapper
 ) {
     private val transferTable = client.table(transferTableName, TableSchema.fromBean(TransferItem::class.java))
     private val payoutTable = client.table(transferTableName, TableSchema.fromBean(PayoutItem::class.java))
@@ -145,27 +147,35 @@ class TransferDao @Inject constructor(
         return toReturn
     }
 
-    fun listMerchantTransfers(merchantId: String): List<TransferItem> {
+    fun listMerchantTransfers(merchantId: String, continuationToken: String?): Pair<List<TransferItem>, ContinuationToken?> {
+        logger.info { "Got table name ${transferTable.tableName()}" }
         val queryConditional = QueryConditional.keyEqualTo {
             it.partitionValue(TransferItem.generateGsi1Pk(merchantId))
         }
-        val queryRequest = QueryEnhancedRequest.builder()
+        val queryRequestBuilder = QueryEnhancedRequest.builder()
             .queryConditional(queryConditional)
             .scanIndexForward(false)
             .limit(MAX_LIST_ITEMS)
-            .build()
 
-        // TODO: handle pagination
-        val toReturn = mutableListOf<TransferItem>()
-        transferTable.index(GSI_1)
-            .query(queryRequest)
-            .stream().forEach {
-                logger.info { "Got list response page ${it.items()}" }
-                toReturn += it.items()
-            }
+        if (continuationToken != null) {
+            logger.info { "Using continuation token $continuationToken" }
+            val token = ContinuationToken.decodeToken(continuationToken, objectMapper)
+            queryRequestBuilder.exclusiveStartKey(token.key)
+        }
 
-        logger.info { "Returning accumulated list $toReturn" }
-        return toReturn
+        val page = transferTable.index(GSI_1)
+            .query(queryRequestBuilder.build())
+            .iterator()
+            .asSequence()
+            .firstOrNull()
+
+        return if (page == null) {
+            listOf<TransferItem>() to null
+        } else {
+            page.items() to ContinuationToken(page.lastEvaluatedKey())
+        }.also {
+            logger.info { "Got ${it.first.size} items and continuation token ${it.second}" }
+        }
     }
 
     fun addPayoutItemAmount(merchantId: String, amount: Int, date: LocalDate) {

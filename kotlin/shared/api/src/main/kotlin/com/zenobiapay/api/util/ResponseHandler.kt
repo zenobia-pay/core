@@ -13,16 +13,16 @@ import com.zenobiapay.api.generated.models.ErrorResponse
 import com.zenobiapay.api.model.Operation
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.logging.log4j.ThreadContext
-import java.security.Provider
 import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
 class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper) {
     fun returnApiGwResponse(operation: Operation, input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
-        setLoggingContext(input.requestContext.requestId, input.requestContext.getUserId())
         return wrapOperation {
             val userId = input.requestContext.getUserId()
+            setLoggingContext(input.requestContext.requestId, userId)
+            logger.info { "Got operation ${operation.javaClass}, userId $userId, body ${input.body}"}
             val role = input.requestContext.getUserRole()
             if (role !in operation.getUserPoolAllowList()) {
                 logger.error { "Role $role not allowed for operation ${operation.javaClass.name} with allowed list ${operation.getUserPoolAllowList()}"}

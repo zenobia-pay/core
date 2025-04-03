@@ -1,0 +1,25 @@
+{
+  "resource": "/list-merchant-transfers",
+  "path": "/list-merchant-transfers",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"continuationToken\": \"eyJzayI6Ijk2MzFmMjQ4LTRmMTYtNDYwMi04NDJiLWNhZDNmNWQxZmYyMSIsInBrIjoiVFJBTlNGRVIjbV81NDU4YTQ4OC00MDUxLTcwZjQtZjllYy0wZmQxZWIyOGNmZjkiLCJnc2kxU2siOiJDUkVBVEVEI3RfMjAyNS0wMy0xN1QwNTowNTo1NS42NTIwNDA4NzZaI2lkXzk2MzFmMjQ4LTRmMTYtNDYwMi04NDJiLWNhZDNmNWQxZmYyMSIsImdzaTFQayI6IlRSQU5TRkVSI21fNTQ1OGE0ODgtNDA1MS03MGY0LWY5ZWMtMGZkMWViMjhjZmY5In0=\"}",
+  "isBase64Encoded": false,
+  "requestContext": {
+    "accountId": "123456789012",
+    "resourceId": "abc123",
+    "stage": "dev",
+    "requestId": "xyz789",
+    "identity": {
+      "sourceIp": "127.0.0.1"
+    },
+    "authorizer": {
+      "principalId": "user123",
+      "role": "MERCHANT",
+      "email": "user@example.com",
+      "sub": "5458a488-4051-70f4-f9ec-0fd1eb28cff9"
+    }
+  }
+}

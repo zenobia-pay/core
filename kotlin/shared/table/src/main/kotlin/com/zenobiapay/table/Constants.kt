@@ -1,3 +1,3 @@
 package com.zenobiapay.table
 
-const val MAX_LIST_ITEMS = 100
+const val MAX_LIST_ITEMS = 25

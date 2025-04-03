@@ -148,7 +148,6 @@ paths:
       summary: "Lists all bank accounts associated with account"
       operationId: "ListBankAccounts"
       requestBody:
-        required: true
         content:
           application/json:
             schema:
@@ -201,14 +200,11 @@ paths:
               type: object
               required:
                 - amount
-                - bankAccountId
               properties:
                 amount:
                   type: integer
                   minimum: 0
                   exclusiveMinimum: true
-                bankAccountId:
-                  type: string
                 statementItems:
                   type: array
                   items:
@@ -346,6 +342,14 @@ paths:
     post:
       summary: "Lists all transfers made with customer account"
       operationId: "ListCustomerTransfers"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                continuationToken:
+                  type: string
       responses:
         '200':
           description: "Successful response"
@@ -385,12 +389,14 @@ paths:
     post:
       summary: "Lists all transfers made to a merchant account"
       operationId: "ListMerchantTransfers"
-      parameters:
-        - name: continuationToken
-          in: query
-          required: false
-          schema:
-            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                continuationToken:
+                  type: string
       responses:
         '200':
           description: "Successful response"
@@ -594,6 +600,14 @@ paths:
     post:
       summary: "Lists m2m credentials. Only returns client id"
       operationId: "ListM2MCredentials"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                continuationToken:
+                  type: string
       responses:
         '200':
           description: "Successful response"

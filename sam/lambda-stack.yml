@@ -239,7 +239,6 @@ Resources:
               summary: "Lists all bank accounts associated with account"
               operationId: "ListBankAccounts"
               requestBody:
-                required: true
                 content:
                   application/json:
                     schema:
@@ -440,6 +439,14 @@ Resources:
             post:
               summary: "Lists all transfers made with customer account"
               operationId: "ListCustomerTransfers"
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        continuationToken:
+                          type: string
               responses:
                 '200':
                   description: "Successful response"
@@ -481,12 +488,14 @@ Resources:
             post:
               summary: "Lists all transfers made to a merchant account"
               operationId: "ListMerchantTransfers"
-              parameters:
-                - name: continuationToken
-                  in: query
-                  required: false
-                  schema:
-                    type: string
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        continuationToken:
+                          type: string
               responses:
                 '200':
                   description: "Successful response"
@@ -697,6 +706,14 @@ Resources:
             post:
               summary: "Lists m2m credentials. Only returns client id"
               operationId: "ListM2MCredentials"
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        continuationToken:
+                          type: string
               responses:
                 '200':
                   description: "Successful response"
