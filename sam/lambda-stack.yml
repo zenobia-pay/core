@@ -851,7 +851,7 @@ Resources:
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /list-bank-accounts
-            Method: GET
+            Method: POST
 
   TransferHandlerFunction:
     Type: AWS::Serverless::Function
@@ -917,13 +917,13 @@ Resources:
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /list-customer-transfers
-            Method: GET
+            Method: POST
         ListMerchantTransfers:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /list-merchant-transfers
-            Method: GET
+            Method: POST
 
   UserHandlerFunction:
     Type: AWS::Serverless::Function
