@@ -53,6 +53,8 @@ func init() {
 		panic("Did not retrieve env var AUDIENCE")
 	}
 
+	println("Got domain " + domain + ", issuer " + issuer + ", audience " + audience)
+
 	zenobiaIssuerUrl, err := url.Parse(issuer)
 	if err != nil {
 		panic("Failed to parse the zenobia issuer url " + err.Error())

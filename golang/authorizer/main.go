@@ -46,26 +46,34 @@ func getUserContext(claims *validator.ValidatedClaims) map[string]interface{} {
 
 func generatePolicyResponse(isValid bool, context map[string]interface{}, methodArn string) events.APIGatewayCustomAuthorizerResponse {
 	if isValid {
-		return generatePolicy("user", "Allow", wildcardArn(methodArn), context)
-	} else {
-		return generatePolicy("user", "Deny", "*", map[string]interface{}{})
-	}
-}
-
-func generatePolicy(principalID, effect, resource string, context map[string]interface{}) events.APIGatewayCustomAuthorizerResponse {
-	return events.APIGatewayCustomAuthorizerResponse{
-		PrincipalID: principalID,
-		PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
-			Version: "2012-10-17",
-			Statement: []events.IAMPolicyStatement{
-				{
-					Action:   []string{"execute-api:Invoke"},
-					Effect:   effect,
-					Resource: []string{resource},
+		return events.APIGatewayCustomAuthorizerResponse{
+			PrincipalID: "user",
+			PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
+				Version: "2012-10-17",
+				Statement: []events.IAMPolicyStatement{
+					{
+						Action:   []string{"execute-api:Invoke"},
+						Effect:   "Allow",
+						Resource: []string{wildcardArn(methodArn)},
+					},
 				},
 			},
-		},
-		Context: context,
+			Context: context,
+		}
+	} else {
+		return events.APIGatewayCustomAuthorizerResponse{
+			PrincipalID: "user",
+			PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
+				Version: "2012-10-17",
+				Statement: []events.IAMPolicyStatement{
+					{
+						Action:   []string{"execute-api:Invoke"},
+						Effect:   "Deny",
+						Resource: []string{"*"},
+					},
+				},
+			},
+		}
 	}
 }
 
