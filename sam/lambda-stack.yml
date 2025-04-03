@@ -993,6 +993,18 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /create-m2m-credentials
             Method: GET
+        ListM2MCredentials:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /list-m2m-credentials
+            Method: POST
+        DeleteM2MCredentials:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /delete-m2m-credentials
+            Method: POST
 
   TransferTableEventHandler:
     Type: 'AWS::Serverless::Function'
