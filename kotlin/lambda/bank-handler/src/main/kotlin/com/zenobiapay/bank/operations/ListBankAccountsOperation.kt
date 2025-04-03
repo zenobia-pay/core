@@ -11,7 +11,7 @@ import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.table.bank.dao.BankDao
 import javax.inject.Inject
 
-class ListBankAccounts @Inject constructor(private val objectMapper: ObjectMapper, private val bankDao: BankDao) : Operation() {
+class ListBankAccountsOperation @Inject constructor(private val objectMapper: ObjectMapper, private val bankDao: BankDao) : Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any {
         val request = objectMapper.readValue(input.body, ListBankAccountsRequest::class.java)
         context.logger.log("Got request $request")

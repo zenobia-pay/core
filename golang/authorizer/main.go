@@ -32,9 +32,10 @@ func extractToken(authHeader string) string {
 func getUserContext(claims *validator.ValidatedClaims) map[string]interface{} {
 	if userCustomClaims, ok := claims.CustomClaims.(*UserCustomClaims); ok {
 		context := map[string]interface{}{
-			"sub":   claims.RegisteredClaims.Subject,
-			"email": userCustomClaims.Email,
-			"role":  userCustomClaims.Role,
+			"sub":    claims.RegisteredClaims.Subject,
+			"email":  userCustomClaims.Email,
+			"role":   userCustomClaims.Role,
+			"m2mSub": userCustomClaims.M2MSub,
 		}
 		print("Got context: ")
 		fmt.Println(context)
