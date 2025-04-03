@@ -40,6 +40,13 @@ class Auth0Wrapper @Inject constructor(private val managementAPI: ManagementAPI)
         }
     }
 
+    fun deleteClientCredentials(clientId: String) {
+        val response = managementAPI.clients().delete(clientId).execute()
+        getBodyOrThrow(response, "Failed to delete m2m client").also {
+            logger.info { "Successfully deleted client $clientId" }
+        }
+    }
+
     /**
      * Note that this overwrites any existing metadata.
      */

@@ -343,7 +343,7 @@ paths:
         httpMethod: POST
         type: aws_proxy
   /list-customer-transfers:
-    get:
+    post:
       summary: "Lists all transfers made with customer account"
       operationId: "ListCustomerTransfers"
       responses:
@@ -382,7 +382,7 @@ paths:
         httpMethod: POST
         type: aws_proxy
   /list-merchant-transfers:
-    get:
+    post:
       summary: "Lists all transfers made to a merchant account"
       operationId: "ListMerchantTransfers"
       parameters:
@@ -625,6 +625,17 @@ paths:
     post:
       summary: "Deletes m2m credentials."
       operationId: "DeleteM2MCredentials"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - clientId
+              properties:
+                clientId:
+                  type: string
       responses:
         '200':
           description: "Successful response"

@@ -17,7 +17,7 @@ fun APIGatewayProxyRequestEvent.ProxyRequestContext.getEmail(): String? {
 }
 
 fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserRole(): UserPoolGroup {
-    val role = this.authorizer["role"] as String
+    val role = this.authorizer["role"] as String?
     return UserPoolGroup.fromString(role)
 }
 

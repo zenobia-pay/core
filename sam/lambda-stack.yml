@@ -10,8 +10,8 @@ Globals:
     Architectures:
       - x86_64
     AutoPublishAlias: prod
-    # SnapStart:
-    #   ApplyOn: PublishedVersions
+    SnapStart:
+      ApplyOn: PublishedVersions
     AutoPublishAliasAllProperties: true
     VpcConfig:
       SecurityGroupIds:
@@ -732,6 +732,17 @@ Resources:
             post:
               summary: "Deletes m2m credentials."
               operationId: "DeleteM2MCredentials"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - clientId
+                      properties:
+                        clientId:
+                          type: string
               responses:
                 '200':
                   description: "Successful response"

@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.exception.ResourceNotFoundException
+import com.zenobiapay.api.exception.ServiceQuotaExceededException
 import com.zenobiapay.api.exception.UnauthorizedException
 import com.zenobiapay.api.exception.UnknownPathException
 import com.zenobiapay.api.exception.ZenobiaExternalException
@@ -12,6 +13,7 @@ import com.zenobiapay.api.generated.models.ErrorResponse
 import com.zenobiapay.api.model.Operation
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.logging.log4j.ThreadContext
+import java.security.Provider
 import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
@@ -49,6 +51,7 @@ class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper
         val (errorCode, status) = when (error) {
             is ResourceNotFoundException, is UnknownPathException -> 404 to error.message
             is UnauthorizedException -> 403 to error.message
+            is ServiceQuotaExceededException -> 429 to error.message
             is ZenobiaExternalException -> 400 to error.message
             else -> 500 to "An internal error has occurred"
         }

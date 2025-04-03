@@ -108,6 +108,7 @@ class UserDao @Inject constructor(
         m2mClientId: String,
         auth0ClientName: String
     ) {
+        logger.info { "Putting m2m credentials" }
         m2mCredentialsTable.putItem(
             M2MCredentialsItem(
                 pk = M2MCredentialsItem.generatePk(userId),
@@ -119,9 +120,22 @@ class UserDao @Inject constructor(
         )
     }
 
+    fun getM2MCredentials(
+        userId: String,
+        clientId: String,
+    ): M2MCredentialsItem? {
+        logger.info { "Getting m2m credentials" }
+        val pk = M2MCredentialsItem.generatePk(userId)
+        val sk = M2MCredentialsItem.generateSk(clientId)
+
+        val key = Key.builder().partitionValue(pk).sortValue(sk).build()
+        return m2mCredentialsTable.getItem(key)
+    }
+
     fun listM2MCredentials(
         userId: String,
     ): List<M2MCredentialsItem> {
+        logger.info { "Listing m2m credentials" }
         val queryConditional = QueryConditional.keyEqualTo {
             it.partitionValue(M2MCredentialsItem.generatePk(userId))
         }
@@ -147,8 +161,9 @@ class UserDao @Inject constructor(
         userId: String,
         clientId: String,
     ) {
+        logger.info { "Removing m2m credentials" }
         val pk = M2MCredentialsItem.generatePk(userId)
-        val sk = M2MCredentialsItem.generateSk(userId)
+        val sk = M2MCredentialsItem.generateSk(clientId)
         m2mCredentialsTable.deleteItem(
             Key.builder()
                 .partitionValue(pk)
