@@ -25,7 +25,7 @@ class CreateM2MCredentialsOperation @Inject constructor(private val auth0Wrapper
         userId: String?
     ): Any {
         userId!!
-        val previouslyCreatedCredentials = userDao.listM2MCredentials(userId)
+        val (previouslyCreatedCredentials, _) = userDao.listM2MCredentials(userId, null)
         if (previouslyCreatedCredentials.size >= MAX_M2M_CREDENTIALS) {
             logger.info { "Exceeded service quota for m2m credentials" }
             throw ServiceQuotaExceededException()

@@ -124,27 +124,34 @@ class TransferDao @Inject constructor(
         }
     }
 
-    fun listCustomerTransfers(customerId: String): List<TransferItem> {
+    fun listCustomerTransfers(customerId: String, continuationToken: String?): Pair<List<TransferItem>, ContinuationToken?> {
         val queryConditional = QueryConditional.keyEqualTo {
             it.partitionValue(TransferItem.generateGsi3Pk(customerId))
         }
-        val queryRequest = QueryEnhancedRequest.builder()
+        val queryRequestBuilder = QueryEnhancedRequest.builder()
             .queryConditional(queryConditional)
             .scanIndexForward(false)
             .limit(MAX_LIST_ITEMS)
-            .build()
 
-        // TODO: handle pagination
-        val toReturn = mutableListOf<TransferItem>()
-        transferTable.index(TransferItem.GSI_3)
-            .query(queryRequest)
-            .stream().forEach {
-                logger.info { "Got list response page ${it.items()}" }
-                toReturn += it.items()
-            }
+        if (continuationToken != null) {
+            logger.info { "Using continuation token $continuationToken" }
+            val token = ContinuationToken.decodeToken(continuationToken, objectMapper)
+            queryRequestBuilder.exclusiveStartKey(token.key)
+        }
 
-        logger.info { "Returning accumulated list $toReturn" }
-        return toReturn
+        val page = transferTable.index(TransferItem.GSI_3)
+            .query(queryRequestBuilder.build())
+            .iterator()
+            .asSequence()
+            .firstOrNull()
+
+        return if (page == null) {
+            listOf<TransferItem>() to null
+        } else {
+            page.items() to ContinuationToken(page.lastEvaluatedKey())
+        }.also {
+            logger.info { "Got ${it.first.size} items and continuation token ${it.second}" }
+        }
     }
 
     fun listMerchantTransfers(merchantId: String, continuationToken: String?): Pair<List<TransferItem>, ContinuationToken?> {

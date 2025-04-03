@@ -9,6 +9,7 @@ import com.zenobiapay.api.generated.models.ListBankAccountsRequest
 import com.zenobiapay.api.model.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.table.bank.dao.BankDao
+import com.zenobiapay.table.model.ContinuationToken
 import javax.inject.Inject
 
 class ListBankAccountsOperation @Inject constructor(private val objectMapper: ObjectMapper, private val bankDao: BankDao) : Operation() {
@@ -16,7 +17,11 @@ class ListBankAccountsOperation @Inject constructor(private val objectMapper: Ob
         val request = objectMapper.readValue(input.body, ListBankAccountsRequest::class.java)
         context.logger.log("Got request $request")
 
-        val bankItems = bankDao.listBankAccounts(userId!!, request.deviceId, request.continuationToken)
+        val (bankItems, continuationToken) = bankDao.listBankAccounts(
+            userId!!,
+            request.deviceId,
+            request.continuationToken?.let { ContinuationToken.decodeToken(it, objectMapper) }
+        )
         context.logger.log("Got bank items $bankItems")
         return ListBankAccounts200Response(
             items = bankItems.map {
@@ -24,7 +29,8 @@ class ListBankAccountsOperation @Inject constructor(private val objectMapper: Ob
                     bankAccountId = it.data.bankAccountId,
                     bankAccountName = it.data.bankAccountName
                 )
-            }
+            },
+            continuationToken = continuationToken?.encodeToken(objectMapper)
         )
     }
 

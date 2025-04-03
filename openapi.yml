@@ -623,6 +623,8 @@ paths:
                       properties:
                         clientId:
                           type: string
+                  continuationToken:
+                    type: string
         "400":
           $ref: "#/components/responses/BadRequest"
         "403":

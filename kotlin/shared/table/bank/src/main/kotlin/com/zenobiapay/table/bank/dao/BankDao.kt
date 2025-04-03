@@ -6,6 +6,7 @@ import com.zenobiapay.table.bank.model.BankData
 import com.zenobiapay.table.bank.model.BankPermissions
 import com.zenobiapay.table.bank.model.DeviceCertificate
 import com.zenobiapay.table.di.BANK_TABLE_NAME
+import com.zenobiapay.table.model.ContinuationToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
@@ -21,6 +22,7 @@ class BankDao @Inject constructor(
     private val enhancedClient: DynamoDbEnhancedClient,
     @Named(BANK_TABLE_NAME) private val bankTableName: String
 ) {
+    val bankTable = enhancedClient.table(bankTableName, TableSchema.fromBean(BankAccountItem::class.java))
     fun putBankAccount(
         userId: String,
         deviceId: String?,
@@ -63,18 +65,32 @@ class BankDao @Inject constructor(
     }
 
     // TODO: handle paging using continuation token
-    fun listBankAccounts(userId: String, deviceId: String?, continuationToken: String?): List<BankAccountItem> {
+    fun listBankAccounts(userId: String, deviceId: String?, continuationToken: ContinuationToken?): Pair<List<BankAccountItem>, ContinuationToken?> {
         val queryConditional = QueryConditional.keyEqualTo {
             it.partitionValue(BankAccountItem.generatePk(userId, deviceId))
         }
-        val queryRequest = QueryEnhancedRequest.builder()
+        val queryRequestBuilder = QueryEnhancedRequest.builder()
             .attributesToProject("pk", "sk", "data")
             .queryConditional(queryConditional)
             .limit(MAX_LIST_ITEMS)
-            .build()
 
-        val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankAccountItem::class.java))
-        return table.query(queryRequest).items().toList()
+        if (continuationToken != null) {
+            logger.info { "Using continuation token $continuationToken" }
+            queryRequestBuilder.exclusiveStartKey(continuationToken.key)
+        }
+
+        val page = bankTable.query(queryRequestBuilder.build())
+            .iterator()
+            .asSequence()
+            .firstOrNull()
+
+        return if (page == null) {
+            listOf<BankAccountItem>() to null
+        } else {
+            page.items() to ContinuationToken(page.lastEvaluatedKey())
+        }.also {
+            logger.info { "Got ${it.first.size} items and continuation token ${it.second}" }
+        }
     }
 
     fun getBankAccount(userId: String, deviceId: String?, bankAccountId: String): BankAccountItem? {

@@ -1,8 +1,10 @@
 package com.zenobiapay.table.user.dao
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.exception.InvalidRequestException
 import com.zenobiapay.table.MAX_LIST_ITEMS
 import com.zenobiapay.table.di.USER_TABLE_NAME
+import com.zenobiapay.table.model.ContinuationToken
 import com.zenobiapay.api.generated.models.Location as ApiLocation
 import com.zenobiapay.table.user.model.Location
 import com.zenobiapay.table.user.model.M2MCredentialsData
@@ -30,6 +32,7 @@ private val logger = KotlinLogging.logger {}
 
 class UserDao @Inject constructor(
     private val client: DynamoDbEnhancedClient,
+    private val objectMapper: ObjectMapper,
     @Named(USER_TABLE_NAME) private val userTableName: String
 ) {
     private val userTable = client.table(userTableName, TableSchema.fromBean(UserItem::class.java))
@@ -151,27 +154,35 @@ class UserDao @Inject constructor(
 
     fun listM2MCredentials(
         userId: String,
-    ): List<M2MCredentialsItem> {
+        continuationToken: String?,
+    ): Pair<List<M2MCredentialsItem>, ContinuationToken?> {
         logger.info { "Listing m2m credentials" }
         val queryConditional = QueryConditional.keyEqualTo {
             it.partitionValue(M2MCredentialsItem.generatePk(userId))
         }
-        val queryRequest = QueryEnhancedRequest.builder()
+        val queryRequestBuilder = QueryEnhancedRequest.builder()
             .queryConditional(queryConditional)
             .scanIndexForward(false)
             .limit(MAX_LIST_ITEMS)
-            .build()
 
-        // TODO: handle pagination
-        val toReturn = mutableListOf<M2MCredentialsItem>()
-        m2mCredentialsTable.query(queryRequest)
-            .stream().forEach {
-                logger.info { "Got list response page ${it.items()}" }
-                toReturn += it.items()
-            }
+        if (continuationToken != null) {
+            logger.info { "Using continuation token $continuationToken" }
+            val token = ContinuationToken.decodeToken(continuationToken, objectMapper)
+            queryRequestBuilder.exclusiveStartKey(token.key)
+        }
 
-        logger.info { "Returning accumulated list $toReturn" }
-        return toReturn
+        val page = m2mCredentialsTable.query(queryRequestBuilder.build())
+            .iterator()
+            .asSequence()
+            .firstOrNull()
+
+        return if (page == null) {
+            listOf<M2MCredentialsItem>() to null
+        } else {
+            page.items() to ContinuationToken(page.lastEvaluatedKey())
+        }.also {
+            logger.info { "Got ${it.first.size} items and continuation token ${it.second}" }
+        }
     }
 
     fun deleteM2MCredentials(
