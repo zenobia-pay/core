@@ -19,6 +19,8 @@ import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
+class MerchantNotConfiguredException: Exception("Merchant configuration not set!")
+
 class PayoutProcessor : RequestHandler<SQSEvent, Unit> {
 
     @Inject
@@ -42,7 +44,9 @@ class PayoutProcessor : RequestHandler<SQSEvent, Unit> {
         logger.info { "Got context $context" }
 
         event.records.map {
-            objectMapper.readValue(it.body, PayoutMessage::class.java)
+            objectMapper.readValue(it.body, PayoutMessage::class.java).also {
+                logger.info { "Got record $it" }
+            }
         }.forEach {
             fulfillPayout(it)
         }
@@ -70,6 +74,7 @@ class PayoutProcessor : RequestHandler<SQSEvent, Unit> {
         assert(merchantBankAccountId != null) { "Merchant bank account id is not specified" }
 
         // TODO: check the bank account is of correct type
+        val bankAccountId = merchantData?.data?.merchantData?.bankAccountId ?: throw MerchantNotConfiguredException()
 
         // TODO: handle payouts less than 10 cents
         val transferResponse = orumWrapper.createTransfer(
@@ -78,7 +83,7 @@ class PayoutProcessor : RequestHandler<SQSEvent, Unit> {
                 amount = merchantPayout,
                 destination = TransferParticipant(
                     customerReferenceId = message.merchantId,
-                    accountReferenceId = merchantData?.data?.merchantData?.bankAccountId!!,
+                    accountReferenceId = bankAccountId,
                     statementDisplayName = "ZP_${message.date}"
                 )
             )

@@ -1,2 +1,12 @@
 {
+  "account": "816069139448",
+  "region": "us-east-1",
+  "detail": {},
+  "detailType": "Scheduled Event",
+  "source": "aws.events",
+  "id": "e0a882f2-1102-d4a2-ed46-9dbdf98b87f5",
+  "time": "2025-04-03T18:33:00.000Z",
+  "resources": [
+    "arn:aws:events:us-east-1:816069139448:rule/zenobia-PayoutStack-12IUF-PayoutDispatcherFunctionD-cuyglJcL1piZ"
+  ]
 }
