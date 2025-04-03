@@ -62,6 +62,9 @@ class FulfillTransferOperation @Inject constructor(
 
         logger.info { "Fetching bank item from userId $userId, accountId $bankAccountId" }
         val customerBankAccountItem = bankDao.getBankAccount(userId!!, request.deviceId, bankAccountId) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
+        if (customerBankAccountItem.data.bankPermissions != BankPermissions.SEND_ONLY) {
+            throw InvalidRequestException("Bank account does not have permission to send funds.")
+        }
         val merchantItem = userDao.getUserItem(merchantId) ?: throw ResourceNotFoundException("MERCHANT")
 
         validateRequestSignature(request, customerBankAccountItem)
