@@ -892,8 +892,6 @@ Resources:
           USER_TABLE_NAME: !Ref UserTableName
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Ref PlaidSecretsArn
-        - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref OrumSecretsArn
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
