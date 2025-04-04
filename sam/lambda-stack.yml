@@ -159,6 +159,28 @@ Resources:
             SignatureType:
               type: string
               enum: [ SHA256_WITH_ECDSA ]
+            Address:
+              type: object
+              required:
+                - address1
+                - city
+                - state
+                - country
+                - zip5
+              properties:
+                address1:
+                  type: string
+                address2:
+                  type: string
+                city:
+                  type: string
+                state:
+                  type: string
+                country:
+                  type: string
+                  enum: [ US ]
+                zip5:
+                  type: string
 
         x-amazon-apigateway-request-validators:
           basic:
@@ -622,6 +644,32 @@ Resources:
                           type: string
                         userType:
                           $ref: '#/components/schemas/UserType'
+                        legalBusinessName:
+                          type: string
+                        entityType:
+                          type: string
+                          enum:
+                            - SOLE_PROPRIETORSHIP
+                            - PARTNERSHIP
+                            - LLP
+                            - LLC
+                            - C_CORP
+                            - S_CORP
+                            - B_CORP
+                            - NON_PROFIT
+                        taxId:
+                          type: string
+                          pattern: '^\d{9}$'
+                        taxIdType:
+                          type: string
+                          enum: 
+                            - TIN
+                            - EIN
+                        incorporationDate:
+                          type: string
+                          pattern: '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
+                        address:
+                          $ref: '#/components/schemas/Address'
               responses:
                 '200':
                   description: "Successful response"

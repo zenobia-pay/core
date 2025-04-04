@@ -30,7 +30,7 @@ data class UserItem(
 
 @DynamoDbBean
 data class UserItemData(
-    var orumPersonId: String = "",
+    var orumId: String = "",
     var firstName: String = "",
     var lastName: String = "",
     var isApproved: Boolean = false,

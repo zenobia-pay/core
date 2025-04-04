@@ -8,6 +8,7 @@ import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.model.ddb.transfer.PayoutId
 import com.zenobiapay.orum.model.OrumCreateTransferRequest
 import com.zenobiapay.orum.model.TransferParticipant
+import com.zenobiapay.orum.util.generateMerchantOrumId
 import com.zenobiapay.payout.di.DaggerAppComponent
 import com.zenobiapay.payout.model.PayoutMessage
 import com.zenobiapay.payout.util.getFee
@@ -82,7 +83,7 @@ class PayoutProcessor : RequestHandler<SQSEvent, Unit> {
                 transferReferenceId = "${payoutItem.pk}#${payoutItem.sk}",
                 amount = merchantPayout,
                 destination = TransferParticipant(
-                    customerReferenceId = message.merchantId,
+                    customerReferenceId = generateMerchantOrumId(message.merchantId),
                     accountReferenceId = bankAccountId,
                     statementDisplayName = "ZP_${message.date}"
                 )

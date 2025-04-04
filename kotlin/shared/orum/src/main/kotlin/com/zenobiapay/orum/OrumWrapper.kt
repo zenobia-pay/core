@@ -1,6 +1,8 @@
 package com.zenobiapay.orum
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.orum.model.OrumCreateBusinessRequest
+import com.zenobiapay.orum.model.OrumCreateBusinessResponse
 import com.zenobiapay.orum.model.OrumCreateExternalAccountRequest
 import com.zenobiapay.orum.model.OrumCreateExternalAccountResponse
 import com.zenobiapay.orum.model.OrumCreatePersonRequest
@@ -128,10 +130,25 @@ class OrumWrapper(
         }
     }
 
+    fun createBusiness(createBusinessRequest: OrumCreateBusinessRequest): OrumCreateBusinessResponse {
+        logger.info { "Creating merchant with request $createBusinessRequest" }
+        val accessToken = getAccessToken(orumCredentials)
+        val body = objectMapper.writeValueAsString(createBusinessRequest).toRequestBody(JSON_MEDIA_TYPE)
+        val request = Request.Builder()
+            .addOrumHeaders(accessToken.accessToken)
+            .url("https://api-sandbox.orum.io/deliver/businesses")
+            .post(body)
+            .build()
+
+        return getResponseOrThrowException(OrumCreateBusinessResponse::class.java) {
+            client.newCall(request).execute()
+        }
+    }
+
     fun createPerson(createPersonRequest: OrumCreatePersonRequest): OrumCreatePersonResponse {
+        logger.info { "Creating person with request $createPersonRequest" }
         val accessToken = getAccessToken(orumCredentials)
         val body = objectMapper.writeValueAsString(createPersonRequest).toRequestBody(JSON_MEDIA_TYPE)
-        logger.info { "Creating person with request $createPersonRequest" }
         val request = Request.Builder()
             .addOrumHeaders(accessToken.accessToken)
             .url("https://api-sandbox.orum.io/deliver/persons")

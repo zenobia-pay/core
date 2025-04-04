@@ -20,6 +20,7 @@ import com.zenobiapay.api.model.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.cryptography.util.isSignatureValid
 import com.zenobiapay.orum.util.WaiterFailedException
+import com.zenobiapay.orum.util.generateCustomerOrumId
 import com.zenobiapay.table.bank.model.BankAccountItem
 import com.zenobiapay.table.bank.model.BankPermissions
 import com.zenobiapay.table.transfer.dao.TransferDao
@@ -143,7 +144,7 @@ class FulfillTransferOperation @Inject constructor(
                     transferReferenceId = transferRequestId,
                     amount = transferAmount,
                     source = TransferParticipant(
-                        customerReferenceId = creditorId.id,
+                        customerReferenceId = generateCustomerOrumId(creditorId.id),
                         accountReferenceId = creditorId.bankAccountId,
                         statementDisplayName = creditorId.name
                     ),

@@ -5,7 +5,7 @@
   "headers": {
     "Content-Type": "application/json"
   },
-  "body": "{\"firstName\":\"Teddy\",\"lastName\":\"Li\",\"userType\":\"MERCHANT\"}",
+  "body": "{\"firstName\":\"Teddy\",\"lastName\":\"Li\",\"userType\":\"MERCHANT\",\"merchantDisplayName\":\"Teddy Inc\",\"legalBusinessName\":\"Business\",\"entityType\":\"C_CORP\",\"taxId\":\"123456789\",\"taxIdType\":\"EIN\",\"incorporationDate\":\"2025-01-02\",\"address\":{\"address1\":\"add1\",\"address2\":\"address2\",\"city\":\"Macomb\",\"state\":\"IL\",\"country\":\"US\",\"zip5\":\"61455\"}}",
   "isBase64Encoded": false,
   "requestContext": {
     "accountId": "123456789012",
@@ -17,7 +17,7 @@
     },
     "authorizer": {
       "principalId": "user123",
-      "sub": "google-oauth2|107992810675119826229",
+      "sub": "teddy-fake-sub-1",
       "email": "user@example.com",
       "role": "admin",
       "claims": {

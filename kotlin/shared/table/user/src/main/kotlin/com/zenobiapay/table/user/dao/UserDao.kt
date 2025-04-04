@@ -54,7 +54,7 @@ class UserDao @Inject constructor(
         sub: String,
         firstName: String,
         lastName: String,
-        orumPersonId: String,
+        orumId: String,
         userType: UserType,
         isApproved: Boolean,
         merchantData: MerchantData
@@ -64,7 +64,7 @@ class UserDao @Inject constructor(
                 pk = UserItem.generatePk(sub),
                 sk = UserItem.generateSk(),
                 data = UserItemData(
-                    orumPersonId = orumPersonId,
+                    orumId = orumId,
                     isApproved = isApproved,
                     firstName = firstName,
                     lastName = lastName,

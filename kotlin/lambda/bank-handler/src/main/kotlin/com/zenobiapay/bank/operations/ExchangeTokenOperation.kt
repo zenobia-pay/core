@@ -14,9 +14,13 @@ import com.zenobiapay.api.exception.InvalidRequestException
 import com.zenobiapay.api.generated.models.ExchangeTokenRequest
 import com.zenobiapay.api.model.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
+import com.zenobiapay.api.util.getUserRole
 import com.zenobiapay.cryptography.util.isCertificateValid
 import com.zenobiapay.orum.OrumWrapper
+import com.zenobiapay.orum.model.CustomerResourceType
 import com.zenobiapay.orum.model.OrumCreateExternalAccountRequest
+import com.zenobiapay.orum.util.generateCustomerOrumId
+import com.zenobiapay.orum.util.generateMerchantOrumId
 import com.zenobiapay.plaid.PlaidWrapper
 import com.zenobiapay.table.bank.model.DeviceCertificate
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -47,7 +51,7 @@ class ExchangeTokenOperation @Inject constructor(
 
         val accountsToAch = plaidWrapper.getZippedAccountsAndAch(exchangeResponse.accessToken)
 
-        accountsToAch.forEach { (account, ach) -> processAccount(request, exchangeResponse, userId, account, ach) }
+        accountsToAch.forEach { (account, ach) -> processAccount(request, exchangeResponse, userId, input.requestContext.getUserRole(), account, ach) }
 
         return EmptyApiResponse()
     }
@@ -56,6 +60,7 @@ class ExchangeTokenOperation @Inject constructor(
         request: ExchangeTokenRequest,
         exchangeResponse: ItemPublicTokenExchangeResponse,
         userId: String,
+        userPoolGroup: UserPoolGroup,
         account: AccountBase,
         ach: NumbersACH?
     ) {
@@ -68,12 +73,11 @@ class ExchangeTokenOperation @Inject constructor(
             logger.error { "expected checking or savings, got subtype ${account.subtype} for account ${account.accountId}" }
             throw InvalidRequestException("Provided account is not checking nor savings")
         }
-
         val orumId = orumWrapper.createExternalOrganization(
             OrumCreateExternalAccountRequest(
                 accountReferenceId = ach.accountId,
-                customerReferenceId = userId,
-                customerResourceType = "person", // TODO: use enum
+                customerReferenceId = getOrumCustomerId(userId, userPoolGroup),
+                customerResourceType = getCustomerResourceType(userPoolGroup),
                 accountType = account.subtype!!.value,
                 accountNumber = ach.account,
                 routingNumber = ach.routing,
@@ -100,6 +104,22 @@ class ExchangeTokenOperation @Inject constructor(
             deviceCertificate = deviceCertificate,
         )
         logger.info { "Successfully wrote to ddb bank item ${account.accountId}, orum id $orumId" }
+    }
+
+    private fun getCustomerResourceType(userPoolGroup: UserPoolGroup): CustomerResourceType {
+        return when (userPoolGroup) {
+            UserPoolGroup.MERCHANT -> CustomerResourceType.BUSINESS
+            UserPoolGroup.CUSTOMER -> CustomerResourceType.PERSON
+            UserPoolGroup.MERCHANT_M2M, UserPoolGroup.UNKNOWN -> throw Exception("Got invalid user pool group $userPoolGroup")
+        }
+    }
+
+    private fun getOrumCustomerId(userId: String, userPoolGroup: UserPoolGroup): String {
+        return when (userPoolGroup) {
+            UserPoolGroup.MERCHANT -> generateMerchantOrumId(userId)
+            UserPoolGroup.CUSTOMER -> generateCustomerOrumId(userId)
+            UserPoolGroup.MERCHANT_M2M, UserPoolGroup.UNKNOWN -> throw Exception("Got invalid user pool group $userPoolGroup")
+        }
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {
