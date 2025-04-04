@@ -19,6 +19,7 @@ lambda-events = { module = "com.amazonaws:aws-lambda-java-events", version = "3.
 
 # AWS SDK services
 aws-secretsmanager = { module = "software.amazon.awssdk:secretsmanager", version.ref = "aws" }
+aws-kms = { module = "software.amazon.awssdk:kms", version.ref = "aws" }
 aws-core = { module = "software.amazon.awssdk:aws-core", version.ref = "aws" }
 aws-regions = { module = "software.amazon.awssdk:regions", version.ref = "aws" }
 aws-sdk-core = { module = "software.amazon.awssdk:sdk-core", version.ref = "aws" }

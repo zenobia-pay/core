@@ -54,6 +54,7 @@ dependencies {
 
     // AWS
     api(libs.aws.sqs)
+    api(libs.aws.kms)
 
     // Testing
     testImplementation(libs.kotlin.test)

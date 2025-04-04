@@ -1,0 +1,85 @@
+{
+  "Records": [
+    {
+      "eventID": "700a4cf1d0f2e01425a8004c7bac454f",
+      "eventName": "MODIFY",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "us-east-1",
+      "dynamodb": {
+        "ApproximateCreationDateTime": "Sat Mar 08 17:20:42 UTC 2025",
+        "Keys": {
+          "sk": { "S": "39fb8178-154d-4fa1-8d6c-c156db9a58f3" },
+          "pk": { "S": "TRANSFER#m_64d874c8-b011-70f9-efde-43a92ba4c98d" }
+        },
+        "NewImage": {
+          "amount": { "N": "10" },
+          "data": {
+            "M": {
+              "creationTime": { "S": "2025-03-08T17:20:37.016041839Z" },
+              "merchant": {
+                "M": {
+                  "bankAccountId": { "S": "" },
+                  "name": { "S": "Teddy Li" },
+                  "id": { "S": "64d874c8-b011-70f9-efde-43a92ba4c98d" }
+                }
+              },
+              "statementItems": { "L": [] },
+              "statusMessage": { "NULL": true },
+              "webhookUrl": { "S": "https://test-backend.teddyvision.workers.dev/" },
+              "customer": {
+                "M": {
+                  "bankAccountId": { "S": "pQkm6rbvKJH75AQ7JBGQtjRKeyz7JVfpoBvnK" },
+                  "name": { "S": "Teddy Li" },
+                  "id": { "S": "64d874c8-b011-70f9-efde-43a92ba4c98d" }
+                }
+              }
+            }
+          },
+          "gsi1Sk": { "S": "CREATED#t_2025-03-08T17:20:37.015944937Z#id_39fb8178-154d-4fa1-8d6c-c156db9a58f3" },
+          "gsi2Sk": { "S": "2bbff451-e3fd-4b48-a349-316af0c8f7bf" },
+          "gsi3Sk": { "S": "CREATED#t_2025-03-08T17:20:39.917339014Z#id_2bbff451-e3fd-4b48-a349-316af0c8f7bf" },
+          "gsi1Pk": { "S": "TRANSFER#m_64d874c8-b011-70f9-efde-43a92ba4c98d" },
+          "transferFulfillId": { "S": "2bbff451-e3fd-4b48-a349-316af0c8f7bf" },
+          "version": { "N": "2" },
+          "deleted": { "BOOL": false },
+          "gsi2Pk": { "S": "TRANSFER#c_64d874c8-b011-70f9-efde-43a92ba4c98d" },
+          "sk": { "S": "39fb8178-154d-4fa1-8d6c-c156db9a58f3" },
+          "gsi3Pk": { "S": "TRANSFER#c_64d874c8-b011-70f9-efde-43a92ba4c98d" },
+          "pk": { "S": "TRANSFER#m_64d874c8-b011-70f9-efde-43a92ba4c98d" },
+          "status": { "S": "IN_FLIGHT" }
+        },
+        "OldImage": {
+          "amount": { "N": "10" },
+          "deleted": { "BOOL": false },
+          "data": {
+            "M": {
+              "creationTime": { "S": "2025-03-08T17:20:37.016041839Z" },
+              "merchant": {
+                "M": {
+                  "bankAccountId": { "S": "" },
+                  "name": { "S": "Teddy Li" },
+                  "id": { "S": "64d874c8-b011-70f9-efde-43a92ba4c98d" }
+                }
+              },
+              "statementItems": { "L": [] },
+              "statusMessage": { "NULL": true },
+              "webhookUrl": { "NULL": true },
+              "customer": { "NULL": true }
+            }
+          },
+          "gsi1Sk": { "S": "CREATED#t_2025-03-08T17:20:37.015944937Z#id_39fb8178-154d-4fa1-8d6c-c156db9a58f3" },
+          "gsi1Pk": { "S": "TRANSFER#m_64d874c8-b011-70f9-efde-43a92ba4c98d" },
+          "sk": { "S": "39fb8178-154d-4fa1-8d6c-c156db9a58f3" },
+          "pk": { "S": "TRANSFER#m_64d874c8-b011-70f9-efde-43a92ba4c98d" },
+          "version": { "N": "1" },
+          "status": { "S": "NOT_STARTED" }
+        },
+        "SequenceNumber": "24164600000000070081769328",
+        "SizeBytes": 1423,
+        "StreamViewType": "NEW_AND_OLD_IMAGES"
+      },
+      "eventSourceArn": "arn:aws:dynamodb:us-east-1:816069139448:table/TransferTable/stream/2025-03-04T16:37:01.983"
+    }
+  ]
+}

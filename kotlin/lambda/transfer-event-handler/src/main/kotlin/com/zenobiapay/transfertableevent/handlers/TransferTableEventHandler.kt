@@ -1,4 +1,4 @@
-package main.kotlin.com.zenobiapay.handlers
+package com.zenobiapay.transfertableevent.handlers
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
