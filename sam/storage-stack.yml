@@ -156,69 +156,6 @@ Resources:
         KMSMasterKeyId: !Ref UserKmsKey
         SSEType: KMS
 
-  CredentialsKmsKey:
-    Type: AWS::KMS::Key
-    Properties:
-      Description: Key to encrypt Bank DynamoDB table
-      EnableKeyRotation: true
-      KeyPolicy:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: AllowRootAccount
-            Effect: Allow
-            Principal:
-              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
-            Action: "kms:*"
-            Resource: "*"
-
-  CredentialsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: CredentialsTable
-      KeySchema:
-        - AttributeName: pk
-          KeyType: HASH
-      AttributeDefinitions:
-        - AttributeName: pk
-          AttributeType: S
-      BillingMode: PAY_PER_REQUEST
-      SSESpecification:
-        SSEEnabled: true
-        KMSMasterKeyId: !Ref CredentialsKmsKey
-        SSEType: KMS
-
-#  # TODO: increase security. Only allow authenticated users to access.
-#  ProfilePictureBucket:
-#    Type: AWS::S3::Bucket
-#    Properties:
-#      BucketName: !Sub zenobia-profile-picture-bucket-${AWS::Region}-${Stage}${UniqueIdentifier}
-#
-#  ProfilePictureBucketPolicy:
-#    Type: AWS::S3::BucketPolicy
-#    Properties:
-#      Bucket: !Ref ProfilePictureBucket
-#      PolicyDocument:
-#        Version: 2012-10-17
-#        Statement:
-##          - Effect: Allow
-##            Principal: "*"
-##            Action:
-##              - s3:GetObject
-##            Resource:
-##              - !Sub arn:aws:s3:::zenobia-profile-picture-bucket-${AWS::Region}-dev/*
-##            Condition:
-##              StringEquals:
-##                cognito-identity.amazonaws.com:aud: !Ref IdentityPoolId
-#          - Effect: Deny
-#            Principal: "*"
-#            Action:
-#              - s3:ListBucket
-#              - s3:PutObject
-#              - s3:DeleteObject
-#            Resource:
-#              - !Sub zenobia-profile-picture-bucket-${AWS::Region}-${Stage}${UniqueIdentifier}
-#              - !Sub zenobia-profile-picture-bucket-${AWS::Region}-${Stage}${UniqueIdentifier}/*
-
 Outputs:
   BankKeyId:
     Value: !Ref BankKmsKey
@@ -229,8 +166,6 @@ Outputs:
   UserKeyId:
     Value: !Ref UserKmsKey
     Description: Bank table that stores plaid credentials
-  CredentialsKeyId:
-    Value: !Ref CredentialsKmsKey
   BankTableName:
     Value: !Ref BankTable
     Description: Bank table that stores plaid credentials
@@ -240,9 +175,6 @@ Outputs:
   UserTableName:
     Value: !Ref UserTable
     Description: User table that stores additional user metadata
-  CredentialsTableName:
-    Value: !Ref CredentialsTable
-    Description: Table to store client and hashed secret for m2m requests
   TransferTableStreamArn:
     Value: !GetAtt TransferTable.StreamArn
 

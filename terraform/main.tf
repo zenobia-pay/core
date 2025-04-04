@@ -17,28 +17,21 @@ provider "auth0" {
 }
 
 resource "auth0_client" "zenobia_app" {
-  name            = "Zenobia Web Client Sandbox (TF Managed)"
+  name            = "Zenobia Pay"
   app_type        = "regular_web"
   logo_uri = "https://zenobiapay.com/android-chrome-192x192.png"
   callbacks       = ["https://dashboard.zenobiapay.com/callback", "http://localhost:3000/admin",  "http://localhost:3000", "http://localhost:3000/login", "https://dashboard.zenobiapay.com/login", "zenobia://login-callback"]
   allowed_logout_urls = ["https://dashboard.zenobiapay.com", "http://localhost:3000"]
 }
 
+resource "auth0_client_grant" "zenobia_app_client_grant" {
+  client_id = auth0_client.aws_auth0_management_app.id
+  audience  = "https://dashboard.zenobiapay.com"
+  scopes    = []
+}
+
 resource "auth0_client_credentials" "zenobia_app_credentials" {
   client_id = auth0_client.zenobia_app.id
-  authentication_method = "none"
-}
-
-resource "auth0_client" "zenobia_merchant_app" {
-  name            = "Zenobia Merchant Client (TF Managed)"
-  app_type        = "regular_web"
-  logo_uri = "https://zenobiapay.com/android-chrome-192x192.png"
-  callbacks       = ["https://dashboard.zenobiapay.com/callback", "http://localhost:3000/admin",  "http://localhost:3000", "http://localhost:3000/login", "https://dashboard.zenobiapay.com/login"]
-  allowed_logout_urls = ["https://dashboard.zenobiapay.com/logout", "http://localhost:3000/admin", "http://localhost:3000"]
-}
-
-resource "auth0_client_credentials" "zenobia_merchant_credentials" {
-  client_id = auth0_client.zenobia_merchant_app.id
   authentication_method = "none"
 }
 
@@ -89,7 +82,7 @@ resource "auth0_client" "aws_auth0_management_role_app" {
 }
 
 resource "auth0_resource_server" "zenobia_api" {
-  name                 = "Zenobia API Sandbox"
+  name                 = "Zenobia API"
   identifier           = "https://dashboard.zenobiapay.com"
   signing_alg          = "RS256"
   token_lifetime       = 36000
@@ -137,10 +130,6 @@ resource "auth0_trigger_actions" "bind_credentials_exchange_registration" {
 
 output "client_id" {
   value = auth0_client.zenobia_app.client_id
-}
-
-output "merchant_client_id" {
-  value = auth0_client.zenobia_merchant_app.client_id
 }
 
 output "api_identifier" {

@@ -27,15 +27,11 @@ Parameters:
     Type: String
   UserKeyId:
     Type: String
-  CredentialsKeyId:
-    Type: String
   BankTableName:
     Type: String
   TransferTableName:
     Type: String
   UserTableName:
-    Type: String
-  CredentialsTableName:
     Type: String
   TransferTableStreamArn:
     Type: String
@@ -1025,6 +1021,45 @@ Resources:
             Path: /delete-m2m-credentials
             Method: POST
 
+  WebhookSigningKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: "KMS Key for signing JWT webhooks"
+      KeyUsage: SIGN_VERIFY
+      KeySpec: RSA_2048
+      Enabled: true
+      EnableKeyRotation: false
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowRootAccountAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
+            Resource: "*"
+          # TODO: tighten
+          - Sid: AllowLambdaUse
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - kms:GetPublicKey
+              - kms:Sign
+            Resource: "*"
+            Condition:
+              StringEquals:
+                kms:CallerAccount: !Ref AWS::AccountId
+                kms:ViaService: !Sub lambda.${AWS::Region}.amazonaws.com
+              ArnLike: # Hack to tighten up kms to only be used by the transfer event handler. Cannot reference directly as there is a circular dependency
+                  aws:PrincipalArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/*-TransferTableEventHandler-*"
+
+  WebhookSigningKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/webhook-signing-key
+      TargetKeyId: !Ref WebhookSigningKey
+
   TransferTableEventHandler:
     Type: 'AWS::Serverless::Function'
     Metadata:
@@ -1040,6 +1075,13 @@ Resources:
             StreamName: !Select [3, !Split ["/", !Ref TransferTableStreamArn]]
         - KMSDecryptPolicy:
             KeyId: !Ref TransferKeyId
+        - Statement:
+          - Sid: AllowKmsSignedWebhooks
+            Effect: Allow
+            Action:
+            - kms:GetPublicKey
+            - kms:Sign
+            Resource: !GetAtt WebhookSigningKey.Arn
       Events:
         DynamoDBStreamEvent:
           Type: DynamoDB

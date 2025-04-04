@@ -22,6 +22,11 @@ class CryptographyUtilTest {
     }
 
     @Test
+    fun `doesnt validate non certificate`() {
+        assertFalse(isCertificateValid("badCertificate", CertificateType.EC))
+    }
+
+    @Test
     fun `validate ECDSA signature success`() {
         val data = "test\n".toByteArray()
         assertTrue(isSignatureValid(data, certificate, signature, SignatureType.SHA256_WITH_ECDSA))

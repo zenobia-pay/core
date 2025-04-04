@@ -2,24 +2,31 @@ package com.zenobiapay.cryptography.util
 
 import com.zenobiapay.api.generated.models.CertificateType
 import com.zenobiapay.api.generated.models.SignatureType
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
-import org.bouncycastle.asn1.x509.X509CertificateStructure
-import org.bouncycastle.cert.X509CertificateHolder
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openssl.PEMParser
 import java.io.StringReader
+import java.lang.Exception
 import java.security.PublicKey
 import java.security.Security
 import java.security.Signature
 import java.util.Base64
+
+private val logger = KotlinLogging.logger {}
 
 fun isCertificateValid(
     certificate: String,
     certificateType: CertificateType
 ): Boolean {
     Security.addProvider(BouncyCastleProvider())
-    val publicKey = getPublicKey(certificate)
-    return publicKey?.algorithm == certificateType.value
+    try {
+        val publicKey = getPublicKey(certificate)
+        return publicKey?.algorithm == certificateType.value
+    } catch (e: Exception) {
+        logger.info { "Caught error when parsing certificate, returning false to customer"}
+        return false
+    }
 }
 
 fun isSignatureValid(
