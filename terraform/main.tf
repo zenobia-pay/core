@@ -35,16 +35,6 @@ resource "auth0_client_credentials" "zenobia_app_credentials" {
   authentication_method = "none"
 }
 
-resource "auth0_role" "merchant" {
-  name        = "merchant"
-  description = "Merchant role that allows requesting transfers"
-}
-
-resource "auth0_role" "customer" {
-  name        = "customer"
-  description = "Standard customer role that can authorize pushes"
-}
-
 resource "auth0_client" "auth0_action_app" {
   name            = "auth0-action-app-tf"
   description     = "Used by Auth0 Actions to call API Gateway"
