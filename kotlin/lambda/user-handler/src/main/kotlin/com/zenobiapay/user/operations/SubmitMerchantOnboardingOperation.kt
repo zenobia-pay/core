@@ -4,7 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.exception.InvalidRequestException
-import com.zenobiapay.api.generated.models.SubmitOnboardingRequest
+import com.zenobiapay.api.generated.models.SubmitMerchantOnboardingRequest
 import com.zenobiapay.api.generated.models.UserType
 import com.zenobiapay.api.model.EmptyApiResponse
 import com.zenobiapay.api.model.Operation
@@ -32,11 +32,10 @@ import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
-class SubmitOnboardingOperation @Inject constructor(
+class SubmitMerchantOnboardingOperation @Inject constructor(
     private val objectMapper: ObjectMapper,
     private val userDao: UserDao,
     private val orumWrapper: OrumWrapper,
-    private val auth0Wrapper: Auth0Wrapper,
 ): Operation() {
     override fun run(
         input: APIGatewayProxyRequestEvent,
@@ -44,27 +43,13 @@ class SubmitOnboardingOperation @Inject constructor(
         userId: String?
     ): Any {
         userId!!
-        val request = objectMapper.readValue(input.body, SubmitOnboardingRequest::class.java)
+        val request = objectMapper.readValue(input.body, SubmitMerchantOnboardingRequest::class.java)
 
         if (userDao.getUserItem(userId) != null) {
             throw InvalidRequestException("User has already onboarded")
         }
         val email = input.requestContext.getEmail() ?: throw Exception("email not found")
-        val orumId = when (request.userType) {
-            UserType.CUSTOMER -> createPerson(userId, request, email).id
-            UserType.MERCHANT -> {
-                assertNotNull(
-                    request.merchantDisplayName,
-                    request.legalBusinessName,
-                    request.entityType,
-                    request.taxId,
-                    request.taxIdType,
-                    request.incorporationDate,
-                    request.address,
-                )
-                createMerchant(userId, request, email).business.id
-            }
-        }
+        val merchantId = createMerchant(userId, request, email).business.id
 
         logger.info { "Adding role ${request.userType} to user $userId"}
         val role = UserPoolGroup.fromString(request.userType.value)
@@ -72,15 +57,13 @@ class SubmitOnboardingOperation @Inject constructor(
             logger.error { "Could not get role from request's usertype ${request.userType.value}"}
             throw InvalidRequestException("Unknown role for submit onboarding")
         }
-        auth0Wrapper.putAppMetadataOnUser(userId, mapOf(ROLE_KEY to request.userType.value))
-
         val isAutoApproved = request.userType == UserType.CUSTOMER
         userDao.putUser(
             userId,
             request.firstName,
             request.lastName,
-            orumId,
-            DdbUserType.toDdbUserType(request.userType),
+            merchantId,
+            DdbUserType.toDdbUserType(UserType.MERCHANT),
             isAutoApproved,
             MerchantData(
                 displayName = request.merchantDisplayName,
@@ -90,43 +73,18 @@ class SubmitOnboardingOperation @Inject constructor(
         return EmptyApiResponse()
     }
 
-    private fun createPerson(userId: String, request: SubmitOnboardingRequest, email: String): Person {
-        val createPersonRequest = OrumCreatePersonRequest(
-            customerReferenceId = generateCustomerOrumId(userId),
-            firstName = request.firstName,
-            lastName = request.lastName,
-            socialSecurityNumber = null,
-            contacts = listOf(Contact(type = "email", value = email))
-        )
-
-        val person = try {
-            orumWrapper.createPerson(createPersonRequest).person.also {
-                logger.info { "Created Orum person with customer reference id $userId" }
-            }
-        } catch (e: OrumException) {
-            if (e.isCreatePersonAlreadyExistsException()) {
-                logger.info { "Person $userId already exists. Updating pre-existing person with new info" }
-                orumWrapper.updatePerson(createPersonRequest).person
-            } else {
-                throw e
-            }
-        }
-        logger.info { "Got person $person" }
-        return person
-    }
-
-    private fun createMerchant(userId: String, request: SubmitOnboardingRequest, email: String): OrumCreateBusinessResponse {
+    private fun createMerchant(userId: String, request: SubmitMerchantOnboardingRequest, email: String): OrumCreateBusinessResponse {
         val name = "${request.firstName} ${request.lastName}"
         val createBusinessRequest = OrumCreateBusinessRequest(
             customerReferenceId = generateMerchantOrumId(userId),
             legalName = name,
             businessName = request.legalBusinessName,
-            entityType = request.entityType!!.let { BusinessEntityType.valueOf(it.value) },
+            entityType = BusinessEntityType.valueOf(request.entityType.value),
             taxId = request.taxId,
-            taxIdType = TaxIdType.valueOf(request.taxIdType!!.value),
+            taxIdType = TaxIdType.valueOf(request.taxIdType.value),
             accountHolderName = name,
             incorporationDate = request.incorporationDate,
-            addresses = listOf(request.address!!.let {
+            addresses = listOf(request.address.let {
                 Address(
                     address1 = it.address1,
                     address2 = it.address2,
@@ -140,14 +98,6 @@ class SubmitOnboardingOperation @Inject constructor(
         )
         return orumWrapper.createBusiness(createBusinessRequest).also {
             logger.info { "Created Orum business with business reference id $userId and orum reference ${it.business.id}" }
-        }
-    }
-
-    private fun assertNotNull(vararg values: Any?) {
-        values.forEach {
-            if (it == null) {
-                throw InvalidRequestException("Merchant fields not passed")
-            }
         }
     }
 

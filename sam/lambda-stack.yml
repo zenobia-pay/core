@@ -666,10 +666,10 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
-          /submit-onboarding:
+          /submit-merchant-onboarding:
             post:
-              summary: "Onboards a user, adding user metadata and merchant info (if applicable). Only called on first login."
-              operationId: "SubmitOnboarding"
+              summary: "Onboards a merchant, adding user metadata and merchant info. Only called on first login."
+              operationId: "SubmitMerchantOnboarding"
               requestBody:
                 required: true
                 content:
@@ -679,7 +679,13 @@ Resources:
                       required:
                         - firstName
                         - lastName
-                        - userType
+                        - merchantDisplayName
+                        - legalBusinessName
+                        - entityType
+                        - taxId
+                        - taxIdType
+                        - incorporationDate
+                        - address
                       properties:
                         firstName:
                           type: string
@@ -687,8 +693,6 @@ Resources:
                           type: string
                         merchantDisplayName:
                           type: string
-                        userType:
-                          $ref: '#/components/schemas/UserType'
                         legalBusinessName:
                           type: string
                         entityType:
@@ -1094,11 +1098,11 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /submit-customer-onboarding
             Method: POST
-        SubmitOnboarding:
+        SubmitMerchantOnboarding:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
-            Path: /submit-onboarding
+            Path: /submit-merchant-onboarding
             Method: POST
         CreateM2MCredentials:
           Type: Api

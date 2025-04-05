@@ -8,6 +8,7 @@ import com.plaid.client.model.IdentityVerificationStatus
 import com.zenobiapay.api.exception.IdentityFailedException
 import com.zenobiapay.api.exception.IdentityNotSuccessfulException
 import com.zenobiapay.api.generated.models.SubmitCustomerOnboardingRequest
+import com.zenobiapay.api.generated.models.UserType
 import com.zenobiapay.api.model.EmptyApiResponse
 import com.zenobiapay.api.model.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
@@ -20,8 +21,7 @@ import com.zenobiapay.orum.model.Person
 import com.zenobiapay.orum.util.generateCustomerOrumId
 import com.zenobiapay.plaid.PlaidWrapper
 import com.zenobiapay.table.user.dao.UserDao
-import com.zenobiapay.table.user.model.MerchantData
-import com.zenobiapay.table.user.model.UserType
+import com.zenobiapay.table.user.model.UserType as DdbUserType
 import com.zenobiapay.user.util.Auth0Wrapper
 import com.zenobiapay.user.util.Auth0Wrapper.Companion.ROLE_KEY
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -53,7 +53,7 @@ class SubmitCustomerOnboardingOperation @Inject constructor(
             person.firstName,
             person.lastName,
             person.id,
-            UserType.CUSTOMER,
+            DdbUserType.toDdbUserType(UserType.CUSTOMER),
             isApproved = true,
         )
 
