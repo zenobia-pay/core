@@ -30,6 +30,10 @@ func extractToken(authHeader string) string {
 }
 
 func getUserContext(claims *validator.ValidatedClaims) map[string]interface{} {
+	if claims == nil {
+		return nil
+	}
+
 	if userCustomClaims, ok := claims.CustomClaims.(*UserCustomClaims); ok {
 		context := map[string]interface{}{
 			"sub":    claims.RegisteredClaims.Subject,
@@ -41,41 +45,38 @@ func getUserContext(claims *validator.ValidatedClaims) map[string]interface{} {
 		fmt.Println(context)
 		return context
 	}
-	print("Could not cast claims to user custom claims")
-	return map[string]interface{}{}
+	println("Could not cast user custom claims")
+	return nil
 }
 
 func generatePolicyResponse(isValid bool, context map[string]interface{}, methodArn string) events.APIGatewayCustomAuthorizerResponse {
 	if isValid {
-		return events.APIGatewayCustomAuthorizerResponse{
-			PrincipalID: "user",
-			PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
-				Version: "2012-10-17",
-				Statement: []events.IAMPolicyStatement{
-					{
-						Action:   []string{"execute-api:Invoke"},
-						Effect:   "Allow",
-						Resource: []string{wildcardArn(methodArn)},
-					},
-				},
-			},
-			Context: context,
-		}
+		return generatePolicy("user", "Allow", wildcardArn(methodArn), context)
 	} else {
-		return events.APIGatewayCustomAuthorizerResponse{
-			PrincipalID: "user",
-			PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
-				Version: "2012-10-17",
-				Statement: []events.IAMPolicyStatement{
-					{
-						Action:   []string{"execute-api:Invoke"},
-						Effect:   "Deny",
-						Resource: []string{"*"},
-					},
+		return generatePolicy("user", "Deny", "*", context)
+	}
+}
+
+func generatePolicy(principalId, effect, resource string, context map[string]interface{}) events.APIGatewayCustomAuthorizerResponse {
+	authResponse := events.APIGatewayCustomAuthorizerResponse{PrincipalID: principalId}
+
+	if effect != "" && resource != "" {
+		authResponse.PolicyDocument = events.APIGatewayCustomAuthorizerPolicy{
+			Version: "2012-10-17",
+			Statement: []events.IAMPolicyStatement{
+				{
+					Action:   []string{"execute-api:Invoke"},
+					Effect:   effect,
+					Resource: []string{resource},
 				},
 			},
 		}
 	}
+
+	if context != nil {
+		authResponse.Context = context
+	}
+	return authResponse
 }
 
 func wildcardArn(methodArn string) string {

@@ -14,9 +14,20 @@ go:
 		         zip function.zip bootstrap'; \
 	done
 
+go-dev:
+	echo "Building golang (dev mode). Build in container if you'd like to deploy"
+	@for dir in $(GO_LAMBDA_DIRS); do \
+ 		echo "Building $$dir..."; \
+ 		cd golang/$$dir && GOOS=linux GOARCH=amd64 go build -o ./build/bootstrap . && cd build && zip function.zip bootstrap && cd ../../..; \
+ 	done
+
 kotlin:
 	echo "Building gradle"
-	./gradlew build --parallel
+	./gradlew build --parallel --no-daemon
+
+kotlin-dev:
+	echo "Building gradle (dev mode)"
+	./gradlew build
 
 openapi:
 	yq eval '.Resources.ZenobiaApi.Properties.DefinitionBody' sam/lambda-stack.yml | sed -E 's/!Sub //g' > openapi.yml
