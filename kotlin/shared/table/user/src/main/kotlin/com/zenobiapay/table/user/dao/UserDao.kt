@@ -57,7 +57,7 @@ class UserDao @Inject constructor(
         orumId: String,
         userType: UserType,
         isApproved: Boolean,
-        merchantData: MerchantData
+        merchantData: MerchantData? = null
     ) {
         userTable.putItem(
             UserItem(

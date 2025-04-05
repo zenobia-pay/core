@@ -105,9 +105,23 @@ x-amazon-apigateway-request-validators:
 x-amazon-apigateway-request-validator: basic
 paths:
   /create-link-token:
-    get:
+    post:
       summary: "Creates a plaid link token"
       operationId: "CreateLinkToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - product
+              properties:
+                product:
+                  type: string
+                  enum:
+                    - AUTH
+                    - IDENTITY_VERIFICATION
       responses:
         '200':
           description: "Successful response"
@@ -507,6 +521,36 @@ paths:
                   type: string
                 merchantLocation:
                   $ref: "#/components/schemas/Location"
+      responses:
+        '200':
+          description: "Successful response"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
+        httpMethod: POST
+        type: aws_proxy
+  /submit-customer-onboarding:
+    post:
+      summary: "Onboards a customer, adding user metadata. Only called on first login."
+      operationId: "SubmitCustomerOnboarding"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - identityVerificationId
+              properties:
+                identityVerificationId:
+                  type: string
       responses:
         '200':
           description: "Successful response"

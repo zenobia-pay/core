@@ -35,6 +35,7 @@ class ExchangeTokenOperation @Inject constructor(
     private val bankDao: BankDao,
 ) : Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): ApiResponse {
+        userId!!
         logger.info { "Got input body ${input.body}" }
         val request = objectMapper.readValue(input.body, ExchangeTokenRequest::class.java)
 
@@ -46,7 +47,7 @@ class ExchangeTokenOperation @Inject constructor(
             throw InvalidRequestException("DEVICE_CERTIFICATE")
         }
 
-        val exchangeResponse = plaidWrapper.exchangeLinkToken(userId!!, request.linkToken)
+        val exchangeResponse = plaidWrapper.exchangeLinkToken(request.linkToken)
         logger.info { "Got exchange response $exchangeResponse" }
 
         val accountsToAch = plaidWrapper.getZippedAccountsAndAch(exchangeResponse.accessToken)

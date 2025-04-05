@@ -31,6 +31,7 @@ dependencies {
     implementation(project(":kotlin:shared:api"))
     implementation(project(":kotlin:shared:table"))
     implementation(project(":kotlin:shared:orum"))
+    implementation(project(":kotlin:shared:plaid"))
     implementation(project(":kotlin:shared:table:bank"))
     implementation(project(":kotlin:shared:table:user"))
 
@@ -61,6 +62,9 @@ dependencies {
 
     // Auth0
     api(libs.auth0)
+
+    // Plaid
+    implementation(libs.plaid)
 
     // Testing
     testImplementation(libs.kotlin.test)

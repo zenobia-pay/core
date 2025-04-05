@@ -6,6 +6,8 @@ import com.plaid.client.model.AccountsGetResponse
 import com.plaid.client.model.AuthGetRequest
 import com.plaid.client.model.AuthGetResponse
 import com.plaid.client.model.CountryCode
+import com.plaid.client.model.IdentityVerificationGetRequest
+import com.plaid.client.model.IdentityVerificationGetResponse
 import com.plaid.client.model.ItemGetRequest
 import com.plaid.client.model.ItemGetResponse
 import com.plaid.client.model.ItemPublicTokenExchangeRequest
@@ -25,7 +27,7 @@ private val logger = KotlinLogging.logger {}
 class PlaidException(message: String) : Exception(message)
 
 class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
-    fun createLinkToken(userId: String): LinkTokenCreateResponse {
+    fun createLinkToken(userId: String, products: List<Products>): LinkTokenCreateResponse {
         val user = LinkTokenCreateRequestUser()
             .clientUserId(userId)
 
@@ -33,7 +35,7 @@ class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
         val request = LinkTokenCreateRequest()
             .user(user)
             .clientName("Zenobia")
-            .products(listOf(Products.AUTH))
+            .products(products)
             .countryCodes((listOf(CountryCode.US)))
             .language("en")
             .redirectUri("https://zenobiapay.com/plaid")
@@ -43,18 +45,16 @@ class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
         }
     }
 
-    fun exchangeLinkToken(userId: String, linkToken: String): ItemPublicTokenExchangeResponse {
+    fun exchangeLinkToken(linkToken: String): ItemPublicTokenExchangeResponse {
         val request = ItemPublicTokenExchangeRequest()
-            .clientId(userId)
             .publicToken(linkToken)
         return getResponseOrThrowException("ExchangeLinkToken") {
             plaidApi.itemPublicTokenExchange(request).execute()
         }
     }
 
-    fun getItem(userId: String, accessToken: String): ItemGetResponse {
+    fun getItem(accessToken: String): ItemGetResponse {
         val request = ItemGetRequest()
-            .clientId(userId)
             .accessToken(accessToken)
         return getResponseOrThrowException("GetItem") {
             plaidApi.itemGet(request).execute()
@@ -87,8 +87,14 @@ class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
             .accessToken(accessToken)
         return getResponseOrThrowException("AuthGet") {
             plaidApi.authGet(request).execute()
-        }.also {
-            logger.info { "got plaid response for ach ${it.numbers.ach}" }
+        }
+    }
+
+    fun getIdentityVerification(identityVerificationId: String): IdentityVerificationGetResponse {
+        val request = IdentityVerificationGetRequest()
+            .identityVerificationId(identityVerificationId)
+        return getResponseOrThrowException("GetIdentityVerification") {
+            plaidApi.identityVerificationGet(request).execute()
         }
     }
 
