@@ -6,13 +6,18 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.model.exception.ResourceNotFoundException
 import com.zenobiapay.api.model.transfer.GetTransferRequest
 import com.zenobiapay.api.generated.model.GetMerchantTransfer200Response
+import com.zenobiapay.api.model.NoApiBody
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.table.transfer.dao.TransferDao
 import javax.inject.Inject
 
-class GetMerchantTransferOperation @Inject constructor(private val objectMapper: ObjectMapper, private val transferDao: TransferDao) : Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any {
+class GetMerchantTransferOperation @Inject constructor(
+    private val objectMapper: ObjectMapper,
+    private val transferDao: TransferDao
+): Operation<NoApiBody, GetMerchantTransfer200Response>() {
+    override val inputType = NoApiBody::class.java
+    override fun run(request: NoApiBody, input: APIGatewayProxyRequestEvent, context: Context, userId: String?): GetMerchantTransfer200Response {
         val request = GetTransferRequest.from(input.queryStringParameters, objectMapper)
 
         val transferItem = transferDao.getMerchantTransfer(

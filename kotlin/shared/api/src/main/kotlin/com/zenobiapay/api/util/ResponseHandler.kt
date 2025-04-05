@@ -17,8 +17,8 @@ import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
-class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper) {
-    fun returnApiGwResponse(operation: Operation, input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
+class ResponseHandler @Inject constructor(val objectMapper: ObjectMapper) {
+    fun <I, O> returnApiGwResponse(operation: Operation<I, O>, input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
         return wrapOperation {
             val userId = input.requestContext.getUserId()
             setLoggingContext(input.requestContext.requestId, userId)
@@ -28,11 +28,13 @@ class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper
                 logger.error { "Role $role not allowed for operation ${operation.javaClass.name} with allowed list ${operation.getUserPoolAllowList()}"}
                 throw UnauthorizedException()
             }
-            operation.run(input, context, userId)
+            // Read empty map if no body is provided. Should be cast to NoApiBody class
+            val request = objectMapper.readValue(input.body ?: "{}", operation.inputType)
+            operation.run(request, input, context, userId)
         }
     }
 
-    private fun wrapOperation(body: () -> Any): APIGatewayProxyResponseEvent {
+    private fun <O> wrapOperation(body: () -> O): APIGatewayProxyResponseEvent {
         return try {
             generateSuccessResponse(body())
         } catch (e: Exception) {
@@ -40,7 +42,7 @@ class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper
         }
     }
 
-    fun generateSuccessResponse(response: Any): APIGatewayProxyResponseEvent {
+    private fun <O> generateSuccessResponse(response: O): APIGatewayProxyResponseEvent {
         return APIGatewayProxyResponseEvent()
             .withStatusCode(200)
             .withHeaders(getCorsHeaders())

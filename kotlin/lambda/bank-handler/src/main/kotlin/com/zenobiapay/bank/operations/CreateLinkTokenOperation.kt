@@ -6,15 +6,20 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.plaid.client.model.Products
 import com.zenobiapay.api.generated.model.CreateLinkToken200Response
 import com.zenobiapay.api.generated.model.CreateLinkTokenRequest
+import com.zenobiapay.api.model.NoApiBody
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.plaid.PlaidWrapper
 import javax.inject.Inject
 
-class CreateLinkTokenOperation @Inject constructor(private val objectMapper: ObjectMapper, private val plaidWrapper: PlaidWrapper) : Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): CreateLinkToken200Response {
-        val body = objectMapper.readValue(input.body, CreateLinkTokenRequest::class.java)
-        val response = plaidWrapper.createLinkToken(userId!!, listOf(getPlaidProduct(body.product)))
+class CreateLinkTokenOperation @Inject constructor(
+    private val plaidWrapper: PlaidWrapper,
+): Operation<CreateLinkTokenRequest, CreateLinkToken200Response>() {
+
+    override val inputType = CreateLinkTokenRequest::class.java
+
+    override fun run(request: CreateLinkTokenRequest, input: APIGatewayProxyRequestEvent, context: Context, userId: String?): CreateLinkToken200Response {
+        val response = plaidWrapper.createLinkToken(userId!!, listOf(getPlaidProduct(request.product)))
         context.logger.log("Got plaid response $response")
 
         return CreateLinkToken200Response().linkToken(response.linkToken)

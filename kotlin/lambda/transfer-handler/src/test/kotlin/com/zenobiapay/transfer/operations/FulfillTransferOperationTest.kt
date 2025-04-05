@@ -75,7 +75,7 @@ class FulfillTransferOperationTest {
             objectMapper,
         )
         assertThrows<InvalidSignatureException> {
-            operation.run(createMockGatewayEvent(), context, USER_ID)
+            operation.run(createRequest(), createMockGatewayEvent(), context, USER_ID)
         }
     }
 
@@ -92,15 +92,12 @@ class FulfillTransferOperationTest {
             objectMapper,
         )
         assertThrows<ResourceNotFoundException> {
-            operation.run(createMockGatewayEvent(), context, USER_ID)
+            operation.run(createRequest(), createMockGatewayEvent(), context, USER_ID)
         }
     }
 
     private fun createMockGatewayEvent(): APIGatewayProxyRequestEvent {
         val mockEvent = mockk<APIGatewayProxyRequestEvent>()
-        every {
-            mockEvent.body
-        } returns objectMapper.writeValueAsString(createRequest())
         return mockEvent
     }
 

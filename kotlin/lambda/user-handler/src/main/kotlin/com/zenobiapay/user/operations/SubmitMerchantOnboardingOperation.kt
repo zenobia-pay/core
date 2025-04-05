@@ -30,12 +30,16 @@ class SubmitMerchantOnboardingOperation @Inject constructor(
     private val objectMapper: ObjectMapper,
     private val userDao: UserDao,
     private val orumWrapper: OrumWrapper,
-): Operation() {
+): Operation<SubmitMerchantOnboardingRequest, EmptyApiResponse>() {
+
+    override val inputType = SubmitMerchantOnboardingRequest::class.java
+
     override fun run(
+        request: SubmitMerchantOnboardingRequest,
         input: APIGatewayProxyRequestEvent,
         context: Context,
         userId: String?
-    ): Any {
+    ): EmptyApiResponse {
         userId!!
         val request = objectMapper.readValue(input.body, SubmitMerchantOnboardingRequest::class.java)
 

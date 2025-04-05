@@ -7,7 +7,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 private val logger = KotlinLogging.logger {}
 
 fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserId(): String? {
-    logger.info { "Got authorizer $authorizer" }
+    com.zenobiapay.api.util.logger.info { "Got authorizer $authorizer" }
     return this.authorizer["sub"] as String?
 }
 

@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.zenobiapay.api.model.exception.ServiceQuotaExceededException
 import com.zenobiapay.api.generated.model.CreateM2mCredentials200Response
+import com.zenobiapay.api.model.NoApiBody
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.table.user.dao.UserDao
@@ -14,16 +15,17 @@ import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
-class CreateM2MCredentialsOperation @Inject constructor(private val auth0Wrapper: Auth0Wrapper, private val userDao: UserDao): Operation() {
+class CreateM2MCredentialsOperation @Inject constructor(
+    private val auth0Wrapper: Auth0Wrapper,
+    private val userDao: UserDao
+): Operation<NoApiBody, CreateM2mCredentials200Response>() {
     companion object {
         const val MAX_M2M_CREDENTIALS = 1
     }
 
-    override fun run(
-        input: APIGatewayProxyRequestEvent,
-        context: Context,
-        userId: String?
-    ): Any {
+    override val inputType = NoApiBody::class.java
+
+    override fun run(request: NoApiBody, input: APIGatewayProxyRequestEvent, context: Context, userId: String?): CreateM2mCredentials200Response {
         userId!!
         val (previouslyCreatedCredentials, _) = userDao.listM2MCredentials(userId, null)
         if (previouslyCreatedCredentials.size >= MAX_M2M_CREDENTIALS) {

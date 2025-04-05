@@ -3,6 +3,7 @@ package com.zenobiapay.transfer.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.api.generated.model.CreateTransferRequestRequest
 import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.api.model.exception.InvalidSignatureException
 import com.zenobiapay.orum.OrumWrapper
@@ -42,13 +43,21 @@ class FulfillTransferOperation @Inject constructor(
     private val bankDao: BankDao,
     private val userDao: UserDao,
     private val objectMapper: ObjectMapper,
-) : Operation() {
+) : Operation<FulfillTransferRequest, FulfillTransfer200Response>() {
+
+    override val inputType = FulfillTransferRequest::class.java
+
     private val mixinObjectMapper = lazy {
         objectMapper.copy()
             .addMixIn(FulfillTransferRequest::class.java, FulfillTransferRequestMixin::class.java)
     }
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): FulfillTransfer200Response {
-        val request = objectMapper.readValue(input.body, FulfillTransferRequest::class.java)
+
+    override fun run(
+        request: FulfillTransferRequest,
+        input: APIGatewayProxyRequestEvent,
+        context: Context,
+        userId: String?
+    ): FulfillTransfer200Response {
         val transferRequestId = request.transferRequestId
         val merchantId = request.merchantId
         val bankAccountId = request.bankAccountId

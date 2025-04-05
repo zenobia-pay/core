@@ -35,12 +35,16 @@ class SubmitCustomerOnboardingOperation @Inject constructor(
     private val orumWrapper: OrumWrapper,
     private val auth0Wrapper: Auth0Wrapper,
     private val userDao: UserDao,
-): Operation() {
+): Operation<SubmitCustomerOnboardingRequest, EmptyApiResponse>() {
+
+    override val inputType = SubmitCustomerOnboardingRequest::class.java
+
     override fun run(
+        request: SubmitCustomerOnboardingRequest,
         input: APIGatewayProxyRequestEvent,
         context: Context,
         userId: String?
-    ): Any {
+    ): EmptyApiResponse {
         userId!!
         val request = objectMapper.readValue(input.body, SubmitCustomerOnboardingRequest::class.java)
         val identityVerificationResponse = plaidWrapper.getIdentityVerification(request.identityVerificationId)

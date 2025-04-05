@@ -12,9 +12,14 @@ import com.zenobiapay.table.bank.dao.BankDao
 import com.zenobiapay.table.model.ContinuationToken
 import javax.inject.Inject
 
-class ListBankAccountsOperation @Inject constructor(private val objectMapper: ObjectMapper, private val bankDao: BankDao) : Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any {
-        val request = objectMapper.readValue(input.body, ListBankAccountsRequest::class.java)
+class ListBankAccountsOperation @Inject constructor(
+    private val objectMapper: ObjectMapper,
+    private val bankDao: BankDao
+): Operation<ListBankAccountsRequest, ListBankAccounts200Response>() {
+
+    override val inputType = ListBankAccountsRequest::class.java
+
+    override fun run(request: ListBankAccountsRequest, input: APIGatewayProxyRequestEvent, context: Context, userId: String?): ListBankAccounts200Response {
         context.logger.log("Got request $request")
 
         val (bankItems, continuationToken) = bankDao.listBankAccounts(

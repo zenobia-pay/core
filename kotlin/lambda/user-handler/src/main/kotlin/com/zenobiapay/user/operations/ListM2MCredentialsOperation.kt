@@ -11,12 +11,19 @@ import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.user.model.ListM2mCredentialsRequest
 import javax.inject.Inject
 
-class ListM2MCredentialsOperation @Inject constructor(private val objectMapper: ObjectMapper, private val userDao: UserDao): Operation() {
+class ListM2MCredentialsOperation @Inject constructor(
+    private val objectMapper: ObjectMapper,
+    private val userDao: UserDao
+): Operation<ListM2mCredentialsRequest, ListM2MCredentials200Response>() {
+
+    override val inputType = ListM2mCredentialsRequest::class.java
+
     override fun run(
+        request: ListM2mCredentialsRequest,
         input: APIGatewayProxyRequestEvent,
         context: Context,
         userId: String?
-    ): Any {
+    ): ListM2MCredentials200Response {
         userId!!
         val request = objectMapper.readValue(input.body, ListM2mCredentialsRequest::class.java)
         val (items, continuationToken) = userDao.listM2MCredentials(userId, request.continuationToken)

@@ -7,6 +7,7 @@ import com.plaid.client.model.AccountBase
 import com.plaid.client.model.AccountSubtype
 import com.plaid.client.model.ItemPublicTokenExchangeResponse
 import com.plaid.client.model.NumbersACH
+import com.zenobiapay.api.generated.model.CreateLinkTokenRequest
 import com.zenobiapay.api.model.ApiResponse
 import com.zenobiapay.api.model.EmptyApiResponse
 import com.zenobiapay.table.bank.dao.BankDao
@@ -31,13 +32,14 @@ private val logger = KotlinLogging.logger {}
 class ExchangeTokenOperation @Inject constructor(
     private val plaidWrapper: PlaidWrapper,
     private val orumWrapper: OrumWrapper,
-    private val objectMapper: ObjectMapper,
     private val bankDao: BankDao,
-) : Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): ApiResponse {
+) : Operation<ExchangeTokenRequest, EmptyApiResponse>() {
+
+    override val inputType = ExchangeTokenRequest::class.java
+
+    override fun run(request: ExchangeTokenRequest, input: APIGatewayProxyRequestEvent, context: Context, userId: String?): EmptyApiResponse {
         userId!!
         logger.info { "Got input body ${input.body}" }
-        val request = objectMapper.readValue(input.body, ExchangeTokenRequest::class.java)
 
         if (request.deviceCertificate != null && !isCertificateValid(
                 request.deviceCertificate!!.certificateValue,
@@ -48,7 +50,6 @@ class ExchangeTokenOperation @Inject constructor(
         }
 
         val exchangeResponse = plaidWrapper.exchangeLinkToken(request.linkToken)
-        logger.info { "Got exchange response $exchangeResponse" }
 
         val accountsToAch = plaidWrapper.getZippedAccountsAndAch(exchangeResponse.accessToken)
 

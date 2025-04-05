@@ -19,9 +19,16 @@ class UpdateMerchantConfigOperation @Inject constructor(
     private val bankDao: BankDao,
     private val userDao: UserDao,
     private val objectMapper: ObjectMapper
-) : Operation() {
+) : Operation<UpdateMerchantConfigRequest, EmptyApiResponse>() {
 
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any {
+    override val inputType = UpdateMerchantConfigRequest::class.java
+
+    override fun run(
+        request: UpdateMerchantConfigRequest,
+        input: APIGatewayProxyRequestEvent,
+        context: Context,
+        userId: String?
+    ): EmptyApiResponse {
         val request = objectMapper.readValue(input.body, UpdateMerchantConfigRequest::class.java)
         logger.info { "Got request $request" }
         if (request.bankAccountId != null) {

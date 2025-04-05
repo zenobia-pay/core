@@ -11,9 +11,17 @@ import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.table.transfer.dao.TransferDao
 import javax.inject.Inject
 
-class ListCustomerTransfersOperation @Inject constructor(private val objectMapper: ObjectMapper, private val transferDao: TransferDao) : Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): ListCustomerTransfers200Response {
-        val request = objectMapper.readValue(input.body, ListCustomerTransfersRequest::class.java)
+class ListCustomerTransfersOperation @Inject constructor(
+    private val objectMapper: ObjectMapper,
+    private val transferDao: TransferDao
+) : Operation<ListCustomerTransfersRequest, ListCustomerTransfers200Response>() {
+    override val inputType = ListCustomerTransfersRequest::class.java
+    override fun run(
+        request: ListCustomerTransfersRequest,
+        input: APIGatewayProxyRequestEvent,
+        context: Context,
+        userId: String?
+    ): ListCustomerTransfers200Response {
         val (transfers, continuationToken) = transferDao.listCustomerTransfers(userId!!, request.continuationToken)
         return ListCustomerTransfers200Response()
             .items(

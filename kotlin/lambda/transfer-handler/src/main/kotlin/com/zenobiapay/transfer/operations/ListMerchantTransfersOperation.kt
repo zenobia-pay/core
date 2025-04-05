@@ -11,9 +11,19 @@ import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.transfer.model.ListMerchantTransfersRequest
 import javax.inject.Inject
 
-class ListMerchantTransfersOperation @Inject constructor(private val objectMapper: ObjectMapper, private val transferDao: TransferDao) : Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any {
-        val request = objectMapper.readValue(input.body, ListMerchantTransfersRequest::class.java)
+class ListMerchantTransfersOperation @Inject constructor(
+    private val objectMapper: ObjectMapper,
+    private val transferDao: TransferDao
+) : Operation<ListMerchantTransfersRequest, ListMerchantTransfers200Response>() {
+
+    override val inputType = ListMerchantTransfersRequest::class.java
+
+    override fun run(
+        request: ListMerchantTransfersRequest,
+        input: APIGatewayProxyRequestEvent,
+        context: Context,
+        userId: String?
+    ): ListMerchantTransfers200Response {
         val (merchantTransfers, continuationToken) = transferDao.listMerchantTransfers(userId!!, request.continuationToken)
         return ListMerchantTransfers200Response()
             .items(merchantTransfers.map {
