@@ -25,7 +25,7 @@ resource "auth0_client" "zenobia_app" {
 }
 
 resource "auth0_client_grant" "zenobia_app_client_grant" {
-  client_id = auth0_client.aws_auth0_management_app.id
+  client_id = auth0_client.zenobia_app.id
   audience  = "https://dashboard.zenobiapay.com"
   scopes    = []
 }
@@ -53,14 +53,6 @@ resource "auth0_client_grant" "aws_auth0_management_client_grant" {
   client_id = auth0_client.aws_auth0_management_app.id
   audience  = "https://${var.AUTH0_DOMAIN}/api/v2/"
   scopes    = ["create:clients", "update:clients", "delete:clients", "update:users_app_metadata", "read:users", "create:client_grants"]
-}
-
-resource "auth0_client" "aws_auth0_management_role_app" {
-  name = "Auth0 Role Management App"
-  description     = "Used by Zenobia AWS service to manage auth0 roles"
-  app_type        = "non_interactive"
-  grant_types     = ["client_credentials"]
-  is_first_party  = true
 }
 
 resource "auth0_resource_server" "zenobia_api" {
