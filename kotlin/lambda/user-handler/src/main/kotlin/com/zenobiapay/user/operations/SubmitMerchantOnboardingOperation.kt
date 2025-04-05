@@ -17,15 +17,10 @@ import com.zenobiapay.orum.model.BusinessEntityType
 import com.zenobiapay.orum.model.Contact
 import com.zenobiapay.orum.model.OrumCreateBusinessRequest
 import com.zenobiapay.orum.model.OrumCreateBusinessResponse
-import com.zenobiapay.orum.model.OrumCreatePersonRequest
-import com.zenobiapay.orum.model.Person
 import com.zenobiapay.orum.model.TaxIdType
-import com.zenobiapay.orum.util.generateCustomerOrumId
 import com.zenobiapay.orum.util.generateMerchantOrumId
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.table.user.model.MerchantData
-import com.zenobiapay.user.util.Auth0Wrapper
-import com.zenobiapay.user.util.Auth0Wrapper.Companion.ROLE_KEY
 import com.zenobiapay.table.user.model.UserType as DdbUserType
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
@@ -51,20 +46,13 @@ class SubmitMerchantOnboardingOperation @Inject constructor(
         val email = input.requestContext.getEmail() ?: throw Exception("email not found")
         val merchantId = createMerchant(userId, request, email).business.id
 
-        logger.info { "Adding role ${request.userType} to user $userId"}
-        val role = UserPoolGroup.fromString(request.userType.value)
-        if (role == UserPoolGroup.UNKNOWN) {
-            logger.error { "Could not get role from request's usertype ${request.userType.value}"}
-            throw InvalidRequestException("Unknown role for submit onboarding")
-        }
-        val isAutoApproved = request.userType == UserType.CUSTOMER
         userDao.putUser(
             userId,
             request.firstName,
             request.lastName,
             merchantId,
             DdbUserType.toDdbUserType(UserType.MERCHANT),
-            isAutoApproved,
+            false,
             MerchantData(
                 displayName = request.merchantDisplayName,
             )

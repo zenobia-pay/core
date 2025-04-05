@@ -579,9 +579,7 @@ paths:
               required:
                 - firstName
                 - lastName
-                - userType
                 - merchantDisplayName
-                - userType
                 - legalBusinessName
                 - entityType
                 - taxId
@@ -595,8 +593,6 @@ paths:
                   type: string
                 merchantDisplayName:
                   type: string
-                userType:
-                  $ref: '#/components/schemas/UserType'
                 legalBusinessName:
                   type: string
                 entityType:

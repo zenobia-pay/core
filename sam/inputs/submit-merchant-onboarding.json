@@ -1,0 +1,28 @@
+{
+  "resource": "/submit-merchant-onboarding",
+  "path": "/submit-merchant-onboarding",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"firstName\":\"Teddy\",\"lastName\":\"Li\",\"merchantDisplayName\":\"Teddy Inc\",\"legalBusinessName\":\"Business\",\"entityType\":\"C_CORP\",\"taxId\":\"123456789\",\"taxIdType\":\"EIN\",\"incorporationDate\":\"2025-01-02\",\"address\":{\"address1\":\"add1\",\"address2\":\"address2\",\"city\":\"Macomb\",\"state\":\"IL\",\"country\":\"US\",\"zip5\":\"61455\"}}",
+  "isBase64Encoded": false,
+  "requestContext": {
+    "accountId": "123456789012",
+    "resourceId": "abc123",
+    "stage": "dev",
+    "requestId": "xyz789",
+    "identity": {
+      "sourceIp": "127.0.0.1"
+    },
+    "authorizer": {
+      "principalId": "user123",
+      "sub": "teddy-fake-sub-3",
+      "email": "user@example.com",
+      "role": "admin",
+      "claims": {
+        "scope": "read write"
+      }
+    }
+  }
+}
