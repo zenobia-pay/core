@@ -41,14 +41,11 @@ var provider *jwks.CachingProvider
 
 func init() {
 	domain := os.Getenv("AUTH_DOMAIN")
-	issuer := os.Getenv("ZENOBIA_ISSUER")
+	issuer := "https://" + domain + "/"
 	audience := os.Getenv("AUDIENCE")
 
 	if domain == "" {
 		panic("Did not retrieve env var AUTH_DOMAIN")
-	}
-	if issuer == "" {
-		panic("Did not retrieve env var ZENOBIA_ISSUER")
 	}
 	if audience == "" {
 		panic("Did not retrieve env var AUDIENCE")
@@ -59,11 +56,6 @@ func init() {
 	zenobiaIssuerUrl, err := url.Parse(issuer)
 	if err != nil {
 		panic("Failed to parse the zenobia issuer url " + err.Error())
-	}
-
-	auth0IssuerUrl, err := url.Parse("https://" + domain + "/")
-	if err != nil {
-		panic("Failed to parse the auth0 issuer url " + err.Error())
 	}
 
 	provider = jwks.NewCachingProvider(zenobiaIssuerUrl, 5*time.Minute)
@@ -83,19 +75,6 @@ func init() {
 	if err != nil {
 		panic("Failed to set up the jwt validator " + err.Error())
 	}
-
-	auth0ActionJwtValidator, err = validator.New(
-		provider.KeyFunc,
-		validator.RS256,
-		auth0IssuerUrl.String(),
-		[]string{audience},
-		validator.WithCustomClaims(
-			func() validator.CustomClaims {
-				return &MachineCustomClaims{}
-			},
-		),
-		validator.WithAllowedClockSkew(time.Minute),
-	)
 	if err != nil {
 		panic("Failed to set up the jwt validator " + err.Error())
 	}
@@ -106,15 +85,6 @@ func GetValidatedUserClaims(ctx context.Context, token string) (*validator.Valid
 	claims, err := basicJwtValidator.ValidateToken(ctx, token)
 	if err != nil {
 		println("Validation threw err", err.Error())
-		return nil, err
-	}
-	return getCastClaims(claims)
-}
-
-func GetValidatedAuth0ActionClaims(ctx context.Context, token string) (*validator.ValidatedClaims, error) {
-	claims, err := auth0ActionJwtValidator.ValidateToken(ctx, token)
-	if err != nil {
-		println("Auth0 action validation threw err", err.Error())
 		return nil, err
 	}
 	return getCastClaims(claims)
