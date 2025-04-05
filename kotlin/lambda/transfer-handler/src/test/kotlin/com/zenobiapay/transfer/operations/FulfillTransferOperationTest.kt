@@ -3,12 +3,12 @@ package com.zenobiapay.transfer.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.zenobiapay.api.exception.InvalidSignatureException
-import com.zenobiapay.api.exception.ResourceNotFoundException
-import com.zenobiapay.api.generated.models.CertificateType
-import com.zenobiapay.api.generated.models.FulfillTransferRequest
-import com.zenobiapay.api.generated.models.FulfillTransferRequestSignature
-import com.zenobiapay.api.generated.models.SignatureType
+import com.zenobiapay.api.model.exception.InvalidSignatureException
+import com.zenobiapay.api.model.exception.ResourceNotFoundException
+import com.zenobiapay.api.generated.model.CertificateType
+import com.zenobiapay.api.generated.model.FulfillTransferRequest
+import com.zenobiapay.api.generated.model.FulfillTransferRequestSignature
+import com.zenobiapay.api.generated.model.SignatureType
 import com.zenobiapay.cryptography.util.isSignatureValid
 import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.table.bank.dao.BankDao
@@ -105,16 +105,14 @@ class FulfillTransferOperationTest {
     }
 
     private fun createRequest(): FulfillTransferRequest {
-        return FulfillTransferRequest(
-            TRANSFER_REQUEST_ID,
-            MERCHANT_ID,
-            BANK_ACCOUNT_ID,
-            DEVICE_ID,
-            FulfillTransferRequestSignature(
-                SIGNATURE_TYPE,
-                SIGNATURE
-            )
-        )
+        return FulfillTransferRequest()
+            .transferRequestId(TRANSFER_REQUEST_ID)
+            .merchantId(MERCHANT_ID)
+            .bankAccountId(BANK_ACCOUNT_ID)
+            .deviceId(DEVICE_ID)
+            .signature(FulfillTransferRequestSignature()
+                .signatureType(SIGNATURE_TYPE)
+                .signatureValue(SIGNATURE))
     }
 
     private fun createTransferItem(

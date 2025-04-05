@@ -3,10 +3,10 @@ package com.zenobiapay.user.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.api.exception.ResourceNotFoundException
-import com.zenobiapay.api.generated.models.DeleteM2MCredentialsRequest
+import com.zenobiapay.api.model.exception.ResourceNotFoundException
+import com.zenobiapay.api.generated.model.DeleteM2MCredentialsRequest
 import com.zenobiapay.api.model.EmptyApiResponse
-import com.zenobiapay.api.model.Operation
+import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.user.util.Auth0Wrapper

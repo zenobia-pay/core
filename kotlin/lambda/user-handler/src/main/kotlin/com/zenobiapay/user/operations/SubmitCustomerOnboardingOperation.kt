@@ -5,12 +5,12 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.plaid.client.model.IdentityVerificationGetResponse
 import com.plaid.client.model.IdentityVerificationStatus
-import com.zenobiapay.api.exception.IdentityFailedException
-import com.zenobiapay.api.exception.IdentityNotSuccessfulException
-import com.zenobiapay.api.generated.models.SubmitCustomerOnboardingRequest
-import com.zenobiapay.api.generated.models.UserType
+import com.zenobiapay.api.model.exception.IdentityFailedException
+import com.zenobiapay.api.model.exception.IdentityNotSuccessfulException
+import com.zenobiapay.api.generated.model.SubmitCustomerOnboardingRequest
+import com.zenobiapay.api.generated.model.UserType
 import com.zenobiapay.api.model.EmptyApiResponse
-import com.zenobiapay.api.model.Operation
+import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.util.getEmail
 import com.zenobiapay.orum.OrumException

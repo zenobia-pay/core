@@ -1,6 +1,6 @@
 package com.zenobiapay.api.model.user
 
-import com.zenobiapay.api.generated.models.Location
+import com.zenobiapay.api.generated.model.Location
 
 data class UpdateMerchantConfigRequest(
     val bankAccountId: String?,

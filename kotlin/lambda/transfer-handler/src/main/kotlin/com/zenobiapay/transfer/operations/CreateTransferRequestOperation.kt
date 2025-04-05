@@ -3,11 +3,10 @@ package com.zenobiapay.transfer.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.zenobiapay.api.generated.models.CreateTransferRequest200Response
-import com.zenobiapay.api.generated.models.CreateTransferRequestRequest
-import com.zenobiapay.api.exception.InvalidRequestException
-import com.zenobiapay.api.model.Operation
+import com.zenobiapay.api.generated.model.CreateTransferRequest200Response
+import com.zenobiapay.api.generated.model.CreateTransferRequestRequest
+import com.zenobiapay.api.model.exception.InvalidRequestException
+import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.util.getSubForM2M
 import com.zenobiapay.api.util.getUserRole
@@ -22,7 +21,7 @@ class CreateTransferRequestOperation @Inject constructor(
     private val objectMapper: ObjectMapper,
 ): Operation() {
     override fun run(input: APIGatewayProxyRequestEvent, context: Context, sub: String?): Any {
-        val request = objectMapper.readValue<CreateTransferRequestRequest>(input.body)
+        val request = objectMapper.readValue(input.body, CreateTransferRequestRequest::class.java)
         val userId = when (input.requestContext.getUserRole()) {
             UserPoolGroup.MERCHANT -> sub!!
             UserPoolGroup.MERCHANT_M2M -> input.requestContext.getSubForM2M()
@@ -42,10 +41,9 @@ class CreateTransferRequestOperation @Inject constructor(
             } ?: listOf()
         )
 
-        return CreateTransferRequest200Response(
-            transferRequestId = requestId,
-            merchantId = userId
-        )
+        return CreateTransferRequest200Response()
+            .transferRequestId(requestId)
+            .merchantId(userId)
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {

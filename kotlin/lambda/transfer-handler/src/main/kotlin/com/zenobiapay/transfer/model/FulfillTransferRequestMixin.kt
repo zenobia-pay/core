@@ -2,7 +2,7 @@ package com.zenobiapay.transfer.model
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonPropertyOrder
-import com.zenobiapay.api.generated.models.FulfillTransferRequestSignature
+import com.zenobiapay.api.generated.model.FulfillTransferRequestSignature
 
 @JsonPropertyOrder(alphabetic = true)
 abstract class FulfillTransferRequestMixin {

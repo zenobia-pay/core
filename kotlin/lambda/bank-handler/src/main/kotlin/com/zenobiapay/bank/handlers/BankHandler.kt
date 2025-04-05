@@ -7,7 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.bank.di.DaggerAppComponent
 import com.zenobiapay.bank.operations.CreateLinkTokenOperation
-import com.zenobiapay.api.exception.UnknownPathException
+import com.zenobiapay.api.model.exception.UnknownPathException
 import com.zenobiapay.api.util.ResponseHandler
 import com.zenobiapay.bank.operations.ExchangeTokenOperation
 import com.zenobiapay.bank.operations.ListBankAccountsOperation

@@ -1,11 +1,11 @@
 package com.zenobiapay.table.user.dao
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.api.exception.InvalidRequestException
+import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.table.MAX_LIST_ITEMS
 import com.zenobiapay.table.di.USER_TABLE_NAME
 import com.zenobiapay.table.model.ContinuationToken
-import com.zenobiapay.api.generated.models.Location as ApiLocation
+import com.zenobiapay.api.generated.model.Location as ApiLocation
 import com.zenobiapay.table.user.model.Location
 import com.zenobiapay.table.user.model.M2MCredentialsData
 import com.zenobiapay.table.user.model.M2MCredentialsItem

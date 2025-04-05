@@ -1,8 +1,7 @@
 package com.zenobiapay.cryptography.util
 
-import com.zenobiapay.api.generated.models.CertificateType
-import com.zenobiapay.api.generated.models.SignatureType
-import org.bouncycastle.jce.provider.BouncyCastleProvider
+import com.zenobiapay.api.generated.model.CertificateType
+import com.zenobiapay.api.generated.model.SignatureType
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

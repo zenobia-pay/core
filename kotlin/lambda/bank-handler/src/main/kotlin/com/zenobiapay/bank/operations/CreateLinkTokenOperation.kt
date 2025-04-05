@@ -4,9 +4,9 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.plaid.client.model.Products
-import com.zenobiapay.api.generated.models.CreateLinkToken200Response
-import com.zenobiapay.api.generated.models.CreateLinkTokenRequest
-import com.zenobiapay.api.model.Operation
+import com.zenobiapay.api.generated.model.CreateLinkToken200Response
+import com.zenobiapay.api.generated.model.CreateLinkTokenRequest
+import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.plaid.PlaidWrapper
 import javax.inject.Inject
@@ -17,13 +17,13 @@ class CreateLinkTokenOperation @Inject constructor(private val objectMapper: Obj
         val response = plaidWrapper.createLinkToken(userId!!, listOf(getPlaidProduct(body.product)))
         context.logger.log("Got plaid response $response")
 
-        return CreateLinkToken200Response(linkToken = response.linkToken)
+        return CreateLinkToken200Response().linkToken(response.linkToken)
     }
 
-    private fun getPlaidProduct(product: CreateLinkTokenRequest.Product): Products {
+    private fun getPlaidProduct(product: CreateLinkTokenRequest.ProductEnum): Products {
         return when (product) {
-            CreateLinkTokenRequest.Product.AUTH -> Products.AUTH
-            CreateLinkTokenRequest.Product.IDENTITY_VERIFICATION -> Products.IDENTITY_VERIFICATION
+            CreateLinkTokenRequest.ProductEnum.AUTH -> Products.AUTH
+            CreateLinkTokenRequest.ProductEnum.IDENTITY_VERIFICATION -> Products.IDENTITY_VERIFICATION
         }
     }
 

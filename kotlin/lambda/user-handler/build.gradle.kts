@@ -29,6 +29,7 @@ repositories {
 dependencies {
     api(project(":kotlin:shared"))
     implementation(project(":kotlin:shared:api"))
+    implementation(project(":kotlin:shared:api:model"))
     implementation(project(":kotlin:shared:table"))
     implementation(project(":kotlin:shared:orum"))
     implementation(project(":kotlin:shared:plaid"))

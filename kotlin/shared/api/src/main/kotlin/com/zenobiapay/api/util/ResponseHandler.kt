@@ -4,13 +4,13 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.api.exception.ResourceNotFoundException
-import com.zenobiapay.api.exception.ServiceQuotaExceededException
-import com.zenobiapay.api.exception.UnauthorizedException
-import com.zenobiapay.api.exception.UnknownPathException
-import com.zenobiapay.api.exception.ZenobiaExternalException
-import com.zenobiapay.api.generated.models.ErrorResponse
-import com.zenobiapay.api.model.Operation
+import com.zenobiapay.api.model.exception.ResourceNotFoundException
+import com.zenobiapay.api.model.exception.ServiceQuotaExceededException
+import com.zenobiapay.api.model.exception.UnauthorizedException
+import com.zenobiapay.api.model.exception.UnknownPathException
+import com.zenobiapay.api.model.exception.ZenobiaExternalException
+import com.zenobiapay.api.generated.model.ErrorResponse
+import com.zenobiapay.api.operation.Operation
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.logging.log4j.ThreadContext
 import javax.inject.Inject
@@ -61,7 +61,7 @@ class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper
             .withHeaders(getCorsHeaders())
             .withBody(
                 objectMapper.writeValueAsString(
-                    ErrorResponse(message = status, error = getErrorString(errorCode))
+                    ErrorResponse().error(getErrorString(errorCode)).message(status)
                 )
             )
     }

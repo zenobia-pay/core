@@ -10,9 +10,9 @@ import com.plaid.client.model.NumbersACH
 import com.zenobiapay.api.model.ApiResponse
 import com.zenobiapay.api.model.EmptyApiResponse
 import com.zenobiapay.table.bank.dao.BankDao
-import com.zenobiapay.api.exception.InvalidRequestException
-import com.zenobiapay.api.generated.models.ExchangeTokenRequest
-import com.zenobiapay.api.model.Operation
+import com.zenobiapay.api.model.exception.InvalidRequestException
+import com.zenobiapay.api.generated.model.ExchangeTokenRequest
+import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.util.getUserRole
 import com.zenobiapay.cryptography.util.isCertificateValid

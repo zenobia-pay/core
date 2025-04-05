@@ -2,21 +2,20 @@ package com.zenobiapay.transfer.operations
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
-import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.api.exception.InvalidRequestException
-import com.zenobiapay.api.exception.InvalidSignatureException
+import com.zenobiapay.api.model.exception.InvalidRequestException
+import com.zenobiapay.api.model.exception.InvalidSignatureException
 import com.zenobiapay.orum.OrumWrapper
-import com.zenobiapay.api.generated.models.FulfillTransfer200Response
-import com.zenobiapay.api.generated.models.FulfillTransferRequest
+import com.zenobiapay.api.generated.model.FulfillTransfer200Response
+import com.zenobiapay.api.generated.model.FulfillTransferRequest
 import com.zenobiapay.table.bank.dao.BankDao
 import com.zenobiapay.orum.model.OrumCreateTransferRequest
 import com.zenobiapay.orum.model.OrumCreateTransferResponse
 import com.zenobiapay.orum.model.TransferParticipant
-import com.zenobiapay.api.exception.ResourceNotFoundException
-import com.zenobiapay.api.exception.TransferFailedException
-import com.zenobiapay.api.exception.TransferStatusException
-import com.zenobiapay.api.model.Operation
+import com.zenobiapay.api.model.exception.ResourceNotFoundException
+import com.zenobiapay.api.model.exception.TransferFailedException
+import com.zenobiapay.api.model.exception.TransferStatusException
+import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.cryptography.util.isSignatureValid
 import com.zenobiapay.orum.util.WaiterFailedException
@@ -97,14 +96,13 @@ class FulfillTransferOperation @Inject constructor(
             webhookUrl = merchantItem.data.merchantData?.webhookUrl
         )
 
-        return FulfillTransfer200Response(
-            amount = transferAmount,
-            statementItems = statementItems,
-            merchant = com.zenobiapay.api.generated.models.PaymentParticipantIdentity(
-                id = debtorId.id,
-                name = debtorId.name
+        return FulfillTransfer200Response()
+            .amount(transferAmount)
+            .statementItems(statementItems)
+            .merchant(com.zenobiapay.api.generated.model.PaymentParticipantIdentity()
+                .id(debtorId.id)
+                .name(debtorId.name)
             )
-        )
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {

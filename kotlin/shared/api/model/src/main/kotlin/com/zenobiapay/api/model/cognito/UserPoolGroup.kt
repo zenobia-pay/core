@@ -8,7 +8,7 @@ enum class UserPoolGroup(val value: String?) {
 
     companion object {
         fun fromString(s: String?): UserPoolGroup {
-            return entries.find { it.value == s } ?: UNKNOWN
+            return values().find { it.value == s } ?: UNKNOWN
         }
     }
 }

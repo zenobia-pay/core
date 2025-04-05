@@ -3,10 +3,10 @@ package com.zenobiapay.transfer.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.api.exception.ResourceNotFoundException
+import com.zenobiapay.api.model.exception.ResourceNotFoundException
 import com.zenobiapay.api.model.transfer.GetTransferRequest
-import com.zenobiapay.api.generated.models.GetMerchantTransfer200Response
-import com.zenobiapay.api.model.Operation
+import com.zenobiapay.api.generated.model.GetMerchantTransfer200Response
+import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.table.transfer.dao.TransferDao
 import javax.inject.Inject
@@ -19,13 +19,12 @@ class GetMerchantTransferOperation @Inject constructor(private val objectMapper:
             merchantId = userId!!,
             transferRequestId = request.id
         ) ?: throw ResourceNotFoundException("TRANSFER")
-        return GetMerchantTransfer200Response(
-            transferRequestId = request.id,
-            status = transferItem.status.toApiTransferStatus(),
-            merchant = transferItem.data?.merchant?.toApiParticipantIdentity(),
-            statementItems = transferItem.data?.statementItems?.map { it.toApiStatementItem() } ?: listOf(),
-            statusMessage = transferItem.data?.statusMessage
-        )
+        return GetMerchantTransfer200Response()
+            .transferRequestId(request.id)
+            .status(transferItem.status.toApiTransferStatus())
+            .merchant(transferItem.data?.merchant?.toApiParticipantIdentity())
+            .statementItems(transferItem.data?.statementItems?.map { it.toApiStatementItem() } ?: listOf())
+            .statusMessage(transferItem.data?.statusMessage)
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {

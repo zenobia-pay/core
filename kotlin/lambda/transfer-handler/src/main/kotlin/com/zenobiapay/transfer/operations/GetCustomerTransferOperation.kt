@@ -4,9 +4,9 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.model.transfer.GetTransferRequest
-import com.zenobiapay.api.model.Operation
+import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
-import com.zenobiapay.api.exception.ResourceNotFoundException
+import com.zenobiapay.api.model.exception.ResourceNotFoundException
 import com.zenobiapay.table.transfer.dao.TransferDao
 import javax.inject.Inject
 

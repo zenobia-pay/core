@@ -3,10 +3,10 @@ package com.zenobiapay.bank.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.api.generated.models.ListBankAccounts200Response
-import com.zenobiapay.api.generated.models.ListBankAccounts200ResponseItemsInner
-import com.zenobiapay.api.generated.models.ListBankAccountsRequest
-import com.zenobiapay.api.model.Operation
+import com.zenobiapay.api.generated.model.ListBankAccounts200Response
+import com.zenobiapay.api.generated.model.ListBankAccounts200ResponseItemsInner
+import com.zenobiapay.api.generated.model.ListBankAccountsRequest
+import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.table.bank.dao.BankDao
 import com.zenobiapay.table.model.ContinuationToken
@@ -23,15 +23,13 @@ class ListBankAccountsOperation @Inject constructor(private val objectMapper: Ob
             request.continuationToken?.let { ContinuationToken.decodeToken(it, objectMapper) }
         )
         context.logger.log("Got bank items $bankItems")
-        return ListBankAccounts200Response(
-            items = bankItems.map {
-                ListBankAccounts200ResponseItemsInner(
-                    bankAccountId = it.data.bankAccountId,
-                    bankAccountName = it.data.bankAccountName
-                )
-            },
-            continuationToken = continuationToken?.encodeToken(objectMapper)
-        )
+        return ListBankAccounts200Response().items(
+            bankItems.map {
+                ListBankAccounts200ResponseItemsInner()
+                    .bankAccountId(it.data.bankAccountId)
+                    .bankAccountName(it.data.bankAccountName)
+            }
+        ).continuationToken(continuationToken?.encodeToken(objectMapper))
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {

@@ -26,7 +26,7 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":kotlin:shared:api"))
+    implementation(project(":kotlin:shared:api:model"))
     implementation(libs.bouncycastle.bcpkix)
     implementation(libs.bouncycastle.bcprov)
     api(libs.kotlin.stdlib)

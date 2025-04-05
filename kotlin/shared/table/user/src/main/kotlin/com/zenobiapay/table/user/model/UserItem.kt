@@ -1,7 +1,7 @@
 package com.zenobiapay.table.user.model
 
-import com.zenobiapay.api.generated.models.Location as ApiLocation
-import com.zenobiapay.api.generated.models.UserType as ApiUserType
+import com.zenobiapay.api.generated.model.Location as ApiLocation
+import com.zenobiapay.api.generated.model.UserType as ApiUserType
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey

@@ -1,3 +1,3 @@
-package com.zenobiapay.api.exception
+package com.zenobiapay.api.model.exception
 
 class TransferStatusException(message: String) : ZenobiaExternalException(message)

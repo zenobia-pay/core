@@ -4,6 +4,7 @@ rootProject.name = "zenobiapay-backend"
 include(
     "kotlin:shared",
     "kotlin:shared:api",
+    "kotlin:shared:api:model",
     "kotlin:shared:orum",
     "kotlin:shared:plaid",
     "kotlin:shared:table",
@@ -16,5 +17,4 @@ include(
     "kotlin:lambda:user-handler",
     "kotlin:lambda:payout-handler",
     "kotlin:lambda:transfer-event-handler",
-    "kotlin:lambda:m2m-handler"
 )

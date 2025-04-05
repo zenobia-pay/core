@@ -2,7 +2,7 @@ package com.zenobiapay.transfertableevent.util
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.api.generated.models.TransferStatus
+import com.zenobiapay.api.generated.model.TransferStatus
 import com.zenobiapay.transfertableevent.model.TransferWebhookBody
 import io.github.oshai.kotlinlogging.KotlinLogging
 import okhttp3.OkHttpClient

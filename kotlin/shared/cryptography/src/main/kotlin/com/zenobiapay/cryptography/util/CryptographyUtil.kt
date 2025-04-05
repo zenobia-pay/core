@@ -1,7 +1,7 @@
 package com.zenobiapay.cryptography.util
 
-import com.zenobiapay.api.generated.models.CertificateType
-import com.zenobiapay.api.generated.models.SignatureType
+import com.zenobiapay.api.generated.model.CertificateType
+import com.zenobiapay.api.generated.model.SignatureType
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.jce.provider.BouncyCastleProvider

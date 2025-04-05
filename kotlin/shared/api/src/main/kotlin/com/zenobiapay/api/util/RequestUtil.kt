@@ -1,7 +1,6 @@
 package com.zenobiapay.api.util
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
-import com.zenobiapay.api.generated.models.UserType
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import io.github.oshai.kotlinlogging.KotlinLogging
 

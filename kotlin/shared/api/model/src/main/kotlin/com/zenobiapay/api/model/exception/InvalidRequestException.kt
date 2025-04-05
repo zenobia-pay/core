@@ -1,3 +1,3 @@
-package com.zenobiapay.api.exception
+package com.zenobiapay.api.model.exception
 
 class InvalidRequestException(message: String) : ZenobiaExternalException(message)
