@@ -35,12 +35,6 @@ resource "auth0_client_credentials" "zenobia_app_credentials" {
   authentication_method = "none"
 }
 
-resource "auth0_client_grant" "auth0_action_client_grant" {
-  client_id = auth0_client.auth0_action_app.client_id
-  audience  = auth0_resource_server.zenobia_api.identifier
-  scopes = []
-}
-
 resource "auth0_client" "aws_auth0_management_app" {
   name            = "Auth0 M2M Management App"
   description     = "Used by Zenobia AWS service to manage client credentials for merchants"
