@@ -3,6 +3,7 @@ package com.zenobiapay.transfertableevent.logic
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent
 import com.zenobiapay.table.transfer.model.TransferItem
 import com.zenobiapay.transfertableevent.util.WebhookHandler
+import com.zenobiapay.webhook.util.isValidWebhook
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 
@@ -32,6 +33,10 @@ class TransferTableEventLogic @Inject constructor(private val webhookHandler: We
             val requestId = newItem.requestId
             if (newItem.transferFulfillId != null && webhookUrl != null) {
                 logger.info { "Sending status $status for request id $requestId to webhook $webhookUrl" }
+                if (!isValidWebhook(webhookUrl)) {
+                    logger.warn { "Invalid webhook attempted to publish. Skipping" }
+                    return
+                }
                 webhookHandler.sendTransferStatus(
                     webhookUrl,
                     newItem.data?.merchant?.id!!,

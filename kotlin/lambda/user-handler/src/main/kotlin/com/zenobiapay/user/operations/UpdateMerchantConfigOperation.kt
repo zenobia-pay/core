@@ -9,7 +9,9 @@ import com.zenobiapay.table.bank.dao.BankDao
 import com.zenobiapay.api.model.exception.ResourceNotFoundException
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
+import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.table.user.dao.UserDao
+import com.zenobiapay.webhook.util.isValidWebhook
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 
@@ -35,6 +37,13 @@ class UpdateMerchantConfigOperation @Inject constructor(
             // Validate bank id exists
             logger.info { "Fetching bank account ${request.bankAccountId}" }
             bankDao.getBankAccount(userId!!, null, request.bankAccountId!!) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
+        }
+        if (request.webhookUrl != null) {
+            logger.info { "validating webhook url ${request.webhookUrl}" }
+            if (!isValidWebhook(request.webhookUrl)) {
+                logger.info { "Got invalid webhook ${request.webhookUrl}. Rejecting call" }
+                throw InvalidRequestException("Invalid webhook")
+            }
         }
         userDao.updateMerchant(
             userId!!,

@@ -9,6 +9,8 @@ import com.zenobiapay.api.generated.model.CreateLinkTokenRequest
 import com.zenobiapay.api.model.NoApiBody
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
+import com.zenobiapay.api.model.exception.UnauthorizedException
+import com.zenobiapay.api.util.getUserRole
 import com.zenobiapay.plaid.PlaidWrapper
 import javax.inject.Inject
 
@@ -19,6 +21,11 @@ class CreateLinkTokenOperation @Inject constructor(
     override val inputType = CreateLinkTokenRequest::class.java
 
     override fun run(request: CreateLinkTokenRequest, input: APIGatewayProxyRequestEvent, context: Context, userId: String?): CreateLinkToken200Response {
+        if (input.requestContext.getUserRole() == UserPoolGroup.UNKNOWN &&
+            request.product != CreateLinkTokenRequest.ProductEnum.IDENTITY_VERIFICATION) {
+            throw UnauthorizedException()
+        }
+
         val response = plaidWrapper.createLinkToken(userId!!, listOf(getPlaidProduct(request.product)))
         context.logger.log("Got plaid response $response")
 
@@ -33,6 +40,6 @@ class CreateLinkTokenOperation @Inject constructor(
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {
-        return listOf(UserPoolGroup.CUSTOMER, UserPoolGroup.MERCHANT)
+        return listOf(UserPoolGroup.UNKNOWN, UserPoolGroup.CUSTOMER, UserPoolGroup.MERCHANT)
     }
 }

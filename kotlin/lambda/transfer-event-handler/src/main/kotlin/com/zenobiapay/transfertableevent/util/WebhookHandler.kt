@@ -41,7 +41,7 @@ class WebhookHandler @Inject constructor(
         val mapBody = objectMapper.convertValue(webhookBody, object: TypeReference<Map<String, Any?>>() {})
         val signature = jwtUtil.signJwtWithKms(mapBody, userId)
         logger.info { "Sending webhook to url $webhookUrl with body $body" }
-        val request = Request.Builder() // TODO: add authentication headers
+        val request = Request.Builder()
             .url(webhookUrl)
             .post(body.toRequestBody())
             .header("Authorization", "Bearer $signature")

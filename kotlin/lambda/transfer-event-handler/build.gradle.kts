@@ -28,6 +28,7 @@ repositories {
 
 dependencies {
     api(project(":kotlin:shared"))
+    api(project(":kotlin:shared:webhook"))
     implementation(project(":kotlin:shared:api:model"))
     implementation(project(":kotlin:shared:table"))
     implementation(project(":kotlin:shared:table:transfer"))

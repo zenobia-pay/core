@@ -1,5 +1,9 @@
 import org.gradle.kotlin.dsl.project
 
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
+}
+
 rootProject.name = "zenobiapay-backend"
 include(
     "kotlin:shared",
@@ -8,6 +12,7 @@ include(
     "kotlin:shared:orum",
     "kotlin:shared:plaid",
     "kotlin:shared:table",
+    "kotlin:shared:webhook",
     "kotlin:shared:cryptography",
     "kotlin:shared:table:bank",
     "kotlin:shared:table:transfer",
