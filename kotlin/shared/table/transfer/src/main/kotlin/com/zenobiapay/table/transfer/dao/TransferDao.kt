@@ -69,14 +69,14 @@ class TransferDao @Inject constructor(
 
     fun updateTransferRequestInFlight(
         transferItem: TransferItem
-    ) {
+    ): TransferItem {
         val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
             .item(transferItem.copy(
                 status = TransferStatus.IN_FLIGHT,
             ))
             .build()
 
-        transferTable.updateItem(request)
+        return transferTable.updateItem(request)
     }
 
     fun updateTransferRequestSuccess(

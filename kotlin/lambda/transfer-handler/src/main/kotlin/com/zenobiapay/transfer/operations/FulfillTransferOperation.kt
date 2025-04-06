@@ -62,7 +62,7 @@ class FulfillTransferOperation @Inject constructor(
         val bankAccountId = request.bankAccountId
 
         val date = LocalDate.now(ZoneOffset.UTC).also { logger.info { "Using date $it" } }
-        val transferRequestItem = transferDao.getMerchantTransfer(merchantId = merchantId, transferRequestId = transferRequestId)
+        var transferRequestItem = transferDao.getMerchantTransfer(merchantId = merchantId, transferRequestId = transferRequestId)
             ?: throw ResourceNotFoundException("TRANSFER")
         if (transferRequestItem.status != TransferStatus.NOT_STARTED) {
             throw TransferStatusException("Transfer status is no longer in NOT_STARTED state.")
@@ -86,7 +86,8 @@ class FulfillTransferOperation @Inject constructor(
         )
         val fulfillRequestId = input.requestContext.requestId
 
-        transferDao.updateTransferRequestInFlight(transferRequestItem)
+        transferRequestItem = transferDao.updateTransferRequestInFlight(transferRequestItem)
+        logger.info { "Successfully set request to IN_FLIGHT" }
         val fulfillTimestamp = Instant.now()
         transferFunds(
             transferRequestId,
@@ -95,6 +96,7 @@ class FulfillTransferOperation @Inject constructor(
         )
 
         transferDao.addPayoutItemAmount(debtorId.id, transferAmount, date)
+        logger.info { "Added payout item" }
         val statementItems = transferRequestData.statementItems.map { it.toApiStatementItem() }
         transferDao.updateTransferRequestSuccess(
             transferItem = transferRequestItem,
@@ -107,6 +109,7 @@ class FulfillTransferOperation @Inject constructor(
                 signature = request.signature.signatureValue
             ),
         )
+        logger.info { "Updated transfer request" }
 
         return FulfillTransfer200Response()
             .amount(transferAmount)
