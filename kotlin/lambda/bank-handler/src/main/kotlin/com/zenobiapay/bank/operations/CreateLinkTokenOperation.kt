@@ -26,7 +26,7 @@ class CreateLinkTokenOperation @Inject constructor(
             throw UnauthorizedException()
         }
 
-        val response = plaidWrapper.createLinkToken(userId!!, listOf(getPlaidProduct(request.product)))
+        val response = plaidWrapper.createLinkToken(userId!!, getPlaidProduct(request.product))
         context.logger.log("Got plaid response $response")
 
         return CreateLinkToken200Response().linkToken(response.linkToken)
