@@ -28,6 +28,9 @@ Parameters:
   OrumIpAddresses:
     Type: String
     Description: Valid orum ip addresses to accept requests from. Comma separated.
+  OrumSlackWebhook:
+    Type: String
+    Description: Slack webhook for orum channel
 
 Resources:
   VpcStack:
@@ -64,6 +67,7 @@ Resources:
         Auth0Domain: !Ref Auth0Domain
         OrumPublicCertificate: !Ref OrumPublicCertificate
         OrumIpAddresses: !Ref OrumIpAddresses
+        OrumSlackWebhook: !Ref OrumSlackWebhook
 
   PayoutStack:
     Type: AWS::CloudFormation::Stack

@@ -56,6 +56,9 @@ Parameters:
   OrumIpAddresses:
     Type: String
     Description: Valid orum ip addresses to accept requests from. Comma separated.
+  OrumSlackWebhook:
+    Type: String
+    Description: Slack webhook for orum channel
 
 Resources:
   ZenobiaApi:
@@ -1295,6 +1298,7 @@ Resources:
       Environment:
         Variables:
           ORUM_PUBLIC_CERTIFICATE: !Ref OrumPublicCertificate
+          ORUM_SLACK_WEBHOOK: !Ref OrumSlackWebhook
       Policies:
         - AWSLambdaVPCAccessExecutionRole
       Events:
