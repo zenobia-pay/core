@@ -10,6 +10,7 @@ import com.zenobiapay.api.model.EmptyApiResponse
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.util.getEmail
+import com.zenobiapay.orum.OrumException
 import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.orum.model.Address
 import com.zenobiapay.orum.model.BusinessEntityType
@@ -47,7 +48,15 @@ class SubmitMerchantOnboardingOperation @Inject constructor(
             throw InvalidRequestException("User has already onboarded")
         }
         val email = input.requestContext.getEmail() ?: throw Exception("email not found")
-        val merchantId = createMerchant(userId, request, email).business.id
+        val merchantId = try {
+            createMerchant(userId, request, email).business.id
+        } catch (e: OrumException) {
+            if (e.isInvalidIncorporationDate()) {
+                throw InvalidRequestException("Invalid incorporation date")
+            } else {
+                throw e
+            }
+        }
 
         userDao.putUser(
             userId,

@@ -60,7 +60,9 @@ openApiGenerate {
         mapOf(
             "library" to "native",
             "useBeanValidation" to "true",
-            "useJakartaEe" to "true"
+            "useJakartaEe" to "true",
+            "handleUnknownEnumValues" to "true",
+            "useTags" to "true"
         )
     )
 }

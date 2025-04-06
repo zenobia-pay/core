@@ -28,6 +28,10 @@ class OrumException(val errorCode: Int, override val message: String) : Exceptio
     fun isCreatePersonAlreadyExistsException(): Boolean {
         return errorCode == 400 && message.contains("duplicate_customer_reference_id")
     }
+
+    fun isInvalidIncorporationDate(): Boolean {
+        return errorCode == 400 && message.contains("invalid_incorporation_date")
+    }
 }
 
 class OrumWrapper(

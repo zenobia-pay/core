@@ -3,8 +3,8 @@ package com.zenobiapay.user.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.api.generated.model.UpdateMerchantConfigRequest
 import com.zenobiapay.api.model.EmptyApiResponse
-import com.zenobiapay.api.model.user.UpdateMerchantConfigRequest
 import com.zenobiapay.table.bank.dao.BankDao
 import com.zenobiapay.api.model.exception.ResourceNotFoundException
 import com.zenobiapay.api.operation.Operation
@@ -42,7 +42,7 @@ class UpdateMerchantConfigOperation @Inject constructor(
             request.merchantDisplayName,
             request.merchantDescription,
             request.merchantLocation,
-            request.webhookUrl
+            request.webhookUrl?.toString(),
         )
         return EmptyApiResponse()
     }

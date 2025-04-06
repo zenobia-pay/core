@@ -179,7 +179,7 @@ class TransferDao @Inject constructor(
         return if (page == null) {
             listOf<TransferItem>() to null
         } else {
-            page.items() to ContinuationToken(page.lastEvaluatedKey())
+            page.items() to page.lastEvaluatedKey()?.let { ContinuationToken(page.lastEvaluatedKey()) }
         }.also {
             logger.info { "Got ${it.first.size} items and continuation token ${it.second}" }
         }

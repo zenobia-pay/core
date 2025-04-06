@@ -56,13 +56,18 @@ components:
       properties:
         name:
           type: string
+          maxLength: 255
+          minLength: 1
         amount:
           type: integer
+          minimum: 1
     Location:
       type: object
       properties:
         address:
           type: string
+          maxLength: 255
+          minLength: 1
         latitude:
           type: number
         longitude:
@@ -87,17 +92,22 @@ components:
       properties:
         address1:
           type: string
+          maxLength: 255
         address2:
           type: string
+          maxLength: 255
         city:
           type: string
+          maxLength: 255
         state:
           type: string
+          maxLength: 255
         country:
           type: string
           enum: [US]
         zip5:
           type: string
+          pattern: '^\d{5}$'
 x-amazon-apigateway-request-validators:
   basic:
     validateRequestParameters: true
@@ -149,15 +159,18 @@ paths:
               properties:
                 linkToken:
                   type: string
+                  maxLength: 255
                 deviceId:
                   type: string
+                  maxLength: 255
                 deviceCertificate:
                   type: object
                   properties:
                     certificateType:
                       $ref: "#/components/schemas/CertificateType"
-                    certificateValue: # in base64
+                    certificateValue:
                       type: string
+                      maxLength: 3000
                   required:
                     - certificateType
                     - certificateValue
@@ -191,8 +204,11 @@ paths:
               properties:
                 deviceId:
                   type: string
+                  maxLength: 255
+                  minLength: 1
                 continuationToken:
                   type: string
+                  maxLength: 255
       responses:
         '200':
           description: "Successful response"
@@ -288,18 +304,23 @@ paths:
               properties:
                 transferRequestId:
                   type: string
+                  maxLength: 255
                 merchantId:
                   type: string
+                  maxLength: 255
                 bankAccountId:
                   type: string
+                  maxLength: 255
                 deviceId:
                   type: string
+                  maxLength: 255
                 signature:
                   type: object
                   properties:
                     signatureType:
                       $ref: "#/components/schemas/SignatureType"
                     signatureValue:
+                      maxLength: 1000
                       type: string
                   required:
                     - signatureType
@@ -314,8 +335,6 @@ paths:
                 properties:
                   amount:
                     type: integer
-                  merchant:
-                    $ref: "#/components/schemas/PaymentParticipantIdentity"
                   statementItems:
                     type: array
                     items:
@@ -342,6 +361,8 @@ paths:
           required: true
           schema:
             type: string
+            minLength: 1
+            maxLength: 256
       responses:
         '200':
           description: "Successful response"
@@ -384,6 +405,8 @@ paths:
           required: true
           schema:
             type: string
+            minLength: 1
+            maxLength: 256
       responses:
         '200':
           description: "Successful response"
@@ -428,6 +451,8 @@ paths:
               properties:
                 continuationToken:
                   type: string
+                  minLength: 1
+                  maxLength: 256
       responses:
         '200':
           description: "Successful response"
@@ -475,6 +500,8 @@ paths:
               properties:
                 continuationToken:
                   type: string
+                  minLength: 1
+                  maxLength: 256
       responses:
         '200':
           description: "Successful response"
@@ -555,12 +582,20 @@ paths:
               properties:
                 bankAccountId:
                   type: string
+                  minLength: 1
+                  maxLength: 256
                 merchantDisplayName:
                   type: string
+                  minLength: 1
+                  maxLength: 256
                 merchantDescription:
                   type: string
+                  minLength: 1
+                  maxLength: 256
                 webhookUrl:
                   type: string
+                  pattern: '^https://.*$'
+                  maxLength: 1000
                 merchantLocation:
                   $ref: "#/components/schemas/Location"
       responses:
@@ -593,6 +628,8 @@ paths:
               properties:
                 identityVerificationId:
                   type: string
+                  minLength: 1
+                  maxLength: 256
       responses:
         '200':
           description: "Successful response"
@@ -631,12 +668,20 @@ paths:
               properties:
                 firstName:
                   type: string
+                  minLength: 1
+                  maxLength: 256
                 lastName:
                   type: string
+                  minLength: 1
+                  maxLength: 256
                 merchantDisplayName:
                   type: string
+                  minLength: 1
+                  maxLength: 256
                 legalBusinessName:
                   type: string
+                  minLength: 1
+                  maxLength: 256
                 entityType:
                   type: string
                   enum:
@@ -746,6 +791,8 @@ paths:
               properties:
                 continuationToken:
                   type: string
+                  minLength: 1
+                  maxLength: 256
       responses:
         '200':
           description: "Successful response"
@@ -790,6 +837,8 @@ paths:
               properties:
                 clientId:
                   type: string
+                  minLength: 1
+                  maxLength: 256
       responses:
         '200':
           description: "Successful response"

@@ -4,20 +4,29 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.exc.InvalidFormatException
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
+import com.fasterxml.jackson.databind.exc.ValueInstantiationException
 import com.zenobiapay.api.model.exception.ResourceNotFoundException
 import com.zenobiapay.api.model.exception.ServiceQuotaExceededException
 import com.zenobiapay.api.model.exception.UnauthorizedException
 import com.zenobiapay.api.model.exception.UnknownPathException
 import com.zenobiapay.api.model.exception.ZenobiaExternalException
 import com.zenobiapay.api.generated.model.ErrorResponse
+import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.api.operation.Operation
 import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.validation.Validation
+import jakarta.validation.ValidationException
+import jakarta.validation.Validator
 import org.apache.logging.log4j.ThreadContext
 import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
 class ResponseHandler @Inject constructor(val objectMapper: ObjectMapper) {
+    val validator: Validator = Validation.buildDefaultValidatorFactory().validator
+
     fun <I, O> returnApiGwResponse(operation: Operation<I, O>, input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
         return wrapOperation {
             val userId = input.requestContext.getUserId()
@@ -29,7 +38,20 @@ class ResponseHandler @Inject constructor(val objectMapper: ObjectMapper) {
                 throw UnauthorizedException()
             }
             // Read empty map if no body is provided. Should be cast to NoApiBody class
-            val request = objectMapper.readValue(input.body ?: "{}", operation.inputType)
+            val request = try {
+                objectMapper.readValue(input.body ?: "{}", operation.inputType)
+            } catch (e: ValueInstantiationException) {
+                logger.error(e) { "Failed to read body (enum?), throwing validation exception"}
+                throw InvalidRequestException("Invalid input")
+            } catch (e: UnrecognizedPropertyException) {
+                logger.error(e) { "Unrecognized property provided"}
+                throw InvalidRequestException("Unrecognized property provided")
+            }
+
+            val violations = validator.validate(request)
+            if (violations.isNotEmpty()) {
+                throw InvalidRequestException("${violations.first().propertyPath} ${violations.first().message}")
+            }
             operation.run(request, input, context, userId)
         }
     }

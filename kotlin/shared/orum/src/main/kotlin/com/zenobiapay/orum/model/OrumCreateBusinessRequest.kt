@@ -28,7 +28,7 @@ enum class BusinessEntityType(val value: String) {
     SOLE_PROPRIETORSHIP("sole_proprietorship"),
     PARTNERSHIP("partnership"),
     LLP("limited_liability_partnership"),
-    LLC("limited_liability_corporation"),
+    LLC("limited_liability_company"),
     C_CORP("c_corporation"),
     S_CORP("s_corporation"),
     B_CORP("b_corporation"),

@@ -83,8 +83,7 @@ class UserDao @Inject constructor(
         merchantLocation: ApiLocation?,
         webhookUrl: String?
     ) {
-        // TODO: use ddb instead to handle null values
-        val currentMerchantItem = getUserItem(merchantId) ?: throw InvalidRequestException("")
+        val currentMerchantItem = getUserItem(merchantId) ?: throw InvalidRequestException("User has not submitted onboarding")
         val merchantData = currentMerchantItem.data.merchantData
         val location = if (merchantLocation != null) {
             Location.fromApiLocation(merchantLocation)
