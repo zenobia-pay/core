@@ -10,9 +10,6 @@ private val blockedSubnets = listOf(
     SubnetUtils("127.0.0.0/8"),          // Loopback
     SubnetUtils("169.254.169.254/32"),   // AWS metadata IP
     SubnetUtils("169.254.0.0/16"),       // Link-local
-    SubnetUtils("fc00::/7"),             // IPv6 private
-    SubnetUtils("fe80::/10"),            // IPv6 link-local
-    SubnetUtils("::1/128")               // IPv6 loopback
 ).onEach { it.isInclusiveHostCount = true }
 
 fun isValidWebhook(webhookUrl: String): Boolean {
