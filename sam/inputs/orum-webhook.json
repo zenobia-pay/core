@@ -1,0 +1,23 @@
+{
+  "resource": "/orum-webhook",
+  "path": "/orum-webhook",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json",
+    "Signature": "ffAqzAVs2CUvHEkWGaunok2SQzlZTxH+uuv3pEZEryP5n4zfqfi0/foBWWpyYMccreI0p3cA+h9mEnJHsHn8OWxc5Nt/j0gNWaQiax2dNMbLq26InC9T0gGjb2tVdHJSYeqGPscYXdtGhuLtbLPpx3QN9MqphkxnRDjNil+vFxZZD055MixE81mre0IWrZM0SwkRvtzmozGXCsvYJKv7RSEodpO0ryIMJDr3BBf4PA+eVs3f63TZ8Q99bobHpi+CS2OYYSCebeSoLg7AlQwneKm9gmPYI2zMaO1/8SM+7czizpPfWeuYwPXtgfR4u65Il8DCdjyQXfvwJJ6KAZXxrw=="
+  },
+  "body": "{\"event_id\":\"cdff67be-5cd9-4b17-8a79-31ddc1070768\",\"event_type\":\"person_created\",\"created_at\":\"2025-04-06T18:38:46.113Z\",\"event_data\":{\"person\":{\"customer_reference_id\":\"1234\",\"first_name\":\"Te\",\"last_name\":\"Li\",\"date_of_birth\":\"2000-02-02\",\"addresses\":[{\"address1\":\"123\",\"city\":\"Macomb\",\"state\":\"IL\",\"country\":\"US\",\"zip5\":\"12345\"}],\"contacts\":[{\"value\":\"aoeu@gmail.com\"}]}}}\n",
+  "isBase64Encoded": false,
+  "requestContext": {
+    "accountId": "123456789012",
+    "resourceId": "abc123",
+    "stage": "dev",
+    "requestId": "xyz789",
+    "identity": {
+      "sourceIp": "127.0.0.1"
+    },
+    "authorizer": {
+      "principalId": "user123"
+    }
+  }
+}

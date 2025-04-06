@@ -42,10 +42,16 @@ class OrumWebhookOperation @Inject constructor(
         val signature = input.headers["Signature"]
         val messagePlusCreatedAt = body + request.createdAt
 
+        logger.info { "Using base64 certificate $orumPublicCertificate" }
         val certificate = String(Base64.getDecoder().decode(orumPublicCertificate), Charsets.UTF_8)
         logger.info { "Got certificate $certificate" }
 
-        val publicKeyBytes = Base64.getDecoder().decode(certificate);
+        val trimmedCertificate = certificate.replace("-----BEGIN PUBLIC KEY-----", "")
+            .replace("-----END PUBLIC KEY-----", "")
+            .replace("\\s".toRegex(), "")
+        logger.info { "Got trimmed certificate $trimmedCertificate" }
+
+        val publicKeyBytes = Base64.getDecoder().decode(trimmedCertificate);
         val publicKeySpec = X509EncodedKeySpec(publicKeyBytes);
         val keyFactory = KeyFactory.getInstance("RSA");
         val  publicKey = keyFactory.generatePublic(publicKeySpec);

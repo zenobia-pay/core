@@ -53,6 +53,9 @@ Parameters:
   OrumPublicCertificate:
     Type: String
     Description: Orum public certificate used for webhook signing
+  OrumIpAddresses:
+    Type: String
+    Description: Valid orum ip addresses to accept requests from. Comma separated.
 
 Resources:
   ZenobiaApi:
@@ -95,17 +98,17 @@ Resources:
           title: Zenobia API
           version: 1.0
         components:
-#          securitySchemes:
-#            SignatureAuthorizer:
-#              type: apiKey
-#              name: Signature
-#              in: header
-#              x-amazon-apigateway-authtype: custom
-#              x-amazon-apigateway-authorizer:
-#                type: request
-#                authorizerUri:
-#                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthorizerFunction.Arn}/invocations
-#                identitySource: method.request.header.Signature
+          securitySchemes:
+            SignatureAuthorizer:
+              type: apiKey
+              name: Signature
+              in: header
+              x-amazon-apigateway-authtype: custom
+              x-amazon-apigateway-authorizer:
+                type: request
+                authorizerUri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthorizerFunction.Arn}/invocations
+                identitySource: method.request.header.Signature
           responses:
             BadRequest:
               description: Bad request
@@ -221,6 +224,8 @@ Resources:
           /orum-webhook:
             post:
               summary: "Orum webhook endpoint"
+              security:
+                - SignatureAuthorizer: []
               operationId: "OrumWebhook"
               requestBody:
                 required: true
@@ -1045,6 +1050,7 @@ Resources:
         Variables:
           AUTH_DOMAIN: !Ref Auth0Domain
           AUDIENCE: https://dashboard.zenobiapay.com
+          VALID_ORUM_IP_ADDRESSES: !Ref OrumIpAddresses
 
   ApiGatewayLogGroup:
     Type: AWS::Logs::LogGroup

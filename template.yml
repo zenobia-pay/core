@@ -25,6 +25,9 @@ Parameters:
   OrumPublicCertificate:
     Type: String
     Description: Orum public certificate used for webhook signing
+  OrumIpAddresses:
+    Type: String
+    Description: Valid orum ip addresses to accept requests from. Comma separated.
 
 Resources:
   VpcStack:
@@ -60,6 +63,7 @@ Resources:
         Auth0SecretsArn: !Ref Auth0SecretsArn
         Auth0Domain: !Ref Auth0Domain
         OrumPublicCertificate: !Ref OrumPublicCertificate
+        OrumIpAddresses: !Ref OrumIpAddresses
 
   PayoutStack:
     Type: AWS::CloudFormation::Stack
