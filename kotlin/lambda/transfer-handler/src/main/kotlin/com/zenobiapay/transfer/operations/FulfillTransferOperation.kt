@@ -25,6 +25,7 @@ import com.zenobiapay.table.bank.model.BankAccountItem
 import com.zenobiapay.table.bank.model.BankPermissions
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
+import com.zenobiapay.table.transfer.model.Signature
 import com.zenobiapay.table.transfer.model.TransferItem
 import com.zenobiapay.table.transfer.model.TransferStatus
 import com.zenobiapay.table.user.dao.UserDao
@@ -102,7 +103,11 @@ class FulfillTransferOperation @Inject constructor(
             fulfillRequestId = fulfillRequestId,
             transferItem = transferRequestItem,
             timestamp = fulfillTimestamp,
-            webhookUrl = merchantItem.data.merchantData?.webhookUrl
+            webhookUrl = merchantItem.data.merchantData?.webhookUrl,
+            signature = Signature(
+                signatureType = request.signature.signatureType.value,
+                signature = request.signature.signatureValue
+            )
         )
 
         return FulfillTransfer200Response()
@@ -164,7 +169,8 @@ class FulfillTransferOperation @Inject constructor(
         fulfillRequestId: String,
         transferItem: TransferItem,
         timestamp: Instant,
-        webhookUrl: String?
+        webhookUrl: String?,
+        signature: Signature,
     ) {
         logger.info { "Updating DDB with transfer fulfill details" }
         transferDao.updateTransferRequest(
@@ -172,7 +178,8 @@ class FulfillTransferOperation @Inject constructor(
             fulfillRequestId = fulfillRequestId,
             customerIdentity = creditorId,
             timestamp = timestamp,
-            webhookUrl = webhookUrl
+            webhookUrl = webhookUrl,
+            signature = signature,
         )
     }
 }

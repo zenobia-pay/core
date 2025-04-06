@@ -76,7 +76,8 @@ data class TransferData(
     var statementItems: List<StatementItem> = listOf(),
     var statusMessage: String? = null,
     var creationTime: String = "",
-    var webhookUrl: String? = null
+    var webhookUrl: String? = null,
+    var signature: Signature? = null,
 ) {
     companion object {
         fun fromAttributeValueMap(map: Map<String, AttributeValue>): TransferData {
@@ -100,6 +101,12 @@ data class TransferData(
         }
     }
 }
+
+@DynamoDbBean
+data class Signature(
+    var signatureType: String = "",
+    var signature: String = "",
+)
 
 @DynamoDbBean
 data class PaymentParticipantIdentity(

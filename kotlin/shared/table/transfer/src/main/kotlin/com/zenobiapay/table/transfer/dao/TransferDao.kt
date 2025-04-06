@@ -14,6 +14,7 @@ import com.zenobiapay.table.transfer.model.TransferItem.Companion.GSI_1
 import com.zenobiapay.table.transfer.model.TransferItem.Companion.GSI_2
 import com.zenobiapay.table.transfer.model.TransferStatus
 import com.zenobiapay.table.transfer.di.TRANSFER_TABLE_NAME
+import com.zenobiapay.table.transfer.model.Signature
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
@@ -71,14 +72,16 @@ class TransferDao @Inject constructor(
         fulfillRequestId: String,
         customerIdentity: PaymentParticipantIdentity,
         timestamp: Instant,
-        webhookUrl: String?
+        webhookUrl: String?,
+        signature: Signature,
     ) {
         val updatedItem = transferItem.copy(
             status = TransferStatus.IN_FLIGHT,
             transferFulfillId = fulfillRequestId,
             data = transferItem.data?.copy(
                 customer = customerIdentity,
-                webhookUrl = webhookUrl
+                webhookUrl = webhookUrl,
+                signature = signature,
             ),
             gsi2Pk = TransferItem.generateGsi2Pk(customerIdentity.id),
             gsi2Sk = TransferItem.generateGsi2Sk(fulfillRequestId),
