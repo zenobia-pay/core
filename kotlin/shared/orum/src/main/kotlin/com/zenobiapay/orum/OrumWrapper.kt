@@ -182,7 +182,7 @@ class OrumWrapper(
         val response = block()
         if (response.isSuccessful) {
             val body = response.body!!.string()
-            logger.info { "Got Orum response $body" } // TODO: maybe remove? Make debug?
+            logger.debug { "Got Orum response $body" }
             return objectMapper.readValue(body, responseClass)
         }
         throw OrumException(response.code, "Failed to get response ${responseClass.simpleName}. Error code ${response.code}, body ${response.body?.string()}")

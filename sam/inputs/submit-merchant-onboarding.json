@@ -5,7 +5,7 @@
   "headers": {
     "Content-Type": "application/json"
   },
-  "body": "{\"firstName\":\"Teddy\",\"lastName\":\"Li\",\"merchantDisplayName\":\"Teddy Inc\",\"legalBusinessName\":\"Business\",\"entityType\":\"LLC\",\"taxId\":\"123456789\",\"taxIdType\":\"EIN\",\"incorporationDate\":\"2025-02-31\",\"address\":{\"address1\":\"add1\",\"address2\":\"address2\",\"city\":\"Macomb\",\"state\":\"IL\",\"country\":\"US\",\"zip5\":\"61455\"}}",
+  "body": "{\"firstName\":\"Teddy\",\"lastName\":\"Li\",\"merchantDisplayName\":\"Teddy Inc\",\"legalBusinessName\":\"Business\",\"entityType\":\"LLC\",\"taxId\":\"123456789\",\"taxIdType\":\"EIN\",\"incorporationDate\":\"2025-02-28\",\"address\":{\"address1\":\"add1\",\"city\":\"Macomb\",\"state\":\"IL\",\"country\":\"US\",\"zip5\":\"61455\"}}",
   "isBase64Encoded": false,
   "requestContext": {
     "accountId": "123456789012",
@@ -19,7 +19,7 @@
       "principalId": "user123",
       "sub": "teddy-fake-sub-6",
       "email": "user@example.com",
-      "role": "MERCHANT"
+      "role": "UNKNOWN"
     }
   }
 }

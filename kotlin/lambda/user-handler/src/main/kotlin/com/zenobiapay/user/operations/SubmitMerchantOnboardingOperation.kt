@@ -87,7 +87,7 @@ class SubmitMerchantOnboardingOperation @Inject constructor(
             addresses = listOf(request.address.let {
                 Address(
                     address1 = it.address1,
-                    address2 = it.address2,
+                    address2 = it.address2 ?: "",
                     city = it.city,
                     state = it.state,
                     country = it.country.value,
