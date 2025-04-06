@@ -13,12 +13,37 @@ import (
 
 func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 	println("Got path " + event.Path)
-	token := extractToken(event.Headers["Authorization"])
-	println("Validating auth0 user")
-	claims, err := GetValidatedUserClaims(ctx, token)
-	isValid := err == nil
-	println(fmt.Sprintf("Got isValidApiToken: %t", isValid))
-	return generatePolicyResponse(isValid, getUserContext(claims), event.MethodArn), nil
+
+	if event.Path == "/orum-webhook" {
+		println("Got webhook. Validating ip address")
+		orum_ip_addresses, ok := os.LookupEnv("VALID_ORUM_IP_ADDRESSES")
+		print("valid ip addresses: ")
+		fmt.Println(orum_ip_addresses)
+
+		if !ok {
+			panic("failed to fetch valid orum ip addresses")
+		}
+
+		allowedIps := strings.Split(orum_ip_addresses, ",")
+		ip := event.RequestContext.Identity.SourceIP
+		println("Got request ip: " + ip)
+		for _, allowedIp := range allowedIps {
+			if ip == allowedIp {
+				println("Matched ip address, allowing")
+				return generatePolicy("user", "Allow", event.MethodArn, map[string]interface{}{}), nil
+			}
+		}
+		println("IP address not recognized, denying")
+		return generatePolicy("user", "Deny", "*", map[string]interface{}{}), nil
+
+	} else {
+		token := extractToken(event.Headers["Authorization"])
+		println("Validating auth0 user")
+		claims, err := GetValidatedUserClaims(ctx, token)
+		isValid := err == nil
+		println(fmt.Sprintf("Got isValidApiToken: %t", isValid))
+		return generatePolicyResponse(isValid, getUserContext(claims), event.MethodArn), nil
+	}
 }
 
 func extractToken(authHeader string) string {

@@ -2,14 +2,14 @@ package com.zenobiapay.transfertableevent.logic
 
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent
 import com.zenobiapay.table.transfer.model.TransferItem
-import com.zenobiapay.transfertableevent.util.WebhookHandler
+import com.zenobiapay.transfertableevent.util.WebhookUtil
 import com.zenobiapay.webhook.util.isValidWebhook
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
-class TransferTableEventLogic @Inject constructor(private val webhookHandler: WebhookHandler) {
+class TransferTableEventLogic @Inject constructor(private val webhookUtil: WebhookUtil) {
     fun handleRecord(record: DynamodbEvent.DynamodbStreamRecord) {
         val hasOldImage = record.dynamodb.oldImage != null
         val hasNewImage = record.dynamodb.newImage != null
@@ -37,7 +37,7 @@ class TransferTableEventLogic @Inject constructor(private val webhookHandler: We
                     logger.warn { "Invalid webhook attempted to publish. Skipping" }
                     return
                 }
-                webhookHandler.sendTransferStatus(
+                webhookUtil.sendTransferStatus(
                     webhookUrl,
                     newItem.data?.merchant?.id!!,
                     newItem.requestId,

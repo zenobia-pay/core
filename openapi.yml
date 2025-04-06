@@ -114,6 +114,30 @@ x-amazon-apigateway-request-validators:
     validateRequestBody: true
 x-amazon-apigateway-request-validator: basic
 paths:
+  /orum-webhook:
+    post:
+      summary: "Orum webhook endpoint"
+      operationId: "OrumWebhook"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                created_at:
+                  type: string
+                event_id:
+                  type: string
+                event_type:
+                  type: string
+                event_data:
+                  type: object
+      responses:
+        '200':
+          description: "Successful response"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /create-link-token:
     post:
       summary: "Creates a plaid link token"
@@ -142,6 +166,14 @@ paths:
                 properties:
                   linkToken:
                     type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       x-amazon-apigateway-integration:
         uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
         httpMethod: POST

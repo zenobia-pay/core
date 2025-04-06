@@ -1,0 +1,125 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ZenobiaPay Backend
+Parameters:
+  Stage:
+    Type: String
+    Description: Stage this code is being deployed to (dev, beta, gamma, prod)
+  UniqueIdentifier:
+    Type: String
+    Default: ''
+    Description: Unique identifier to avoid resource naming conflicts. Should only
+      be needed for dev sandbox accounts
+Resources:
+  VpcStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/aws-sam-cli-managed-default-samclisourcebucket-ve6qrmgqkgph/fd563fbe6153f7d4baafe92003703c9e.template
+    Metadata:
+      SamResourceId: VpcStack
+  AuthStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/aws-sam-cli-managed-default-samclisourcebucket-ve6qrmgqkgph/3f2361e487e2ca19e4f67d8e7ab802cc.template
+    Metadata:
+      SamResourceId: AuthStack
+  TableStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/aws-sam-cli-managed-default-samclisourcebucket-ve6qrmgqkgph/48c688edf6042a32ecafeabd0987111d.template
+      Parameters:
+        IdentityPoolId:
+          Fn::GetAtt:
+          - AuthStack
+          - Outputs.IdentityPoolId
+        Stage:
+          Ref: Stage
+        UniqueIdentifier:
+          Ref: UniqueIdentifier
+    Metadata:
+      SamResourceId: TableStack
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/aws-sam-cli-managed-default-samclisourcebucket-ve6qrmgqkgph/9561b91b89cd19429824ab2e021f6e43.template
+      Parameters:
+        SecurityGroupId:
+          Fn::GetAtt:
+          - VpcStack
+          - Outputs.SecurityGroupId
+        SubnetId1:
+          Fn::GetAtt:
+          - VpcStack
+          - Outputs.PrivateSubnetId1
+        SubnetId2:
+          Fn::GetAtt:
+          - VpcStack
+          - Outputs.PrivateSubnetId2
+        UserPoolArn:
+          Fn::GetAtt:
+          - AuthStack
+          - Outputs.UserPoolArn
+        IdentityPoolId:
+          Fn::GetAtt:
+          - AuthStack
+          - Outputs.IdentityPoolId
+        BankTableName:
+          Fn::GetAtt:
+          - TableStack
+          - Outputs.BankTableName
+        UserTableName:
+          Fn::GetAtt:
+          - TableStack
+          - Outputs.UserTableName
+        TransferTableName:
+          Fn::GetAtt:
+          - TableStack
+          - Outputs.TransferTableName
+        CredentialsTableName:
+          Fn::GetAtt:
+          - TableStack
+          - Outputs.CredentialsTableName
+        BankKeyId:
+          Fn::GetAtt:
+          - TableStack
+          - Outputs.BankKeyId
+        TransferKeyId:
+          Fn::GetAtt:
+          - TableStack
+          - Outputs.TransferKeyId
+        UserKeyId:
+          Fn::GetAtt:
+          - TableStack
+          - Outputs.UserKeyId
+        CredentialsKeyId:
+          Fn::GetAtt:
+          - TableStack
+          - Outputs.CredentialsKeyId
+        TransferTableStreamArn:
+          Fn::GetAtt:
+          - TableStack
+          - Outputs.TransferTableStreamArn
+    Metadata:
+      SamResourceId: LambdaStack
+  PayoutStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/aws-sam-cli-managed-default-samclisourcebucket-ve6qrmgqkgph/c89c876e989ab01e91ab7a0f3c6afee2.template
+      Parameters:
+        UserPoolArn:
+          Fn::GetAtt:
+          - AuthStack
+          - Outputs.UserPoolArn
+        TransferTableName:
+          Fn::GetAtt:
+          - TableStack
+          - Outputs.TransferTableName
+    Metadata:
+      SamResourceId: PayoutStack
+Outputs:
+  WebEndpoint:
+    Description: API Gateway endpoint URL
+    Value:
+      Fn::GetAtt:
+      - LambdaStack
+      - Outputs.WebEndpoint
