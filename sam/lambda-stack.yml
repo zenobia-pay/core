@@ -50,21 +50,36 @@ Parameters:
   Auth0Domain:
     Type: String
     Description: Auth0 domain used for authentication
+  OrumPublicCertificate:
+    Type: String
+    Description: Orum public certificate used for webhook signing
+  OrumIpAddresses:
+    Type: String
+    Description: Valid orum ip addresses to accept requests from. Comma separated.
+  OrumSlackWebhook:
+    Type: String
+    Description: Slack webhook for orum channel
 
 Resources:
   ZenobiaApi:
     Type: AWS::Serverless::Api
     Properties:
       Auth:
-        DefaultAuthorizer: CustomAuthorizer
+        DefaultAuthorizer: ApiAuthorizer
         AddDefaultAuthorizerToCorsPreflight: false
         Authorizers:
-          CustomAuthorizer:
+          ApiAuthorizer:
             FunctionPayloadType: REQUEST
             FunctionArn: !GetAtt CustomAuthorizerFunction.Arn
             Identity:
-              Headers: 
+              Headers:
                 - Authorization
+          SignatureAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn: !GetAtt CustomAuthorizerFunction.Arn
+            Identity:
+              Headers:
+                - Signature
       Cors:
         AllowCredentials: true
         AllowMethods: "'GET,POST,OPTIONS'"
@@ -86,6 +101,17 @@ Resources:
           title: Zenobia API
           version: 1.0
         components:
+          securitySchemes:
+            SignatureAuthorizer:
+              type: apiKey
+              name: Signature
+              in: header
+              x-amazon-apigateway-authtype: custom
+              x-amazon-apigateway-authorizer:
+                type: request
+                authorizerUri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthorizerFunction.Arn}/invocations
+                identitySource: method.request.header.Signature
           responses:
             BadRequest:
               description: Bad request
@@ -198,6 +224,43 @@ Resources:
             validateRequestBody: true
         x-amazon-apigateway-request-validator: basic
         paths:
+          /orum-webhook:
+            post:
+              summary: "Orum webhook endpoint"
+              security:
+                - SignatureAuthorizer: []
+              operationId: "OrumWebhook"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        created_at:
+                          type: string
+                        event_id:
+                          type: string
+                        event_type:
+                          type: string
+                        event_data:
+                          type: object
+              responses:
+                '200':
+                  description: "Successful response"
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebhookHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
           /create-link-token:
             post:
               summary: "Creates a plaid link token"
@@ -226,6 +289,14 @@ Resources:
                         properties:
                           linkToken:
                             type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
@@ -984,6 +1055,7 @@ Resources:
         Variables:
           AUTH_DOMAIN: !Ref Auth0Domain
           AUDIENCE: https://dashboard.zenobiapay.com
+          VALID_ORUM_IP_ADDRESSES: !Ref OrumIpAddresses
 
   ApiGatewayLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1215,6 +1287,31 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /delete-m2m-credentials
             Method: POST
+
+  WebhookHandlerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      SkipBuild: true
+    Properties:
+      FunctionName: WebhookHandler
+      CodeUri: ../kotlin/lambda/orum-webhook-handler/build/libs/lambda.jar
+      Handler: com.zenobiapay.webhook.handlers.WebhookHandler::handleRequest
+      MemorySize: 2048
+      Environment:
+        Variables:
+          ORUM_PUBLIC_CERTIFICATE: !Ref OrumPublicCertificate
+          ORUM_SLACK_WEBHOOK: !Ref OrumSlackWebhook
+      Policies:
+        - AWSLambdaVPCAccessExecutionRole
+      Events:
+        OrumWebhook:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /orum-webhook
+            Method: POST
+            Auth:
+              Authorizer: SignatureAuthorizer
 
   WebhookSigningKey:
     Type: AWS::KMS::Key

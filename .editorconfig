@@ -1,0 +1,3 @@
+[*.kt]
+ktlint_disabled_rules = filename
+exclude = build/gradle/**

@@ -23,3 +23,5 @@ include(
     "kotlin:lambda:payout-handler",
     "kotlin:lambda:transfer-event-handler",
 )
+include("kotlin:lambda:orum-webhook-handler")
+findProject(":kotlin:lambda:orum-webhook-handler")?.name = "orum-webhook-handler"

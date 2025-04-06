@@ -22,6 +22,15 @@ Parameters:
   Auth0Domain:
     Type: String
     Description: Auth0 domain used for authentication
+  OrumPublicCertificate:
+    Type: String
+    Description: Orum public certificate used for webhook signing
+  OrumIpAddresses:
+    Type: String
+    Description: Valid orum ip addresses to accept requests from. Comma separated.
+  OrumSlackWebhook:
+    Type: String
+    Description: Slack webhook for orum channel
 
 Resources:
   VpcStack:
@@ -56,6 +65,9 @@ Resources:
         OrumSecretsArn: !Ref OrumSecretsArn
         Auth0SecretsArn: !Ref Auth0SecretsArn
         Auth0Domain: !Ref Auth0Domain
+        OrumPublicCertificate: !Ref OrumPublicCertificate
+        OrumIpAddresses: !Ref OrumIpAddresses
+        OrumSlackWebhook: !Ref OrumSlackWebhook
 
   PayoutStack:
     Type: AWS::CloudFormation::Stack

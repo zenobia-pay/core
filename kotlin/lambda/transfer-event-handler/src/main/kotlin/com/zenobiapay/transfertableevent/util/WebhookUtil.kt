@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
-class WebhookHandler @Inject constructor(
+class WebhookUtil @Inject constructor(
     private val okHttpClient: OkHttpClient,
     private val objectMapper: ObjectMapper,
     private val jwtUtil: JwtUtil,
