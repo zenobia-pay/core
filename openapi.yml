@@ -335,6 +335,8 @@ paths:
                 properties:
                   amount:
                     type: integer
+                  merchant:
+                    $ref: "#/components/schemas/PaymentParticipantIdentity"
                   statementItems:
                     type: array
                     items:

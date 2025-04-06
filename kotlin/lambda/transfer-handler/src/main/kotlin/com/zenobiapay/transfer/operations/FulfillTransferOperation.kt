@@ -114,6 +114,10 @@ class FulfillTransferOperation @Inject constructor(
         return FulfillTransfer200Response()
             .amount(transferAmount)
             .statementItems(statementItems)
+            .merchant(com.zenobiapay.api.generated.model.PaymentParticipantIdentity()
+                .id(merchantId)
+                .name(merchantItem.data.merchantData?.displayName)
+            )
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {
