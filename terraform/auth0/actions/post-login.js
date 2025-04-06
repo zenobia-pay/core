@@ -2,6 +2,7 @@ exports.onExecutePostLogin = async (event, api) => {
   try {
     const emailVerified = event.user.email_verified;
     if (!emailVerified) {
+      console.log("Access denied due to email not being verified")
       api.access.deny('Access denied', 'Please verify your email before logging in.');
     }
 
