@@ -27,7 +27,6 @@ class GetMerchantTransferOperation @Inject constructor(
         return GetMerchantTransfer200Response()
             .transferRequestId(request.id)
             .status(transferItem.status.toApiTransferStatus())
-            .merchant(transferItem.data?.merchant?.toApiParticipantIdentity())
             .statementItems(transferItem.data?.statementItems?.map { it.toApiStatementItem() } ?: listOf())
             .statusMessage(transferItem.data?.statusMessage)
     }

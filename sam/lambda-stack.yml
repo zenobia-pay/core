@@ -510,8 +510,6 @@ Resources:
                         properties:
                           transferRequestId:
                             type: string
-                          merchant:
-                            $ref: "#/components/schemas/PaymentParticipantIdentity"
                           status:
                             $ref: "#/components/schemas/TransferStatus"
                           statementItems:
