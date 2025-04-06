@@ -3,7 +3,7 @@ exports.onExecutePostLogin = async (event, api) => {
     const emailVerified = event.user.email_verified;
     if (!emailVerified) {
       console.log("Access denied due to email not being verified")
-      api.access.deny('Please verify your email before logging in.');
+      api.access.deny('EMAIL_NOT_VERIFIED');
     }
     console.log(`Setting email claim: ${event.user.email}`)
     api.idToken.setCustomClaim("email", event.user.email)
