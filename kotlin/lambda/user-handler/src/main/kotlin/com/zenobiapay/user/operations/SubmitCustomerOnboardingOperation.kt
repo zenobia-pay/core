@@ -102,6 +102,6 @@ class SubmitCustomerOnboardingOperation @Inject constructor(
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {
-        return listOf(UserPoolGroup.CUSTOMER)
+        return listOf(UserPoolGroup.UNKNOWN)
     }
 }
