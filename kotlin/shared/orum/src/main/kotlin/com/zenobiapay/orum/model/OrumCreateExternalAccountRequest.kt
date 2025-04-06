@@ -1,6 +1,7 @@
 package com.zenobiapay.orum.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonValue
 
 data class OrumCreateExternalAccountRequest(
     @JsonProperty("account_reference_id")
@@ -23,4 +24,7 @@ enum class CustomerResourceType(val value: String) {
     BUSINESS("business"),
     PERSON("person"),
     ENTERPRISE("enterprise");
+
+    @JsonValue
+    fun toValue(): String = value
 }
