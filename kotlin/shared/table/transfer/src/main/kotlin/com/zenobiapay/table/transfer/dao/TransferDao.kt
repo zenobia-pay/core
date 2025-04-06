@@ -67,7 +67,19 @@ class TransferDao @Inject constructor(
         )
     }
 
-    fun updateTransferRequest(
+    fun updateTransferRequestInFlight(
+        transferItem: TransferItem
+    ) {
+        val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
+            .item(transferItem.copy(
+                status = TransferStatus.IN_FLIGHT,
+            ))
+            .build()
+
+        transferTable.updateItem(request)
+    }
+
+    fun updateTransferRequestSuccess(
         transferItem: TransferItem,
         fulfillRequestId: String,
         customerIdentity: PaymentParticipantIdentity,
@@ -76,7 +88,7 @@ class TransferDao @Inject constructor(
         signature: Signature,
     ) {
         val updatedItem = transferItem.copy(
-            status = TransferStatus.IN_FLIGHT,
+            status = TransferStatus.COMPLETED,
             transferFulfillId = fulfillRequestId,
             data = transferItem.data?.copy(
                 customer = customerIdentity,
@@ -94,7 +106,6 @@ class TransferDao @Inject constructor(
             .build()
 
         transferTable.updateItem(request)
-        // TODO: handle Conditional check failed from optimistic version lock
     }
 
     fun getCustomerTransfer(customerId: String, fulfillRequestId: String): TransferItem? {
@@ -226,7 +237,7 @@ class TransferDao @Inject constructor(
             )
         )
         payoutTable.updateItem(updatedItem)
-        logger.info { "Updated payout metadat with item $item" }
+        logger.info { "Updated payout metadata with item $item" }
     }
 
     fun getPayoutItem(merchantId: String, date: String): PayoutItem? {

@@ -3,7 +3,6 @@ package com.zenobiapay.transfer.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.api.generated.model.CreateTransferRequestRequest
 import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.api.model.exception.InvalidSignatureException
 import com.zenobiapay.orum.OrumWrapper
@@ -26,7 +25,6 @@ import com.zenobiapay.table.bank.model.BankPermissions
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
 import com.zenobiapay.table.transfer.model.Signature
-import com.zenobiapay.table.transfer.model.TransferItem
 import com.zenobiapay.table.transfer.model.TransferStatus
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.transfer.model.FulfillTransferRequestMixin
@@ -84,11 +82,11 @@ class FulfillTransferOperation @Inject constructor(
         val debtorId = transferRequestData.merchant!!
         val creditorId = PaymentParticipantIdentity(
             id = userId,
-            name = "TODO", // TODO: fetch auth0 user name
             bankAccountId = bankAccountId
         )
         val fulfillRequestId = input.requestContext.requestId
 
+        transferDao.updateTransferRequestInFlight(transferRequestItem)
         val fulfillTimestamp = Instant.now()
         transferFunds(
             transferRequestId,
@@ -98,16 +96,16 @@ class FulfillTransferOperation @Inject constructor(
 
         transferDao.addPayoutItemAmount(debtorId.id, transferAmount, date)
         val statementItems = transferRequestData.statementItems.map { it.toApiStatementItem() }
-        updateTransferTableStatusSuccess(
-            creditorId = creditorId,
-            fulfillRequestId = fulfillRequestId,
+        transferDao.updateTransferRequestSuccess(
             transferItem = transferRequestItem,
+            fulfillRequestId = fulfillRequestId,
+            customerIdentity = creditorId,
             timestamp = fulfillTimestamp,
             webhookUrl = merchantItem.data.merchantData?.webhookUrl,
             signature = Signature(
                 signatureType = request.signature.signatureType.value,
                 signature = request.signature.signatureValue
-            )
+            ),
         )
 
         return FulfillTransfer200Response()
@@ -162,24 +160,5 @@ class FulfillTransferOperation @Inject constructor(
         } catch (e: WaiterFailedException) {
             throw TransferFailedException()
         }
-    }
-
-    private fun updateTransferTableStatusSuccess(
-        creditorId: PaymentParticipantIdentity,
-        fulfillRequestId: String,
-        transferItem: TransferItem,
-        timestamp: Instant,
-        webhookUrl: String?,
-        signature: Signature,
-    ) {
-        logger.info { "Updating DDB with transfer fulfill details" }
-        transferDao.updateTransferRequest(
-            transferItem = transferItem,
-            fulfillRequestId = fulfillRequestId,
-            customerIdentity = creditorId,
-            timestamp = timestamp,
-            webhookUrl = webhookUrl,
-            signature = signature,
-        )
     }
 }

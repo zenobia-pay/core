@@ -111,14 +111,14 @@ data class Signature(
 @DynamoDbBean
 data class PaymentParticipantIdentity(
     var id: String = "",
-    var name: String = "",
+    var name: String? = null,
     var bankAccountId: String = ""
 ) {
     companion object {
         fun fromAttributeValueMap(map: Map<String, AttributeValue>): PaymentParticipantIdentity {
             return PaymentParticipantIdentity(
                 id = map["id"]!!.s,
-                name = map["name"]!!.s,
+                name = map["name"]?.s,
                 bankAccountId = map["bankAccountId"]!!.s
             )
         }
