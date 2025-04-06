@@ -1,10 +1,12 @@
 package com.zenobiapay.table.transfer.dao
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.table.MAX_LIST_ITEMS
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
 import com.zenobiapay.model.ddb.transfer.PayoutData
 import com.zenobiapay.model.ddb.transfer.PayoutId
 import com.zenobiapay.model.ddb.transfer.PayoutItem
+import com.zenobiapay.table.model.ContinuationToken
 import com.zenobiapay.table.transfer.model.StatementItem
 import com.zenobiapay.table.transfer.model.TransferData
 import com.zenobiapay.table.transfer.model.TransferItem
@@ -12,6 +14,7 @@ import com.zenobiapay.table.transfer.model.TransferItem.Companion.GSI_1
 import com.zenobiapay.table.transfer.model.TransferItem.Companion.GSI_2
 import com.zenobiapay.table.transfer.model.TransferStatus
 import com.zenobiapay.table.transfer.di.TRANSFER_TABLE_NAME
+import com.zenobiapay.table.transfer.model.Signature
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
@@ -33,7 +36,8 @@ class TransferDao @Inject constructor(
     private val client: DynamoDbEnhancedClient,
     private val lowLevelClient: DynamoDbClient,
     @Named(TRANSFER_TABLE_NAME)
-    private val transferTableName: String
+    private val transferTableName: String,
+    private val objectMapper: ObjectMapper
 ) {
     private val transferTable = client.table(transferTableName, TableSchema.fromBean(TransferItem::class.java))
     private val payoutTable = client.table(transferTableName, TableSchema.fromBean(PayoutItem::class.java))
@@ -63,19 +67,33 @@ class TransferDao @Inject constructor(
         )
     }
 
-    fun updateTransferRequest(
+    fun updateTransferRequestInFlight(
+        transferItem: TransferItem
+    ): TransferItem {
+        val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
+            .item(transferItem.copy(
+                status = TransferStatus.IN_FLIGHT,
+            ))
+            .build()
+
+        return transferTable.updateItem(request)
+    }
+
+    fun updateTransferRequestSuccess(
         transferItem: TransferItem,
         fulfillRequestId: String,
         customerIdentity: PaymentParticipantIdentity,
         timestamp: Instant,
-        webhookUrl: String?
+        webhookUrl: String?,
+        signature: Signature,
     ) {
         val updatedItem = transferItem.copy(
-            status = TransferStatus.IN_FLIGHT,
+            status = TransferStatus.COMPLETED,
             transferFulfillId = fulfillRequestId,
             data = transferItem.data?.copy(
                 customer = customerIdentity,
-                webhookUrl = webhookUrl
+                webhookUrl = webhookUrl,
+                signature = signature,
             ),
             gsi2Pk = TransferItem.generateGsi2Pk(customerIdentity.id),
             gsi2Sk = TransferItem.generateGsi2Sk(fulfillRequestId),
@@ -88,7 +106,6 @@ class TransferDao @Inject constructor(
             .build()
 
         transferTable.updateItem(request)
-        // TODO: handle Conditional check failed from optimistic version lock
     }
 
     fun getCustomerTransfer(customerId: String, fulfillRequestId: String): TransferItem? {
@@ -107,60 +124,79 @@ class TransferDao @Inject constructor(
         ).first().items().firstOrNull()
     }
 
-    fun getMerchantTransfer(merchantId: String, transferRequestId: String): TransferItem {
+    fun getMerchantTransfer(merchantId: String, transferRequestId: String): TransferItem? {
         val pk = TransferItem.generatePk(merchantId)
         val sk = TransferItem.generateSk(transferRequestId)
-        return transferTable.getItem {
-            it.key {
-                it.partitionValue(pk).sortValue(sk)
+        return try {
+            transferTable.getItem {
+                it.key {
+                    it.partitionValue(pk).sortValue(sk)
+                }
             }
+        } catch (e: ResourceNotFoundException) {
+            return null
         }
     }
 
-    fun listCustomerTransfers(customerId: String): List<TransferItem> {
+    fun listCustomerTransfers(customerId: String, continuationToken: String?): Pair<List<TransferItem>, ContinuationToken?> {
         val queryConditional = QueryConditional.keyEqualTo {
             it.partitionValue(TransferItem.generateGsi3Pk(customerId))
         }
-        val queryRequest = QueryEnhancedRequest.builder()
+        val queryRequestBuilder = QueryEnhancedRequest.builder()
             .queryConditional(queryConditional)
             .scanIndexForward(false)
             .limit(MAX_LIST_ITEMS)
-            .build()
 
-        // TODO: handle pagination
-        val toReturn = mutableListOf<TransferItem>()
-        transferTable.index(TransferItem.GSI_3)
-            .query(queryRequest)
-            .stream().forEach {
-                logger.info { "Got list response page ${it.items()}" }
-                toReturn += it.items()
-            }
+        if (continuationToken != null) {
+            logger.info { "Using continuation token $continuationToken" }
+            val token = ContinuationToken.decodeToken(continuationToken, objectMapper)
+            queryRequestBuilder.exclusiveStartKey(token.key)
+        }
 
-        logger.info { "Returning accumulated list $toReturn" }
-        return toReturn
+        val page = transferTable.index(TransferItem.GSI_3)
+            .query(queryRequestBuilder.build())
+            .iterator()
+            .asSequence()
+            .firstOrNull()
+
+        return if (page == null) {
+            listOf<TransferItem>() to null
+        } else {
+            page.items() to page.lastEvaluatedKey()?.let { ContinuationToken(page.lastEvaluatedKey()) }
+        }.also {
+            logger.info { "Got ${it.first.size} items and continuation token ${it.second}" }
+        }
     }
 
-    fun listMerchantTransfers(merchantId: String): List<TransferItem> {
+    fun listMerchantTransfers(merchantId: String, continuationToken: String?): Pair<List<TransferItem>, ContinuationToken?> {
+        logger.info { "Got table name ${transferTable.tableName()}" }
         val queryConditional = QueryConditional.keyEqualTo {
             it.partitionValue(TransferItem.generateGsi1Pk(merchantId))
         }
-        val queryRequest = QueryEnhancedRequest.builder()
+        val queryRequestBuilder = QueryEnhancedRequest.builder()
             .queryConditional(queryConditional)
             .scanIndexForward(false)
             .limit(MAX_LIST_ITEMS)
-            .build()
 
-        // TODO: handle pagination
-        val toReturn = mutableListOf<TransferItem>()
-        transferTable.index(GSI_1)
-            .query(queryRequest)
-            .stream().forEach {
-                logger.info { "Got list response page ${it.items()}" }
-                toReturn += it.items()
-            }
+        if (continuationToken != null) {
+            logger.info { "Using continuation token $continuationToken" }
+            val token = ContinuationToken.decodeToken(continuationToken, objectMapper)
+            queryRequestBuilder.exclusiveStartKey(token.key)
+        }
 
-        logger.info { "Returning accumulated list $toReturn" }
-        return toReturn
+        val page = transferTable.index(GSI_1)
+            .query(queryRequestBuilder.build())
+            .iterator()
+            .asSequence()
+            .firstOrNull()
+
+        return if (page == null) {
+            listOf<TransferItem>() to null
+        } else {
+            page.items() to page.lastEvaluatedKey()?.let { ContinuationToken(page.lastEvaluatedKey()) }
+        }.also {
+            logger.info { "Got ${it.first.size} items and continuation token ${it.second}" }
+        }
     }
 
     fun addPayoutItemAmount(merchantId: String, amount: Int, date: LocalDate) {
@@ -201,7 +237,7 @@ class TransferDao @Inject constructor(
             )
         )
         payoutTable.updateItem(updatedItem)
-        logger.info { "Updated payout metadat with item $item" }
+        logger.info { "Updated payout metadata with item $item" }
     }
 
     fun getPayoutItem(merchantId: String, date: String): PayoutItem? {

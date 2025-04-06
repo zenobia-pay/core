@@ -3,13 +3,15 @@ package com.zenobiapay.user.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.api.generated.model.UpdateMerchantConfigRequest
 import com.zenobiapay.api.model.EmptyApiResponse
-import com.zenobiapay.api.model.user.UpdateMerchantConfigRequest
 import com.zenobiapay.table.bank.dao.BankDao
-import com.zenobiapay.api.exception.ResourceNotFoundException
-import com.zenobiapay.api.model.Operation
+import com.zenobiapay.api.model.exception.ResourceNotFoundException
+import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
+import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.table.user.dao.UserDao
+import com.zenobiapay.webhook.util.isValidWebhook
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 
@@ -19,27 +21,37 @@ class UpdateMerchantConfigOperation @Inject constructor(
     private val bankDao: BankDao,
     private val userDao: UserDao,
     private val objectMapper: ObjectMapper
-) : Operation() {
+) : Operation<UpdateMerchantConfigRequest, EmptyApiResponse>() {
 
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): Any {
+    override val inputType = UpdateMerchantConfigRequest::class.java
+
+    override fun run(
+        request: UpdateMerchantConfigRequest,
+        input: APIGatewayProxyRequestEvent,
+        context: Context,
+        userId: String?
+    ): EmptyApiResponse {
         val request = objectMapper.readValue(input.body, UpdateMerchantConfigRequest::class.java)
         logger.info { "Got request $request" }
         if (request.bankAccountId != null) {
             // Validate bank id exists
             logger.info { "Fetching bank account ${request.bankAccountId}" }
-            bankDao.getBankAccount(userId!!, request.bankAccountId!!) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
+            bankDao.getBankAccount(userId!!, null, request.bankAccountId!!) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
         }
-        // TODO: do in one ddb call
-        val merchantItem = userDao.getMerchant(userId!!)
-        logger.info { "Got current item $merchantItem" }
+        if (request.webhookUrl != null) {
+            logger.info { "validating webhook url ${request.webhookUrl}" }
+            if (!isValidWebhook(request.webhookUrl)) {
+                logger.info { "Got invalid webhook ${request.webhookUrl}. Rejecting call" }
+                throw InvalidRequestException("Invalid webhook")
+            }
+        }
         userDao.updateMerchant(
-            userId,
-            merchantItem,
+            userId!!,
             request.bankAccountId,
             request.merchantDisplayName,
             request.merchantDescription,
             request.merchantLocation,
-            request.webhookUrl
+            request.webhookUrl?.toString(),
         )
         return EmptyApiResponse()
     }

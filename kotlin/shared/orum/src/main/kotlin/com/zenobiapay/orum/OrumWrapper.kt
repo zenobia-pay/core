@@ -1,6 +1,8 @@
 package com.zenobiapay.orum
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.orum.model.OrumCreateBusinessRequest
+import com.zenobiapay.orum.model.OrumCreateBusinessResponse
 import com.zenobiapay.orum.model.OrumCreateExternalAccountRequest
 import com.zenobiapay.orum.model.OrumCreateExternalAccountResponse
 import com.zenobiapay.orum.model.OrumCreatePersonRequest
@@ -25,6 +27,10 @@ private val logger = KotlinLogging.logger {}
 class OrumException(val errorCode: Int, override val message: String) : Exception(message) {
     fun isCreatePersonAlreadyExistsException(): Boolean {
         return errorCode == 400 && message.contains("duplicate_customer_reference_id")
+    }
+
+    fun isInvalidIncorporationDate(): Boolean {
+        return errorCode == 400 && message.contains("invalid_incorporation_date")
     }
 }
 
@@ -76,13 +82,9 @@ class OrumWrapper(
         val accessToken = getAccessToken(orumCredentials)
         val body = objectMapper.writeValueAsString(
             createTransferRequest.copy(
-                source = if (createTransferRequest.source != null) {
-                    createTransferRequest.source.copy(
-                        customerReferenceId = createTransferRequest.source.customerReferenceId
-                    )
-                } else {
-                    null
-                }
+                source = createTransferRequest.source?.copy(
+                    customerReferenceId = createTransferRequest.source.customerReferenceId
+                )
             )
         ).toRequestBody(JSON_MEDIA_TYPE)
         logger.info { "Creating transfer with request $createTransferRequest" }
@@ -132,10 +134,25 @@ class OrumWrapper(
         }
     }
 
+    fun createBusiness(createBusinessRequest: OrumCreateBusinessRequest): OrumCreateBusinessResponse {
+        logger.info { "Creating merchant with request $createBusinessRequest" }
+        val accessToken = getAccessToken(orumCredentials)
+        val body = objectMapper.writeValueAsString(createBusinessRequest).toRequestBody(JSON_MEDIA_TYPE)
+        val request = Request.Builder()
+            .addOrumHeaders(accessToken.accessToken)
+            .url("https://api-sandbox.orum.io/deliver/businesses")
+            .post(body)
+            .build()
+
+        return getResponseOrThrowException(OrumCreateBusinessResponse::class.java) {
+            client.newCall(request).execute()
+        }
+    }
+
     fun createPerson(createPersonRequest: OrumCreatePersonRequest): OrumCreatePersonResponse {
+        logger.info { "Creating person with request $createPersonRequest" }
         val accessToken = getAccessToken(orumCredentials)
         val body = objectMapper.writeValueAsString(createPersonRequest).toRequestBody(JSON_MEDIA_TYPE)
-        logger.info { "Creating person with request $createPersonRequest" }
         val request = Request.Builder()
             .addOrumHeaders(accessToken.accessToken)
             .url("https://api-sandbox.orum.io/deliver/persons")
@@ -165,7 +182,7 @@ class OrumWrapper(
         val response = block()
         if (response.isSuccessful) {
             val body = response.body!!.string()
-            logger.info { "Got Orum response $body" } // TODO: maybe remove? Make debug?
+            logger.debug { "Got Orum response $body" }
             return objectMapper.readValue(body, responseClass)
         }
         throw OrumException(response.code, "Failed to get response ${responseClass.simpleName}. Error code ${response.code}, body ${response.body?.string()}")

@@ -10,8 +10,8 @@ Globals:
     Architectures:
       - x86_64
     AutoPublishAlias: prod
-    # SnapStart:
-    #   ApplyOn: PublishedVersions
+    SnapStart:
+      ApplyOn: PublishedVersions
     AutoPublishAliasAllProperties: true
     VpcConfig:
       SecurityGroupIds:
@@ -27,15 +27,11 @@ Parameters:
     Type: String
   UserKeyId:
     Type: String
-  CredentialsKeyId:
-    Type: String
   BankTableName:
     Type: String
   TransferTableName:
     Type: String
   UserTableName:
-    Type: String
-  CredentialsTableName:
     Type: String
   TransferTableStreamArn:
     Type: String
@@ -51,6 +47,9 @@ Parameters:
     Type: String
   Auth0SecretsArn:
     Type: String
+  Auth0Domain:
+    Type: String
+    Description: Auth0 domain used for authentication
 
 Resources:
   ZenobiaApi:
@@ -140,17 +139,58 @@ Resources:
               properties:
                 name:
                   type: string
+                  maxLength: 255
+                  minLength: 1
                 amount:
                   type: integer
+                  minimum: 1
             Location:
               type: object
               properties:
                 address:
                   type: string
+                  maxLength: 255
+                  minLength: 1
                 latitude:
                   type: number
                 longitude:
                   type: number
+            UserType:
+              type: string
+              enum: [ MERCHANT, CUSTOMER ]
+            CertificateType:
+              type: string
+              enum: [ EC ]
+            SignatureType:
+              type: string
+              enum: [ SHA256_WITH_ECDSA ]
+            Address:
+              type: object
+              required:
+                - address1
+                - city
+                - state
+                - country
+                - zip5
+              properties:
+                address1:
+                  type: string
+                  maxLength: 255
+                address2:
+                  type: string
+                  maxLength: 255
+                city:
+                  type: string
+                  maxLength: 255
+                state:
+                  type: string
+                  maxLength: 255
+                country:
+                  type: string
+                  enum: [ US ]
+                zip5:
+                  type: string
+                  pattern: '^\d{5}$'
 
         x-amazon-apigateway-request-validators:
           basic:
@@ -159,9 +199,23 @@ Resources:
         x-amazon-apigateway-request-validator: basic
         paths:
           /create-link-token:
-            get:
+            post:
               summary: "Creates a plaid link token"
               operationId: "CreateLinkToken"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - product
+                      properties:
+                        product:
+                          type: string
+                          enum:
+                            - AUTH
+                            - IDENTITY_VERIFICATION
               responses:
                 '200':
                   description: "Successful response"
@@ -190,10 +244,21 @@ Resources:
                       properties:
                         linkToken:
                           type: string
+                          maxLength: 255
                         deviceId:
                           type: string
+                          maxLength: 255
                         deviceCertificate:
-                          type: string
+                          type: object
+                          properties:
+                            certificateType:
+                              $ref: "#/components/schemas/CertificateType"
+                            certificateValue:
+                              type: string
+                              maxLength: 3000
+                          required:
+                            - certificateType
+                            - certificateValue
                       required:
                         - linkToken
               responses:
@@ -219,7 +284,6 @@ Resources:
               summary: "Lists all bank accounts associated with account"
               operationId: "ListBankAccounts"
               requestBody:
-                required: true
                 content:
                   application/json:
                     schema:
@@ -227,6 +291,11 @@ Resources:
                       properties:
                         deviceId:
                           type: string
+                          maxLength: 255
+                          minLength: 1
+                        continuationToken:
+                          type: string
+                          maxLength: 255
               responses:
                 '200':
                   description: "Successful response"
@@ -271,14 +340,11 @@ Resources:
                       type: object
                       required:
                         - amount
-                        - bankAccountId
                       properties:
                         amount:
                           type: integer
                           minimum: 0
                           exclusiveMinimum: true
-                        bankAccountId:
-                          type: string
                         statementItems:
                           type: array
                           items:
@@ -322,18 +388,32 @@ Resources:
                         - transferRequestId
                         - merchantId
                         - bankAccountId
-                        # TODO: device and signature should be required
+                        - deviceId
+                        - signature
                       properties:
                         transferRequestId:
                           type: string
+                          maxLength: 255
                         merchantId:
                           type: string
+                          maxLength: 255
                         bankAccountId:
                           type: string
+                          maxLength: 255
                         deviceId:
                           type: string
+                          maxLength: 255
                         signature:
-                          type: string
+                          type: object
+                          properties:
+                            signatureType:
+                              $ref: "#/components/schemas/SignatureType"
+                            signatureValue:
+                              maxLength: 1000
+                              type: string
+                          required:
+                            - signatureType
+                            - signatureValue
               responses:
                 '200':
                   description: "Successful response"
@@ -364,16 +444,18 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
-          /get-merchant-transfer:
+          /get-customer-transfer:
             get:
               summary: "Fetches metadata associated with a merchant's transfer request"
-              operationId: "GetMerchantTransfer"
+              operationId: "GetCustomerTransfer"
               parameters:
                 - name: id
                   in: query
                   required: true
                   schema:
                     type: string
+                    minLength: 1
+                    maxLength: 256
               responses:
                 '200':
                   description: "Successful response"
@@ -408,10 +490,64 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
-          /list-customer-transfers:
+          /get-merchant-transfer:
             get:
+              summary: "Fetches metadata associated with a merchant's transfer request"
+              operationId: "GetMerchantTransfer"
+              parameters:
+                - name: id
+                  in: query
+                  required: true
+                  schema:
+                    type: string
+                    minLength: 1
+                    maxLength: 256
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          transferRequestId:
+                            type: string
+                          status:
+                            $ref: "#/components/schemas/TransferStatus"
+                          statementItems:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/StatementItem"
+                          statusMessage:
+                            type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /list-customer-transfers:
+            post:
               summary: "Lists all transfers made with customer account"
               operationId: "ListCustomerTransfers"
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        continuationToken:
+                          type: string
+                          minLength: 1
+                          maxLength: 256
               responses:
                 '200':
                   description: "Successful response"
@@ -450,15 +586,19 @@ Resources:
                 type: aws_proxy
 
           /list-merchant-transfers:
-            get:
+            post:
               summary: "Lists all transfers made to a merchant account"
               operationId: "ListMerchantTransfers"
-              parameters:
-                - name: continuationToken
-                  in: query
-                  required: false
-                  schema:
-                    type: string
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        continuationToken:
+                          type: string
+                          minLength: 1
+                          maxLength: 256
               responses:
                 '200':
                   description: "Successful response"
@@ -542,12 +682,20 @@ Resources:
                       properties:
                         bankAccountId:
                           type: string
+                          minLength: 1
+                          maxLength: 256
                         merchantDisplayName:
                           type: string
+                          minLength: 1
+                          maxLength: 256
                         merchantDescription:
                           type: string
+                          minLength: 1
+                          maxLength: 256
                         webhookUrl:
                           type: string
+                          pattern: '^https://.*$'
+                          maxLength: 1000
                         merchantLocation:
                           $ref: "#/components/schemas/Location"
               responses:
@@ -566,10 +714,10 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
-          /register-user:
+          /submit-customer-onboarding:
             post:
-              summary: "Registers a user. Called by Auth0 only, not available to end customer"
-              operationId: "RegisterUser"
+              summary: "Onboards a customer, adding user metadata. Only called on first login."
+              operationId: "SubmitCustomerOnboarding"
               requestBody:
                 required: true
                 content:
@@ -577,19 +725,12 @@ Resources:
                     schema:
                       type: object
                       required:
-                        - sub 
-                        - firstName
-                        - lastName
-                        - email
+                        - identityVerificationId
                       properties:
-                        sub:
+                        identityVerificationId:
                           type: string
-                        firstName:
-                          type: string
-                        lastName:
-                          type: string
-                        email:
-                          type: string
+                          minLength: 1
+                          maxLength: 256
               responses:
                 '200':
                   description: "Successful response"
@@ -602,70 +743,230 @@ Resources:
                 "500":
                   $ref: "#/components/responses/InternalServerError"
               x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSignUpHandlerFunction.Arn}:prod/invocations
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
                 type: aws_proxy
 
-#          /create-m2m-credentials:
-#            get:
-#              summary: "Creates m2m credentials for a merchant"
-#              operationId: "CreateM2mCredentials"
-#              responses:
-#                '200':
-#                  description: "Successful response"
-#                  content:
-#                    application/json:
-#                      schema:
-#                        type: object
-#                        properties:
-#                          clientId:
-#                            type: string
-#                          clientSecret:
-#                            type: string
-#                "400":
-#                  $ref: "#/components/responses/BadRequest"
-#                "403":
-#                  $ref: "#/components/responses/Forbidden"
-#                "404":
-#                  $ref: "#/components/responses/NotFound"
-#                "500":
-#                  $ref: "#/components/responses/InternalServerError"
-#              x-amazon-apigateway-integration:
-#                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSignUpHandlerFunction.Arn}:prod/invocations
-#                httpMethod: POST
-#                type: aws_proxy
+          /submit-merchant-onboarding:
+            post:
+              summary: "Onboards a merchant, adding user metadata and merchant info. Only called on first login."
+              operationId: "SubmitMerchantOnboarding"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - firstName
+                        - lastName
+                        - merchantDisplayName
+                        - legalBusinessName
+                        - entityType
+                        - taxId
+                        - taxIdType
+                        - incorporationDate
+                        - address
+                      properties:
+                        firstName:
+                          type: string
+                          minLength: 1
+                          maxLength: 256
+                        lastName:
+                          type: string
+                          minLength: 1
+                          maxLength: 256
+                        merchantDisplayName:
+                          type: string
+                          minLength: 1
+                          maxLength: 256
+                        legalBusinessName:
+                          type: string
+                          minLength: 1
+                          maxLength: 256
+                        entityType:
+                          type: string
+                          enum:
+                            - SOLE_PROPRIETORSHIP
+                            - PARTNERSHIP
+                            - LLP
+                            - LLC
+                            - C_CORP
+                            - S_CORP
+                            - B_CORP
+                            - NON_PROFIT
+                        taxId:
+                          type: string
+                          pattern: '^\d{9}$'
+                        taxIdType:
+                          type: string
+                          enum: 
+                            - TIN
+                            - EIN
+                        incorporationDate:
+                          type: string
+                          pattern: '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
+                        address:
+                          $ref: '#/components/schemas/Address'
+              responses:
+                '200':
+                  description: "Successful response"
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
 
-#          /list-m2m-credentials:
-#            get:
-#              summary: "Lists m2m credentials. Only returns client id"
-#              operationId: "ListM2MCredentials"
-#              responses:
-#                '200':
-#                  description: "Successful response"
-#                  content:
-#                    application/json:
-#                      schema:
-#                        type: object
-#                        properties:
-#                          credentials:
-#                            type: array
-#                            items:
-#                              type: object
-#                              properties:
-#                                clientId:
-#                                  type: string
-#                "400":
-#                  $ref: "#/components/responses/BadRequest"
-#                "403":
-#                  $ref: "#/components/responses/Forbidden"
-#                "404":
-#                  $ref: "#/components/responses/NotFound"
-#                "500":
-#                  $ref: "#/components/responses/InternalServerError"
-#              x-amazon-apigateway-integration:
-#                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSignUpHandlerFunction.Arn}:prod/invocations
-#                httpMethod: POST
-#                type: aws_proxy
+          /get-user-profile:
+            get:
+              summary: "Fetches user profile, including onboarding status, user type, etc"
+              operationId: "GetUserProfile"
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          hasOnboarded:
+                            type: boolean
+                          userType:
+                            $ref: '#/components/schemas/UserType'
+                          isApproved:
+                            type: boolean
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /create-m2m-credentials:
+            get:
+              summary: "Creates m2m credentials for a merchant"
+              operationId: "CreateM2mCredentials"
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          clientId:
+                            type: string
+                          clientSecret:
+                            type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /list-m2m-credentials:
+            post:
+              summary: "Lists m2m credentials. Only returns client id"
+              operationId: "ListM2MCredentials"
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        continuationToken:
+                          type: string
+                          minLength: 1
+                          maxLength: 256
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          credentials:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                clientId:
+                                  type: string
+                          continuationToken:
+                            type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /delete-m2m-credentials:
+            post:
+              summary: "Deletes m2m credentials."
+              operationId: "DeleteM2MCredentials"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - clientId
+                      properties:
+                        clientId:
+                          type: string
+                          minLength: 1
+                          maxLength: 256
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                         clientId:
+                           type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
 
   CustomAuthorizerFunction:
     Type: AWS::Serverless::Function
@@ -681,10 +982,8 @@ Resources:
         ApplyOn: None
       Environment:
         Variables:
-          AUTH_DOMAIN: dev-u0ert1rxhkdmhwy8.us.auth0.com
-          ZENOBIA_ISSUER: https://accounts.zenobiapay.com/
+          AUTH_DOMAIN: !Ref Auth0Domain
           AUDIENCE: https://dashboard.zenobiapay.com
-          AUTH0_CLIENT_ID: MBxUwuO3ApyissWpYzT74gBGW0FbC9nn
 
   ApiGatewayLogGroup:
     Type: AWS::Logs::LogGroup
@@ -752,7 +1051,7 @@ Resources:
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /create-link-token
-            Method: GET
+            Method: POST
         GetExchangeToken:
           Type: Api
           Properties:
@@ -764,7 +1063,7 @@ Resources:
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /list-bank-accounts
-            Method: GET
+            Method: POST
 
   TransferHandlerFunction:
     Type: AWS::Serverless::Function
@@ -781,8 +1080,6 @@ Resources:
           BANK_TABLE_NAME: !Ref BankTableName
           USER_TABLE_NAME: !Ref UserTableName
       Policies:
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Ref PlaidSecretsArn
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref OrumSecretsArn
         - AWSLambdaVPCAccessExecutionRole
@@ -830,13 +1127,13 @@ Resources:
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /list-customer-transfers
-            Method: GET
+            Method: POST
         ListMerchantTransfers:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /list-merchant-transfers
-            Method: GET
+            Method: POST
 
   UserHandlerFunction:
     Type: AWS::Serverless::Function
@@ -863,6 +1160,12 @@ Resources:
             KeyId: !Ref UserKeyId
         - KMSDecryptPolicy:
             KeyId: !Ref BankKeyId
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref OrumSecretsArn
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref Auth0SecretsArn
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref PlaidSecretsArn
       Events:
         UpdateMerchant:
           Type: Api
@@ -876,58 +1179,80 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /get-merchant-config
             Method: GET
-
-  M2MHandlerFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      SkipBuild: true
-    Properties:
-      FunctionName: M2MHandler
-      CodeUri: ../kotlin/lambda/m2m-handler/build/libs/lambda.jar
-      Handler: com.zenobiapay.m2mhandler.handlers.M2MHandler::handleRequest
-      MemorySize: 2048
-      Policies:
-        - AWSLambdaVPCAccessExecutionRole
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Ref Auth0SecretsArn
-      Events:
+        GetUserProfile:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /get-user-profile
+            Method: GET
+        SubmitCustomerOnboarding:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /submit-customer-onboarding
+            Method: POST
+        SubmitMerchantOnboarding:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /submit-merchant-onboarding
+            Method: POST
         CreateM2MCredentials:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /create-m2m-credentials
             Method: GET
-
-  UserSignUpHandlerFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      SkipBuild: true
-    Properties:
-      FunctionName: CustomerSignUpHandler
-      CodeUri: ../kotlin/lambda/cognito-handler/build/libs/lambda.jar
-      Handler: com.zenobiapay.cognito.handlers.CustomerSignupEventHandler::handleRequest
-      SnapStart:
-        ApplyOn: None
-      Environment:
-        Variables:
-          USER_TABLE_NAME: !Ref UserTableName
-      Policies:
-        - AWSLambdaVPCAccessExecutionRole
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserTableName
-        - KMSEncryptPolicy:
-            KeyId: !Ref UserKeyId
-        - KMSDecryptPolicy:
-            KeyId: !Ref UserKeyId
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Ref OrumSecretsArn
-      Events:
-        RegisterUser:
+        ListM2MCredentials:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
-            Path: /register-user
+            Path: /list-m2m-credentials
             Method: POST
+        DeleteM2MCredentials:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /delete-m2m-credentials
+            Method: POST
+
+  WebhookSigningKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: "KMS Key for signing JWT webhooks"
+      KeyUsage: SIGN_VERIFY
+      KeySpec: RSA_2048
+      Enabled: true
+      EnableKeyRotation: false
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowRootAccountAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
+            Resource: "*"
+          - Sid: AllowLambdaUse
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - kms:GetPublicKey
+              - kms:Sign
+            Resource: "*"
+            Condition:
+              StringEquals:
+                kms:CallerAccount: !Ref AWS::AccountId
+                kms:ViaService: !Sub lambda.${AWS::Region}.amazonaws.com
+              ArnLike: # Hack to tighten up kms to only be used by the transfer event handler. Cannot reference directly as there is a circular dependency
+                  aws:PrincipalArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/*-TransferTableEventHandler-*"
+
+  WebhookSigningKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/webhook-signing-key
+      TargetKeyId: !Ref WebhookSigningKey
 
   TransferTableEventHandler:
     Type: 'AWS::Serverless::Function'
@@ -938,12 +1263,22 @@ Resources:
       Handler: com.zenobiapay.transfertableevent.handlers.TransferTableEventHandler::handleRequest
       Runtime: java17
       CodeUri: ../kotlin/lambda/transfer-event-handler/build/libs/lambda.jar
+      Environment:
+        Variables:
+          WEBHOOK_KMS_ALIAS: !Ref WebhookSigningKeyAlias
       Policies:
         - DynamoDBStreamReadPolicy:
             TableName: !Ref TransferTableName
             StreamName: !Select [3, !Split ["/", !Ref TransferTableStreamArn]]
         - KMSDecryptPolicy:
             KeyId: !Ref TransferKeyId
+        - Statement:
+          - Sid: AllowKmsSignedWebhooks
+            Effect: Allow
+            Action:
+            - kms:GetPublicKey
+            - kms:Sign
+            Resource: !GetAtt WebhookSigningKey.Arn
       Events:
         DynamoDBStreamEvent:
           Type: DynamoDB

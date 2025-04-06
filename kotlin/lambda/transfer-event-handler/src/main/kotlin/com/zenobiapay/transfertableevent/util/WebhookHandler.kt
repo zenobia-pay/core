@@ -1,7 +1,8 @@
 package com.zenobiapay.transfertableevent.util
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.api.generated.models.TransferStatus
+import com.zenobiapay.api.generated.model.TransferStatus
 import com.zenobiapay.transfertableevent.model.TransferWebhookBody
 import io.github.oshai.kotlinlogging.KotlinLogging
 import okhttp3.OkHttpClient
@@ -13,13 +14,18 @@ import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
-class WebhookHandler @Inject constructor(private val okHttpClient: OkHttpClient, private val objectMapper: ObjectMapper) {
+class WebhookHandler @Inject constructor(
+    private val okHttpClient: OkHttpClient,
+    private val objectMapper: ObjectMapper,
+    private val jwtUtil: JwtUtil,
+) {
     companion object {
         const val EXPIRY_OFFSET_SECONDS = 60 * 5L // 5 minutes
     }
 
     fun sendTransferStatus(
         webhookUrl: String,
+        userId: String,
         transferRequestId: String,
         status: TransferStatus,
         amount: Int,
@@ -30,13 +36,15 @@ class WebhookHandler @Inject constructor(private val okHttpClient: OkHttpClient,
             transferRequestId = transferRequestId,
             amount = amount,
             status = status,
-            expiry = expiryTime.toString()
         )
         val body = objectMapper.writeValueAsString(webhookBody)
+        val mapBody = objectMapper.convertValue(webhookBody, object: TypeReference<Map<String, Any?>>() {})
+        val signature = jwtUtil.signJwtWithKms(mapBody, userId)
         logger.info { "Sending webhook to url $webhookUrl with body $body" }
-        val request = Request.Builder() // TODO: add authentication headers
+        val request = Request.Builder()
             .url(webhookUrl)
             .post(body.toRequestBody())
+            .header("Authorization", "Bearer $signature")
             .build()
 
         try {

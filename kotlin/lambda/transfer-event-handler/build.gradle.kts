@@ -28,7 +28,8 @@ repositories {
 
 dependencies {
     api(project(":kotlin:shared"))
-    implementation(project(":kotlin:shared:api"))
+    api(project(":kotlin:shared:webhook"))
+    implementation(project(":kotlin:shared:api:model"))
     implementation(project(":kotlin:shared:table"))
     implementation(project(":kotlin:shared:table:transfer"))
 
@@ -54,6 +55,7 @@ dependencies {
 
     // AWS
     api(libs.aws.sqs)
+    api(libs.aws.kms)
 
     // Testing
     testImplementation(libs.kotlin.test)

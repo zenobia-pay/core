@@ -19,6 +19,9 @@ Parameters:
   Auth0SecretsArn:
     Type: String
     Description: Auth0 secrets manager arn that stores client id and client secret
+  Auth0Domain:
+    Type: String
+    Description: Auth0 domain used for authentication
 
 Resources:
   VpcStack:
@@ -45,15 +48,14 @@ Resources:
         BankTableName: !GetAtt TableStack.Outputs.BankTableName
         UserTableName: !GetAtt TableStack.Outputs.UserTableName
         TransferTableName: !GetAtt TableStack.Outputs.TransferTableName
-        CredentialsTableName: !GetAtt TableStack.Outputs.CredentialsTableName
         BankKeyId: !GetAtt TableStack.Outputs.BankKeyId
         TransferKeyId: !GetAtt TableStack.Outputs.TransferKeyId
         UserKeyId: !GetAtt TableStack.Outputs.UserKeyId
-        CredentialsKeyId: !GetAtt TableStack.Outputs.CredentialsKeyId
         TransferTableStreamArn: !GetAtt TableStack.Outputs.TransferTableStreamArn
         PlaidSecretsArn: !Ref PlaidSecretsArn
         OrumSecretsArn: !Ref OrumSecretsArn
         Auth0SecretsArn: !Ref Auth0SecretsArn
+        Auth0Domain: !Ref Auth0Domain
 
   PayoutStack:
     Type: AWS::CloudFormation::Stack
@@ -61,6 +63,10 @@ Resources:
       TemplateURL: ./sam/payout-stack.yml
       Parameters:
         TransferTableName: !GetAtt TableStack.Outputs.TransferTableName
+        UserTableName: !GetAtt TableStack.Outputs.UserTableName
+        TransferKeyId: !GetAtt TableStack.Outputs.TransferKeyId
+        UserKeyId: !GetAtt TableStack.Outputs.UserKeyId
+        OrumSecretsArn: !Ref OrumSecretsArn
 
 Outputs:
   WebEndpoint:

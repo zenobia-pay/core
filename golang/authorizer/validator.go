@@ -11,23 +11,27 @@ import (
 	"github.com/auth0/go-jwt-middleware/v2/validator"
 )
 
-// CustomClaims contains custom data we want from the token.
-type CustomClaims struct {
+// MachineCustomClaims contains custom data we want from the token.
+type MachineCustomClaims struct {
 	Scope string `json:"scope"`
 	Azp   string `json:"azp"`
 	Role  string `json:"role"`
 }
 
 // Validates that azp is auth0 app client
-func (c CustomClaims) Validate(ctx context.Context) error {
-	auth0ClientId, found := os.LookupEnv("AUTH0_CLIENT_ID")
-	if !found {
-		println("Did not find auth0 client env var")
-		return errors.New("did not find AUTH0_CLIENT_ID")
-	}
-	if c.Azp != auth0ClientId {
-		return errors.New("auth 0 client id did not match azp")
-	}
+func (c MachineCustomClaims) Validate(ctx context.Context) error {
+	return nil
+}
+
+// UserCustomClaims contains custom data we want from the token.
+type UserCustomClaims struct {
+	Role   *string `json:"role"`
+	Email  *string `json:"email"`
+	M2MSub *string `json:"m2mSub"`
+}
+
+// Validates that azp is auth0 app client
+func (c UserCustomClaims) Validate(ctx context.Context) error {
 	return nil
 }
 
@@ -37,25 +41,19 @@ var provider *jwks.CachingProvider
 
 func init() {
 	domain := os.Getenv("AUTH_DOMAIN")
-	issuer := os.Getenv("ZENOBIA_ISSUER")
+	issuer := "https://" + domain + "/"
 	audience := os.Getenv("AUDIENCE")
 
 	if domain == "" {
 		panic("Did not retrieve env var AUTH_DOMAIN")
 	}
-	if issuer == "" {
-		panic("Did not retrieve env var ZENOBIA_ISSUER")
-	}
 	if audience == "" {
 		panic("Did not retrieve env var AUDIENCE")
 	}
 
-	zenobiaIssuerUrl, err := url.Parse(issuer)
-	if err != nil {
-		panic("Failed to parse the zenobia issuer url " + err.Error())
-	}
+	println("Got domain " + domain + ", issuer " + issuer + ", audience " + audience)
 
-	auth0IssuerUrl, err := url.Parse("https://" + domain + "/")
+	zenobiaIssuerUrl, err := url.Parse(issuer)
 	if err != nil {
 		panic("Failed to parse the zenobia issuer url " + err.Error())
 	}
@@ -66,25 +64,17 @@ func init() {
 		validator.RS256,
 		zenobiaIssuerUrl.String(),
 		[]string{audience},
+		validator.WithCustomClaims(
+			func() validator.CustomClaims {
+				return &UserCustomClaims{}
+			},
+		),
 		validator.WithAllowedClockSkew(time.Minute),
 	)
 
 	if err != nil {
 		panic("Failed to set up the jwt validator " + err.Error())
 	}
-
-	auth0ActionJwtValidator, err = validator.New(
-		provider.KeyFunc,
-		validator.RS256,
-		auth0IssuerUrl.String(),
-		[]string{audience},
-		validator.WithCustomClaims(
-			func() validator.CustomClaims {
-				return &CustomClaims{}
-			},
-		),
-		validator.WithAllowedClockSkew(time.Minute),
-	)
 	if err != nil {
 		panic("Failed to set up the jwt validator " + err.Error())
 	}
@@ -95,15 +85,6 @@ func GetValidatedUserClaims(ctx context.Context, token string) (*validator.Valid
 	claims, err := basicJwtValidator.ValidateToken(ctx, token)
 	if err != nil {
 		println("Validation threw err", err.Error())
-		return nil, err
-	}
-	return getCastClaims(claims)
-}
-
-func GetValidatedAuth0ActionClaims(ctx context.Context, token string) (*validator.ValidatedClaims, error) {
-	claims, err := auth0ActionJwtValidator.ValidateToken(ctx, token)
-	if err != nil {
-		println("Auth0 action validation threw err", err.Error())
 		return nil, err
 	}
 	return getCastClaims(claims)

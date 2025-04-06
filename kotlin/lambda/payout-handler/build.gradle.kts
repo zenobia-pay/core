@@ -31,6 +31,7 @@ dependencies {
     implementation(project(":kotlin:shared:orum"))
     implementation(project(":kotlin:shared:table"))
     implementation(project(":kotlin:shared:table:transfer"))
+    implementation(project(":kotlin:shared:table:user"))
 
     api(libs.kotlin.stdlib)
     api(libs.lambda.core)

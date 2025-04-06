@@ -26,7 +26,7 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":kotlin:shared:api"))
+    implementation(project(":kotlin:shared:api:model"))
     implementation(project(":kotlin:shared:table"))
 
     api(libs.kotlin.stdlib)

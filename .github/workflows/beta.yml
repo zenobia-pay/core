@@ -14,11 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Install yq
-      run: |
-        curl -LJO https://github.com/mikefarah/yq/releases/download/v4.15.1/yq_linux_amd64
-        chmod +x yq_linux_amd64
-        sudo mv yq_linux_amd64 /usr/local/bin/yq
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
@@ -75,7 +70,7 @@ jobs:
     - name: Terraform Init
       run: |
         terraform init \
-        -backend-config="bucket=zenobia-beta-terraform-deployment-bucket" \
+        -backend-config="bucket=zenobia-terraform-bucket" \
         -backend-config="key=envs/beta/terraform.tfstate" \
         -backend-config="region=us-east-1"
       working-directory: terraform
@@ -86,7 +81,6 @@ jobs:
         TF_VAR_AUTH0_DOMAIN: ${{ vars.TF_VAR_AUTH0_DOMAIN}}
         TF_VAR_AUTH0_CLIENT_ID: ${{ secrets.TF_VAR_AUTH0_CLIENT_ID }}
         TF_VAR_AUTH0_CLIENT_SECRET: ${{ secrets.TF_VAR_AUTH0_CLIENT_SECRET }}
-        TF_VAR_AUTH0_ACTION_CLIENT_SECRET: ${{ secrets.TF_VAR_AUTH0_ACTION_CLIENT_SECRET }}
         TF_VAR_ZENOBIA_ENDPOINT: ${{ vars.TF_VAR_ZENOBIA_ENDPOINT}}
     - name: Terraform Apply
       run: terraform apply -auto-approve
@@ -95,15 +89,14 @@ jobs:
         TF_VAR_AUTH0_DOMAIN: ${{ vars.TF_VAR_AUTH0_DOMAIN}}
         TF_VAR_AUTH0_CLIENT_ID: ${{ secrets.TF_VAR_AUTH0_CLIENT_ID }}
         TF_VAR_AUTH0_CLIENT_SECRET: ${{ secrets.TF_VAR_AUTH0_CLIENT_SECRET }}
-        TF_VAR_AUTH0_ACTION_CLIENT_SECRET: ${{ secrets.TF_VAR_AUTH0_ACTION_CLIENT_SECRET }}
         TF_VAR_ZENOBIA_ENDPOINT: ${{ vars.TF_VAR_ZENOBIA_ENDPOINT}}
-
 
   deploy-beta:
     if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
     runs-on: ubuntu-latest
     environment: beta
     env:
+      AUTH0_DOMAIN: ${{ vars.AUTH0_DOMAIN }}
       AUTH0_SECRETS_ARN: ${{ vars.AUTH0_SECRETS_ARN }}
       ORUM_SECRETS_ARN: ${{ vars.ORUM_SECRETS_ARN }}
       PLAID_SECRETS_ARN: ${{ vars.PLAID_SECRETS_ARN }}
@@ -125,13 +118,17 @@ jobs:
         echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.bashrc
         source ~/.bashrc
 
-    - name: Install yq
-      run: |
-        curl -LJO https://github.com/mikefarah/yq/releases/download/v4.15.1/yq_linux_amd64
-        chmod +x yq_linux_amd64
-        sudo mv yq_linux_amd64 /usr/local/bin/yq
     - name: Build Go artifacts
       run: make go
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          gradle-${{ runner.os }}-
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
     - name: Build Kotlin artifacts
@@ -143,4 +140,5 @@ jobs:
           Stage=beta \
           PlaidSecretsArn=$PLAID_SECRETS_ARN \
           OrumSecretsArn=$ORUM_SECRETS_ARN \
-          Auth0SecretsArn=$AUTH0_SECRETS_ARN
+          Auth0SecretsArn=$AUTH0_SECRETS_ARN \
+          Auth0Domain=$AUTH0_DOMAIN

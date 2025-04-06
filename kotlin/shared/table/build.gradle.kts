@@ -30,9 +30,9 @@ dependencies {
     api(libs.kotlin.stdlib)
 
     // Json processing
-    runtimeOnly(libs.jackson.core)
-    runtimeOnly(libs.jackson.kotlin)
-    runtimeOnly(libs.jackson.databind)
+    implementation(libs.jackson.core)
+    implementation(libs.jackson.kotlin)
+    implementation(libs.jackson.databind)
 
     // Injection
     api(libs.dagger)

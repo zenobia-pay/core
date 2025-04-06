@@ -4,28 +4,59 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.api.exception.ResourceNotFoundException
-import com.zenobiapay.api.exception.UnauthorizedException
-import com.zenobiapay.api.exception.UnknownPathException
-import com.zenobiapay.api.exception.ZenobiaExternalException
-import com.zenobiapay.api.generated.models.ErrorResponse
-import com.zenobiapay.api.model.Operation
+import com.fasterxml.jackson.databind.exc.InvalidFormatException
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
+import com.fasterxml.jackson.databind.exc.ValueInstantiationException
+import com.zenobiapay.api.model.exception.ResourceNotFoundException
+import com.zenobiapay.api.model.exception.ServiceQuotaExceededException
+import com.zenobiapay.api.model.exception.UnauthorizedException
+import com.zenobiapay.api.model.exception.UnknownPathException
+import com.zenobiapay.api.model.exception.ZenobiaExternalException
+import com.zenobiapay.api.generated.model.ErrorResponse
+import com.zenobiapay.api.model.exception.InvalidRequestException
+import com.zenobiapay.api.operation.Operation
 import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.validation.Validation
+import jakarta.validation.ValidationException
+import jakarta.validation.Validator
 import org.apache.logging.log4j.ThreadContext
 import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
-class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper) {
-    fun returnApiGwResponse(operation: Operation, input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
-        setLoggingContext(input.requestContext.requestId, input.requestContext.getUserId())
+class ResponseHandler @Inject constructor(val objectMapper: ObjectMapper) {
+    val validator: Validator = Validation.buildDefaultValidatorFactory().validator
+
+    fun <I, O> returnApiGwResponse(operation: Operation<I, O>, input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
         return wrapOperation {
             val userId = input.requestContext.getUserId()
-            operation.run(input, context, userId)
+            setLoggingContext(input.requestContext.requestId, userId)
+            logger.info { "Got operation ${operation.javaClass}, userId $userId, body ${input.body}"}
+            val role = input.requestContext.getUserRole()
+            if (role !in operation.getUserPoolAllowList()) {
+                logger.error { "Role $role not allowed for operation ${operation.javaClass.name} with allowed list ${operation.getUserPoolAllowList()}"}
+                throw UnauthorizedException()
+            }
+            // Read empty map if no body is provided. Should be cast to NoApiBody class
+            val request = try {
+                objectMapper.readValue(input.body ?: "{}", operation.inputType)
+            } catch (e: ValueInstantiationException) {
+                logger.error(e) { "Failed to read body (enum?), throwing validation exception"}
+                throw InvalidRequestException("Invalid input")
+            } catch (e: UnrecognizedPropertyException) {
+                logger.error(e) { "Unrecognized property provided"}
+                throw InvalidRequestException("Unrecognized property provided")
+            }
+
+            val violations = validator.validate(request)
+            if (violations.isNotEmpty()) {
+                throw InvalidRequestException("${violations.first().propertyPath} ${violations.first().message}")
+            }
+            operation.run(request, input, context, userId)
         }
     }
 
-    private fun wrapOperation(body: () -> Any): APIGatewayProxyResponseEvent {
+    private fun <O> wrapOperation(body: () -> O): APIGatewayProxyResponseEvent {
         return try {
             generateSuccessResponse(body())
         } catch (e: Exception) {
@@ -33,7 +64,7 @@ class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper
         }
     }
 
-    fun generateSuccessResponse(response: Any): APIGatewayProxyResponseEvent {
+    private fun <O> generateSuccessResponse(response: O): APIGatewayProxyResponseEvent {
         return APIGatewayProxyResponseEvent()
             .withStatusCode(200)
             .withHeaders(getCorsHeaders())
@@ -44,6 +75,7 @@ class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper
         val (errorCode, status) = when (error) {
             is ResourceNotFoundException, is UnknownPathException -> 404 to error.message
             is UnauthorizedException -> 403 to error.message
+            is ServiceQuotaExceededException -> 429 to error.message
             is ZenobiaExternalException -> 400 to error.message
             else -> 500 to "An internal error has occurred"
         }
@@ -53,7 +85,7 @@ class ResponseHandler @Inject constructor(private val objectMapper: ObjectMapper
             .withHeaders(getCorsHeaders())
             .withBody(
                 objectMapper.writeValueAsString(
-                    ErrorResponse(message = status, error = getErrorString(errorCode))
+                    ErrorResponse().error(getErrorString(errorCode)).message(status)
                 )
             )
     }

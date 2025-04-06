@@ -29,12 +29,9 @@ class TableModule {
 
     @Provides
     fun provideDynamoDbClient(@Named(SAM_LOCAL) samLocal: String?): DynamoDbClient {
-        val builder = DynamoDbClient.builder()
+        return DynamoDbClient.builder()
             .region(Region.US_EAST_1)
-        if (samLocal != null) {
-            builder.endpointOverride(URI("http://dynamodb-local:8000"))
-        }
-        return builder.build()
+            .build()
     }
 
     @Provides

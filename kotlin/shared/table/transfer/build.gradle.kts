@@ -26,7 +26,7 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":kotlin:shared:api"))
+    implementation(project(":kotlin:shared:api:model"))
     implementation(project(":kotlin:shared:table"))
 
     api(libs.kotlin.stdlib)
@@ -39,6 +39,7 @@ dependencies {
     implementation(libs.slf4j)
 
     // AWS
+    api(libs.lambda.events)
     api(libs.aws.dynamodb)
     api(libs.aws.dynamodb.enhanced)
 

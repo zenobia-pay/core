@@ -1,0 +1,25 @@
+{
+  "resource": "/create-link-token",
+  "path": "/create-link-token",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"product\":\"IDENTITY_VERIFICATION\"}",
+  "isBase64Encoded": false,
+  "requestContext": {
+    "accountId": "123456789012",
+    "resourceId": "abc123",
+    "stage": "dev",
+    "requestId": "xyz789",
+    "identity": {
+      "sourceIp": "127.0.0.1"
+    },
+    "authorizer": {
+      "principalId": "user123",
+      "role": "UNKNOWN",
+      "email": "user@example.com",
+      "sub": "user-abc-123"
+    }
+  }
+}

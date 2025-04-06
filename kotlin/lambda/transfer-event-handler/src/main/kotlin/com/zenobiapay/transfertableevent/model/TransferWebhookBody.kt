@@ -1,10 +1,9 @@
 package com.zenobiapay.transfertableevent.model
 
-import com.zenobiapay.api.generated.models.TransferStatus
+import com.zenobiapay.api.generated.model.TransferStatus
 
 data class TransferWebhookBody(
     val transferRequestId: String,
     val amount: Int,
-    val status: TransferStatus,
-    val expiry: String
+    val status: TransferStatus
 )

@@ -14,7 +14,13 @@ data class BankAccountItem(
     var data: BankData = BankData()
 ) {
     companion object {
-        fun generatePk(userId: String) = "BANK_ACCOUNT#c_$userId"
+        fun generatePk(userId: String, deviceId: String?): String {
+            val prefix = "BANK_ACCOUNT#c_$userId"
+            if (deviceId != null) {
+                return "${prefix}#d_$deviceId"
+            }
+            return prefix
+        }
 
         fun generateSk(accountId: String) = "ID#$accountId"
     }
@@ -26,5 +32,18 @@ data class BankData(
     var bankAccountName: String = "",
     var bankAccountType: String = "",
     var orumId: String = "",
-    var plaidItemId: String = ""
+    var plaidItemId: String = "",
+    var deviceCertificate: DeviceCertificate? = null,
+    var bankPermissions: BankPermissions? = null,
+)
+
+enum class BankPermissions {
+    RECEIVE_ONLY,
+    SEND_ONLY,
+}
+
+@DynamoDbBean
+data class DeviceCertificate(
+    var certificateType: String = "",
+    var certificateValue: String = "",
 )

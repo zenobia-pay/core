@@ -5,7 +5,6 @@ plugins {
     kotlin("plugin.serialization") version "1.9.21"
     id("com.google.devtools.ksp") version "2.1.0-1.0.29"
     id("org.openapi.generator") version "7.12.0"
-    id("com.autonomousapps.dependency-analysis") version "1.30.0"
 }
 
 java {

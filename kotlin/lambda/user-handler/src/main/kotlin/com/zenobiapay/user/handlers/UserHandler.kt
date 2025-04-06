@@ -5,10 +5,16 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.api.exception.UnknownPathException
+import com.zenobiapay.api.model.exception.UnknownPathException
 import com.zenobiapay.api.util.ResponseHandler
 import com.zenobiapay.user.di.DaggerAppComponent
+import com.zenobiapay.user.operations.CreateM2MCredentialsOperation
+import com.zenobiapay.user.operations.DeleteM2MCredentialsOperation
 import com.zenobiapay.user.operations.GetMerchantConfigOperation
+import com.zenobiapay.user.operations.GetUserProfileOperation
+import com.zenobiapay.user.operations.ListM2MCredentialsOperation
+import com.zenobiapay.user.operations.SubmitCustomerOnboardingOperation
+import com.zenobiapay.user.operations.SubmitMerchantOnboardingOperation
 import com.zenobiapay.user.operations.UpdateMerchantConfigOperation
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
@@ -26,6 +32,24 @@ class UserHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
     lateinit var getMerchantConfigOperation: GetMerchantConfigOperation
 
     @Inject
+    lateinit var getUserProfileOperation: GetUserProfileOperation
+
+    @Inject
+    lateinit var submitMerchantOnboardingOperation: SubmitMerchantOnboardingOperation
+
+    @Inject
+    lateinit var submitCustomerOnboardingOperation: SubmitCustomerOnboardingOperation
+
+    @Inject
+    lateinit var createM2MCredentialsOperation: CreateM2MCredentialsOperation
+
+    @Inject
+    lateinit var listM2MCredentialsOperation: ListM2MCredentialsOperation
+
+    @Inject
+    lateinit var deleteM2MCredentialsOperation: DeleteM2MCredentialsOperation
+
+    @Inject
     lateinit var objectMapper: ObjectMapper
 
     init {
@@ -37,6 +61,12 @@ class UserHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
         val operation = when (input?.path) {
             "/update-merchant-config" -> updateMerchantConfigOperation
             "/get-merchant-config" -> getMerchantConfigOperation
+            "/get-user-profile" -> getUserProfileOperation
+            "/submit-merchant-onboarding" -> submitMerchantOnboardingOperation
+            "/submit-customer-onboarding" -> submitCustomerOnboardingOperation
+            "/create-m2m-credentials" -> createM2MCredentialsOperation
+            "/list-m2m-credentials" -> listM2MCredentialsOperation
+            "/delete-m2m-credentials" -> deleteM2MCredentialsOperation
             else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
         }
         return responseHandler.returnApiGwResponse(operation, input, context!!)

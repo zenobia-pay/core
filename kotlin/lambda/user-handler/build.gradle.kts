@@ -29,7 +29,11 @@ repositories {
 dependencies {
     api(project(":kotlin:shared"))
     implementation(project(":kotlin:shared:api"))
+    implementation(project(":kotlin:shared:webhook"))
+    implementation(project(":kotlin:shared:api:model"))
     implementation(project(":kotlin:shared:table"))
+    implementation(project(":kotlin:shared:orum"))
+    implementation(project(":kotlin:shared:plaid"))
     implementation(project(":kotlin:shared:table:bank"))
     implementation(project(":kotlin:shared:table:user"))
 
@@ -56,6 +60,13 @@ dependencies {
     // AWS
     api(libs.aws.dynamodb)
     api(libs.aws.dynamodb.enhanced)
+    api(libs.aws.secretsmanager)
+
+    // Auth0
+    api(libs.auth0)
+
+    // Plaid
+    implementation(libs.plaid)
 
     // Testing
     testImplementation(libs.kotlin.test)

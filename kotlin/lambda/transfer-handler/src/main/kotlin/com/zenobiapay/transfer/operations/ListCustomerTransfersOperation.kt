@@ -2,26 +2,37 @@ package com.zenobiapay.transfer.operations
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
-import com.zenobiapay.api.generated.models.ListCustomerTransfers200Response
-import com.zenobiapay.api.generated.models.ListCustomerTransfers200ResponseItemsInner
-import com.zenobiapay.api.model.Operation
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.api.generated.model.ListCustomerTransfers200Response
+import com.zenobiapay.api.generated.model.ListCustomerTransfers200ResponseItemsInner
+import com.zenobiapay.api.generated.model.ListCustomerTransfersRequest
+import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.table.transfer.dao.TransferDao
 import javax.inject.Inject
 
-class ListCustomerTransfersOperation @Inject constructor(private val transferDao: TransferDao) : Operation() {
-    override fun run(input: APIGatewayProxyRequestEvent, context: Context, userId: String?): ListCustomerTransfers200Response {
-        val transfers = transferDao.listCustomerTransfers(userId!!)
-        return ListCustomerTransfers200Response(
-            items = transfers.map {
-                ListCustomerTransfers200ResponseItemsInner(
-                    amount = it.amount,
-                    status = it.status.toApiTransferStatus(),
-                    merchant = it.data!!.merchant!!.toApiParticipantIdentity(),
-                    creationTime = it.data!!.creationTime
-                )
-            }
-        )
+class ListCustomerTransfersOperation @Inject constructor(
+    private val objectMapper: ObjectMapper,
+    private val transferDao: TransferDao
+) : Operation<ListCustomerTransfersRequest, ListCustomerTransfers200Response>() {
+    override val inputType = ListCustomerTransfersRequest::class.java
+    override fun run(
+        request: ListCustomerTransfersRequest,
+        input: APIGatewayProxyRequestEvent,
+        context: Context,
+        userId: String?
+    ): ListCustomerTransfers200Response {
+        val (transfers, continuationToken) = transferDao.listCustomerTransfers(userId!!, request.continuationToken)
+        return ListCustomerTransfers200Response()
+            .items(
+                transfers.map {
+                    ListCustomerTransfers200ResponseItemsInner()
+                        .amount(it.amount)
+                        .status(it.status.toApiTransferStatus())
+                        .merchant(it.data!!.merchant!!.toApiParticipantIdentity())
+                        .creationTime(it.data!!.creationTime)
+                },
+            ).continuationToken(continuationToken?.encodeToken(objectMapper))
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {

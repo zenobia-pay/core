@@ -1,6 +1,6 @@
 package com.zenobiapay.table.transfer.model
 
-import com.zenobiapay.api.generated.models.TransferStatus as ApiTransferStatus
+import com.zenobiapay.api.generated.model.TransferStatus as ApiTransferStatus
 
 enum class TransferStatus {
     NOT_STARTED,

@@ -6,11 +6,15 @@ import com.plaid.client.model.AccountsGetResponse
 import com.plaid.client.model.AuthGetRequest
 import com.plaid.client.model.AuthGetResponse
 import com.plaid.client.model.CountryCode
+import com.plaid.client.model.IdentityVerification
+import com.plaid.client.model.IdentityVerificationGetRequest
+import com.plaid.client.model.IdentityVerificationGetResponse
 import com.plaid.client.model.ItemGetRequest
 import com.plaid.client.model.ItemGetResponse
 import com.plaid.client.model.ItemPublicTokenExchangeRequest
 import com.plaid.client.model.ItemPublicTokenExchangeResponse
 import com.plaid.client.model.LinkTokenCreateRequest
+import com.plaid.client.model.LinkTokenCreateRequestIdentityVerification
 import com.plaid.client.model.LinkTokenCreateRequestUser
 import com.plaid.client.model.LinkTokenCreateResponse
 import com.plaid.client.model.NumbersACH
@@ -25,36 +29,41 @@ private val logger = KotlinLogging.logger {}
 class PlaidException(message: String) : Exception(message)
 
 class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
-    fun createLinkToken(userId: String): LinkTokenCreateResponse {
+    fun createLinkToken(userId: String, product: Products): LinkTokenCreateResponse {
         val user = LinkTokenCreateRequestUser()
             .clientUserId(userId)
 
         // TODO: I think redirectUri should ONLY be passed if the request is from IOS
-        val request = LinkTokenCreateRequest()
+        var request = LinkTokenCreateRequest()
             .user(user)
             .clientName("Zenobia")
-            .products(listOf(Products.AUTH))
+            .products(listOf(product))
             .countryCodes((listOf(CountryCode.US)))
             .language("en")
             .redirectUri("https://zenobiapay.com/plaid")
+
+        if (product == Products.IDENTITY_VERIFICATION) {
+            request = request.identityVerification(
+                LinkTokenCreateRequestIdentityVerification()
+                    .templateId("idvtmp_aMnDHwUDRwYP2s") // TODO: make env var
+            )
+        }
 
         return getResponseOrThrowException("CreateLinkToken") {
             plaidApi.linkTokenCreate(request).execute()
         }
     }
 
-    fun exchangeLinkToken(userId: String, linkToken: String): ItemPublicTokenExchangeResponse {
+    fun exchangeLinkToken(linkToken: String): ItemPublicTokenExchangeResponse {
         val request = ItemPublicTokenExchangeRequest()
-            .clientId(userId)
             .publicToken(linkToken)
         return getResponseOrThrowException("ExchangeLinkToken") {
             plaidApi.itemPublicTokenExchange(request).execute()
         }
     }
 
-    fun getItem(userId: String, accessToken: String): ItemGetResponse {
+    fun getItem(accessToken: String): ItemGetResponse {
         val request = ItemGetRequest()
-            .clientId(userId)
             .accessToken(accessToken)
         return getResponseOrThrowException("GetItem") {
             plaidApi.itemGet(request).execute()
@@ -87,8 +96,14 @@ class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
             .accessToken(accessToken)
         return getResponseOrThrowException("AuthGet") {
             plaidApi.authGet(request).execute()
-        }.also {
-            logger.info { "got plaid response for ach ${it.numbers.ach}" }
+        }
+    }
+
+    fun getIdentityVerification(identityVerificationId: String): IdentityVerificationGetResponse {
+        val request = IdentityVerificationGetRequest()
+            .identityVerificationId(identityVerificationId)
+        return getResponseOrThrowException("GetIdentityVerification") {
+            plaidApi.identityVerificationGet(request).execute()
         }
     }
 

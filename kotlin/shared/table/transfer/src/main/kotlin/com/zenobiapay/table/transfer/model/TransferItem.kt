@@ -1,7 +1,7 @@
 package com.zenobiapay.table.transfer.model
 
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue
-import com.zenobiapay.api.exception.InvalidRequestException
+import com.zenobiapay.api.model.exception.InvalidRequestException
 import software.amazon.awssdk.enhanced.dynamodb.extensions.annotations.DynamoDbVersionAttribute
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
@@ -9,7 +9,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecon
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondarySortKey
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
 import java.time.Instant
-import com.zenobiapay.api.generated.models.PaymentParticipantIdentity as ApiPaymentParticipantIdentity
+import com.zenobiapay.api.generated.model.PaymentParticipantIdentity as ApiPaymentParticipantIdentity
 
 @DynamoDbBean
 data class TransferItem(
@@ -76,7 +76,8 @@ data class TransferData(
     var statementItems: List<StatementItem> = listOf(),
     var statusMessage: String? = null,
     var creationTime: String = "",
-    var webhookUrl: String? = null
+    var webhookUrl: String? = null,
+    var signature: Signature? = null,
 ) {
     companion object {
         fun fromAttributeValueMap(map: Map<String, AttributeValue>): TransferData {
@@ -102,26 +103,29 @@ data class TransferData(
 }
 
 @DynamoDbBean
+data class Signature(
+    var signatureType: String = "",
+    var signature: String = "",
+)
+
+@DynamoDbBean
 data class PaymentParticipantIdentity(
     var id: String = "",
-    var name: String = "",
+    var name: String? = null,
     var bankAccountId: String = ""
 ) {
     companion object {
         fun fromAttributeValueMap(map: Map<String, AttributeValue>): PaymentParticipantIdentity {
             return PaymentParticipantIdentity(
                 id = map["id"]!!.s,
-                name = map["name"]!!.s,
+                name = map["name"]?.s,
                 bankAccountId = map["bankAccountId"]!!.s
             )
         }
     }
 
     fun toApiParticipantIdentity(): ApiPaymentParticipantIdentity {
-        return ApiPaymentParticipantIdentity(
-            id = this.id,
-            name = this.name
-        )
+        return ApiPaymentParticipantIdentity().id(this.id).name(this.name)
     }
 }
 
@@ -138,17 +142,14 @@ data class StatementItem(
             )
         }
 
-        fun fromApiRequestStatementItem(item: com.zenobiapay.api.generated.models.StatementItem) =
+        fun fromApiRequestStatementItem(item: com.zenobiapay.api.generated.model.StatementItem) =
             StatementItem(
                 name = item.name ?: throw InvalidRequestException("name not specified in statementItems"),
                 amount = item.amount ?: throw InvalidRequestException("item amount not specified in statementItems")
             )
     }
 
-    fun toApiStatementItem(): com.zenobiapay.api.generated.models.StatementItem {
-        return com.zenobiapay.api.generated.models.StatementItem(
-            name = name,
-            amount = amount
-        )
+    fun toApiStatementItem(): com.zenobiapay.api.generated.model.StatementItem {
+        return com.zenobiapay.api.generated.model.StatementItem().name(name).amount(amount)
     }
 }
