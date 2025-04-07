@@ -17,6 +17,7 @@ import com.zenobiapay.api.model.exception.TransferFailedException
 import com.zenobiapay.api.model.exception.TransferStatusException
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
+import com.zenobiapay.api.model.exception.ConcurrentModificationException
 import com.zenobiapay.cryptography.util.isSignatureValid
 import com.zenobiapay.orum.util.WaiterFailedException
 import com.zenobiapay.orum.util.generateCustomerOrumId
@@ -29,6 +30,7 @@ import com.zenobiapay.table.transfer.model.TransferStatus
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.transfer.model.FulfillTransferRequestMixin
 import io.github.oshai.kotlinlogging.KotlinLogging
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -92,7 +94,11 @@ class FulfillTransferOperation @Inject constructor(
         )
         val fulfillRequestId = input.requestContext.requestId
 
-        transferRequestItem = transferDao.updateTransferRequestInFlight(transferRequestItem)
+        transferRequestItem = try {
+            transferDao.updateTransferRequestInFlight(transferRequestItem)
+        } catch (e: ConditionalCheckFailedException) {
+            throw ConcurrentModificationException()
+        }
         logger.info { "Successfully set request to IN_FLIGHT" }
         val fulfillTimestamp = Instant.now()
         transferFunds(
