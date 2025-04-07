@@ -236,6 +236,11 @@ Resources:
                   application/json:
                     schema:
                       type: object
+                      required:
+                        - created_at
+                        - event_id
+                        - event_type
+                        - event_data
                       properties:
                         created_at:
                           type: string
