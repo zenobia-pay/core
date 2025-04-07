@@ -1311,7 +1311,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
-            Path: /list-merchant-payouts.json
+            Path: /list-merchant-payouts
             Method: POST
 
   UserHandlerFunction:
