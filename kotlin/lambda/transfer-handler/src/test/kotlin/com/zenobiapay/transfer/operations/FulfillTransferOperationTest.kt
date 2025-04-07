@@ -58,7 +58,7 @@ class FulfillTransferOperationTest {
             transferDao.getMerchantTransfer(MERCHANT_ID, TRANSFER_REQUEST_ID)
         } returns createTransferItem(100, TransferStatus.NOT_STARTED)
         every {
-            bankDao.getBankAccount(USER_ID, DEVICE_ID, BANK_ACCOUNT_ID)
+            bankDao.getBankAccount(USER_ID, BANK_ACCOUNT_ID, DEVICE_ID)
         } returns createBankAccountItem(BankPermissions.SEND_ONLY, DeviceCertificate(CertificateType.EC.value, CERT_VALUE))
         every {
             userDao.getUserItem(MERCHANT_ID)

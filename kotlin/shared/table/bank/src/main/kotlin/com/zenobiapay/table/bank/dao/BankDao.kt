@@ -10,8 +10,10 @@ import com.zenobiapay.table.model.ContinuationToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
+import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest
+import software.amazon.awssdk.enhanced.dynamodb.model.TransactDeleteItemEnhancedRequest
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException
 import javax.inject.Inject
 import javax.inject.Named
@@ -34,7 +36,6 @@ class BankDao @Inject constructor(
         orumId: String,
         deviceCertificate: DeviceCertificate?
     ) {
-        val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankAccountItem::class.java))
         val pk = BankAccountItem.generatePk(userId, deviceId)
         val sk = BankAccountItem.generateSk(bankAccountId)
 
@@ -46,7 +47,7 @@ class BankDao @Inject constructor(
             BankPermissions.SEND_ONLY
         }
 
-        table.putItem(
+        bankTable.putItem(
             BankAccountItem(
                 pk = pk,
                 sk = sk,
@@ -64,7 +65,6 @@ class BankDao @Inject constructor(
         )
     }
 
-    // TODO: handle paging using continuation token
     fun listBankAccounts(userId: String, deviceId: String?, continuationToken: ContinuationToken?): Pair<List<BankAccountItem>, ContinuationToken?> {
         val queryConditional = QueryConditional.keyEqualTo {
             it.partitionValue(BankAccountItem.generatePk(userId, deviceId))
@@ -93,20 +93,31 @@ class BankDao @Inject constructor(
         }
     }
 
-    fun getBankAccount(userId: String, deviceId: String?, bankAccountId: String): BankAccountItem? {
+    fun getBankAccount(userId: String, bankAccountId: String, deviceId: String?): BankAccountItem {
         logger.info { "Fetch bank account from userId $userId, bankAccountId $bankAccountId" }
-        val table = enhancedClient.table(bankTableName, TableSchema.fromBean(BankAccountItem::class.java))
         val pk = BankAccountItem.generatePk(userId, deviceId)
         val sk = BankAccountItem.generateSk(bankAccountId)
 
-        return try {
-            table.getItem {
-                it.key {
-                    it.partitionValue(pk).sortValue(sk)
-                }
+        return bankTable.getItem {
+            it.key {
+                it.partitionValue(pk).sortValue(sk)
             }
-        } catch (e: ResourceNotFoundException) {
-            null
+        }
+    }
+
+    fun deleteBankAccount(userId: String, bankAccountId: String, deviceId: String?) {
+        logger.info { "Deleting bank account for user $userId, bankAccountId $bankAccountId, deviceId $deviceId" }
+        val item = getBankAccount(userId, bankAccountId, deviceId)
+        val deletedItem = item.copy(
+            pk = BankAccountItem.generateDeletedPk(userId, deviceId)
+        )
+        logger.info { "Updating ddb to use new partition value ${deletedItem.pk}" }
+        enhancedClient.transactWriteItems { builder ->
+            builder.addDeleteItem(bankTable, TransactDeleteItemEnhancedRequest.builder()
+                .key { it.partitionValue(item.pk).sortValue(item.sk) }
+                .build()
+            )
+            builder.addPutItem(bankTable, deletedItem)
         }
     }
 }

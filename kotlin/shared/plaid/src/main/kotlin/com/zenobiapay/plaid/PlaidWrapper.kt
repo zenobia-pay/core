@@ -13,6 +13,8 @@ import com.plaid.client.model.ItemGetRequest
 import com.plaid.client.model.ItemGetResponse
 import com.plaid.client.model.ItemPublicTokenExchangeRequest
 import com.plaid.client.model.ItemPublicTokenExchangeResponse
+import com.plaid.client.model.ItemRemoveRequest
+import com.plaid.client.model.ItemRemoveResponse
 import com.plaid.client.model.LinkTokenCreateRequest
 import com.plaid.client.model.LinkTokenCreateRequestIdentityVerification
 import com.plaid.client.model.LinkTokenCreateRequestUser
@@ -67,6 +69,14 @@ class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
             .accessToken(accessToken)
         return getResponseOrThrowException("GetItem") {
             plaidApi.itemGet(request).execute()
+        }
+    }
+
+    fun removeItem(accessToken: String): ItemRemoveResponse {
+        val request = ItemRemoveRequest()
+            .accessToken(accessToken)
+        return getResponseOrThrowException("RemoveItem") {
+            plaidApi.itemRemove(request).execute()
         }
     }
 

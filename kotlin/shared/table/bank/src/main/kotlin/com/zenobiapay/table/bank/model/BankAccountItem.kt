@@ -23,6 +23,10 @@ data class BankAccountItem(
         }
 
         fun generateSk(accountId: String) = "ID#$accountId"
+
+        fun generateDeletedPk(userId: String, deviceId: String?): String {
+            return "DELETED#${generatePk(userId, deviceId)}"
+        }
     }
 }
 

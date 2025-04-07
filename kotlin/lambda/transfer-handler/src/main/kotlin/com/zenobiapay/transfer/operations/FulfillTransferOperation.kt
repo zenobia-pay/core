@@ -69,7 +69,13 @@ class FulfillTransferOperation @Inject constructor(
         }
 
         logger.info { "Fetching bank item from userId $userId, accountId $bankAccountId" }
-        val customerBankAccountItem = bankDao.getBankAccount(userId!!, request.deviceId, bankAccountId) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
+        val customerBankAccountItem = try {
+            bankDao.getBankAccount(userId!!, bankAccountId, request.deviceId)
+        } catch (e: software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException) {
+            logger.info { "Could not find bank id $bankAccountId" }
+            throw ResourceNotFoundException("BANK_ACCOUNT")
+        }
+
         if (customerBankAccountItem.data.bankPermissions != BankPermissions.SEND_ONLY) {
             throw InvalidRequestException("Bank account does not have permission to send funds.")
         }
