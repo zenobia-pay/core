@@ -1196,6 +1196,8 @@ Resources:
             SecretArn: !Ref PlaidSecretsArn
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref OrumSecretsArn
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref PaginationSigningSecret
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref BankTableName
@@ -1246,6 +1248,8 @@ Resources:
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref OrumSecretsArn
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref PaginationSigningSecret
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref TransferTableName
@@ -1336,6 +1340,8 @@ Resources:
             SecretArn: !Ref Auth0SecretsArn
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref PlaidSecretsArn
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref PaginationSigningSecret
       Events:
         UpdateMerchant:
           Type: Api
@@ -1385,6 +1391,17 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /delete-m2m-credentials
             Method: POST
+
+  PaginationSigningSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: pagination/hmac
+      Description: HMAC secret for signing pagination tokens
+      GenerateSecretString:
+        SecretStringTemplate: "{}"
+        GenerateStringKey: secret
+        PasswordLength: 32
+        ExcludeCharacters: "\"@/\\^`|&[](){}$"
 
   WebhookHandlerFunction:
     Type: AWS::Serverless::Function

@@ -11,9 +11,10 @@ import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
-class Auth0Module {
+class UserModule {
     companion object {
         const val AUTH_MANAGEMENT_TOKEN = "AUTH_MANAGEMENT_TOKEN"
+        const val PAGINATION_SECRET = "PAGINATION_SECRET"
     }
     @Provides
     fun provideSecretsManagerClient(): SecretsManagerClient {
@@ -52,5 +53,13 @@ class Auth0Module {
         return ManagementAPI
             .newBuilder(auth0ManagementSecret.domain, authManagementToken)
             .build()
+    }
+
+    @Provides
+    @Named(PAGINATION_SECRET)
+    fun providePaginationSecret(secretsManagerClient: SecretsManagerClient): String {
+        return secretsManagerClient.getSecretValue {
+            it.secretId("pagination/hmac")
+        }.secretString()
     }
 }

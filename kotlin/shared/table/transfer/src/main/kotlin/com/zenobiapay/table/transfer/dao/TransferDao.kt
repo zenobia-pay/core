@@ -138,7 +138,7 @@ class TransferDao @Inject constructor(
         }
     }
 
-    fun listCustomerTransfers(customerId: String, continuationToken: String?): Pair<List<TransferItem>, ContinuationToken?> {
+    fun listCustomerTransfers(customerId: String, continuationToken: String?, paginationSecret: String): Pair<List<TransferItem>, ContinuationToken?> {
         val queryConditional = QueryConditional.keyEqualTo {
             it.partitionValue(TransferItem.generateGsi3Pk(customerId))
         }
@@ -149,7 +149,7 @@ class TransferDao @Inject constructor(
 
         if (continuationToken != null) {
             logger.info { "Using continuation token $continuationToken" }
-            val token = ContinuationToken.decodeToken(continuationToken, objectMapper)
+            val token = ContinuationToken.decodeToken(continuationToken, objectMapper, paginationSecret)
             queryRequestBuilder.exclusiveStartKey(token.key)
         }
 
@@ -168,7 +168,7 @@ class TransferDao @Inject constructor(
         }
     }
 
-    fun listMerchantTransfers(merchantId: String, continuationToken: String?): Pair<List<TransferItem>, ContinuationToken?> {
+    fun listMerchantTransfers(merchantId: String, continuationToken: String?, paginationSecret: String): Pair<List<TransferItem>, ContinuationToken?> {
         logger.info { "Got table name ${transferTable.tableName()}" }
         val queryConditional = QueryConditional.keyEqualTo {
             it.partitionValue(TransferItem.generateGsi1Pk(merchantId))
@@ -180,7 +180,7 @@ class TransferDao @Inject constructor(
 
         if (continuationToken != null) {
             logger.info { "Using continuation token $continuationToken" }
-            val token = ContinuationToken.decodeToken(continuationToken, objectMapper)
+            val token = ContinuationToken.decodeToken(continuationToken, objectMapper, paginationSecret)
             queryRequestBuilder.exclusiveStartKey(token.key)
         }
 
@@ -199,7 +199,7 @@ class TransferDao @Inject constructor(
         }
     }
 
-    fun listMerchantPayouts(merchantId: String, continuationToken: String?): Pair<List<PayoutItem>, ContinuationToken?> {
+    fun listMerchantPayouts(merchantId: String, continuationToken: String?, paginationSecret: String): Pair<List<PayoutItem>, ContinuationToken?> {
         logger.info { "Got table name ${transferTable.tableName()}" }
         val queryConditional = QueryConditional.keyEqualTo {
             it.partitionValue(PayoutItem.generatePk(merchantId))
@@ -212,7 +212,7 @@ class TransferDao @Inject constructor(
 
         if (continuationToken != null) {
             logger.info { "Using continuation token $continuationToken" }
-            val token = ContinuationToken.decodeToken(continuationToken, objectMapper)
+            val token = ContinuationToken.decodeToken(continuationToken, objectMapper, paginationSecret)
             queryRequestBuilder.exclusiveStartKey(token.key)
         }
 

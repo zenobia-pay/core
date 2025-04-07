@@ -27,7 +27,7 @@ class CreateM2MCredentialsOperation @Inject constructor(
 
     override fun run(request: NoApiBody, input: APIGatewayProxyRequestEvent, context: Context, userId: String?): CreateM2mCredentials200Response {
         userId!!
-        val (previouslyCreatedCredentials, _) = userDao.listM2MCredentials(userId, null)
+        val (previouslyCreatedCredentials, _) = userDao.listM2MCredentials(userId, null, null)
         if (previouslyCreatedCredentials.size >= MAX_M2M_CREDENTIALS) {
             logger.info { "Exceeded service quota for m2m credentials" }
             throw ServiceQuotaExceededException()

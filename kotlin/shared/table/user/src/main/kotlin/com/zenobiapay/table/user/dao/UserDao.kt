@@ -154,6 +154,7 @@ class UserDao @Inject constructor(
     fun listM2MCredentials(
         userId: String,
         continuationToken: String?,
+        paginationSecret: String?,
     ): Pair<List<M2MCredentialsItem>, ContinuationToken?> {
         logger.info { "Listing m2m credentials" }
         val queryConditional = QueryConditional.keyEqualTo {
@@ -166,7 +167,7 @@ class UserDao @Inject constructor(
 
         if (continuationToken != null) {
             logger.info { "Using continuation token $continuationToken" }
-            val token = ContinuationToken.decodeToken(continuationToken, objectMapper)
+            val token = ContinuationToken.decodeToken(continuationToken, objectMapper, paginationSecret!!)
             queryRequestBuilder.exclusiveStartKey(token.key)
         }
 
