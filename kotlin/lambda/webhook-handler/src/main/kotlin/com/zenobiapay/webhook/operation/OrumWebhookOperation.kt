@@ -36,14 +36,16 @@ class OrumWebhookOperation @Inject constructor(
         context: Context,
         userId: String?
     ): EmptyApiResponse {
-        logger.info { "Got request $request, body ${input.body}, headers ${input.headers}" }
+        logger.debug { "Got request $request, body ${input.body}, headers ${input.headers}" }
         if (!isSignatureValid(request, input)) {
             logger.info { "Signature did not match. Failing" }
             throw InvalidRequestException("Invalid signature")
         }
         val message = getMessage(request)
         if (message != null) {
+            logger.info { "Sending slack message" }
             slackUtil.sendMessage(message, SlackChannel.ORUM)
+            logger.info { "Successfully sent slack message" }
         }
         return EmptyApiResponse()
     }
@@ -51,7 +53,6 @@ class OrumWebhookOperation @Inject constructor(
     private fun getMessage(request: OrumWebhookRequest): String? {
         val data = request.eventData as Map<String, Any>
         val stringData = objectMapper.writeValueAsString(data)
-        logger.info { "Got string data $stringData" }
         return when (request.eventType) {
             "transfer_updated" -> handleTransferUpdated(stringData)
             "business_rejected", "business_restricted", "business_created", "business_verified" -> handleBusinessUpdated(stringData, request.eventType)
@@ -103,7 +104,6 @@ class OrumWebhookOperation @Inject constructor(
         val signature = input.headers["Signature"]
         val messagePlusCreatedAt = body + request.createdAt
 
-        logger.info { "Using base64 certificate $orumPublicCertificate" }
         val certificate = String(Base64.getDecoder().decode(orumPublicCertificate), Charsets.UTF_8)
         logger.info { "Got certificate $certificate" }
 
