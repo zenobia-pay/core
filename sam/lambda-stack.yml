@@ -1392,7 +1392,7 @@ Resources:
       SkipBuild: true
     Properties:
       FunctionName: WebhookHandler
-      CodeUri: ../kotlin/lambda/orum-webhook-handler/build/libs/lambda.jar
+      CodeUri: ../kotlin/lambda/webhook-handler/build/libs/lambda.jar
       Handler: com.zenobiapay.webhook.handlers.WebhookHandler::handleRequest
       MemorySize: 2048
       Environment:
