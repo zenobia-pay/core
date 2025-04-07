@@ -1,4 +1,4 @@
-package com.zenobiapay.payout.util
+package com.zenobiapay.table.transfer.util
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.math.BigDecimal

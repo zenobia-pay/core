@@ -3,6 +3,17 @@ info:
   title: Zenobia API
   version: 1.0
 components:
+  securitySchemes:
+    SignatureAuthorizer:
+      type: apiKey
+      name: Signature
+      in: header
+      x-amazon-apigateway-authtype: custom
+      x-amazon-apigateway-authorizer:
+        type: request
+        authorizerUri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthorizerFunction.Arn}/invocations
+        identitySource: method.request.header.Signature
   responses:
     BadRequest:
       description: Bad request
@@ -117,6 +128,8 @@ paths:
   /orum-webhook:
     post:
       summary: "Orum webhook endpoint"
+      security:
+        - SignatureAuthorizer: []
       operationId: "OrumWebhook"
       requestBody:
         required: true
@@ -136,8 +149,18 @@ paths:
       responses:
         '200':
           description: "Successful response"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebhookHandlerFunction.Arn}:prod/invocations
+        httpMethod: POST
+        type: aws_proxy
   /create-link-token:
     post:
       summary: "Creates a plaid link token"
@@ -555,6 +578,56 @@ paths:
                           type: string
                         transferRequestId:
                           type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+        httpMethod: POST
+        type: aws_proxy
+  /list-merchant-payouts:
+    post:
+      summary: "Lists all payouts for a merchant"
+      operationId: "ListMerchantPayouts"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                continuationToken:
+                  type: string
+                  minLength: 1
+                  maxLength: 256
+      responses:
+        '200':
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  continuationToken:
+                    type: string
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        amount:
+                          type: integer
+                        fee:
+                          type: integer
+                        status:
+                          type: string
+                          enum:
+                            - PENDING
+                            - PAID
         "400":
           $ref: "#/components/responses/BadRequest"
         "403":

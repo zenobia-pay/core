@@ -199,6 +199,37 @@ class TransferDao @Inject constructor(
         }
     }
 
+    fun listMerchantPayouts(merchantId: String, continuationToken: String?): Pair<List<PayoutItem>, ContinuationToken?> {
+        logger.info { "Got table name ${transferTable.tableName()}" }
+        val queryConditional = QueryConditional.keyEqualTo {
+            it.partitionValue(PayoutItem.generatePk(merchantId))
+        }
+
+        val queryRequestBuilder = QueryEnhancedRequest.builder()
+            .queryConditional(queryConditional)
+            .scanIndexForward(false)
+            .limit(MAX_LIST_ITEMS)
+
+        if (continuationToken != null) {
+            logger.info { "Using continuation token $continuationToken" }
+            val token = ContinuationToken.decodeToken(continuationToken, objectMapper)
+            queryRequestBuilder.exclusiveStartKey(token.key)
+        }
+
+        val page = payoutTable.query(queryRequestBuilder.build())
+            .iterator()
+            .asSequence()
+            .firstOrNull()
+
+        return if (page == null) {
+            listOf<PayoutItem>() to null
+        } else {
+            page.items() to page.lastEvaluatedKey()?.let { ContinuationToken(page.lastEvaluatedKey()) }
+        }.also {
+            logger.info { "Got ${it.first.size} items and continuation token ${it.second}" }
+        }
+    }
+
     fun addPayoutItemAmount(merchantId: String, amount: Int, date: LocalDate) {
         val pk = PayoutItem.generatePk(merchantId)
         val sk = PayoutItem.generateSk(date)

@@ -699,6 +699,57 @@ Resources:
                   $ref: "#/components/responses/NotFound"
                 "500":
                   $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /list-merchant-payouts:
+            post:
+              summary: "Lists all payouts for a merchant"
+              operationId: "ListMerchantPayouts"
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        continuationToken:
+                          type: string
+                          minLength: 1
+                          maxLength: 256
+              responses:
+                '200':
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          continuationToken:
+                            type: string
+                          items:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                amount:
+                                  type: integer
+                                fee:
+                                  type: integer
+                                status:
+                                  type: string
+                                  enum:
+                                    - PENDING
+                                    - PAID
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
 
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
@@ -1205,6 +1256,12 @@ Resources:
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /list-merchant-transfers
+            Method: POST
+        ListMerchantPayouts:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /list-merchant-payouts.json
             Method: POST
 
   UserHandlerFunction:

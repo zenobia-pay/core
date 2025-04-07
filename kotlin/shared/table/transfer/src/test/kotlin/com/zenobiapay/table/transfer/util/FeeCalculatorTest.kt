@@ -1,6 +1,5 @@
-package com.zenobiapay.payout.util
+package com.zenobiapay.table.transfer.util
 
-import com.zenobiapay.payout.util.getFee
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 

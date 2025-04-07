@@ -11,8 +11,8 @@ import com.zenobiapay.orum.model.TransferParticipant
 import com.zenobiapay.orum.util.generateMerchantOrumId
 import com.zenobiapay.payout.di.DaggerAppComponent
 import com.zenobiapay.payout.model.PayoutMessage
-import com.zenobiapay.payout.util.getFee
 import com.zenobiapay.table.transfer.dao.TransferDao
+import com.zenobiapay.table.transfer.util.getFee
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.table.user.model.UserType
 import io.github.oshai.kotlinlogging.KotlinLogging
