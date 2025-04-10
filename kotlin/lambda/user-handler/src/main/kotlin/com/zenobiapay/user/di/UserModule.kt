@@ -46,16 +46,6 @@ class UserModule {
     }
 
     @Provides
-    fun provideManagementAPI(
-        auth0ManagementSecret: Auth0ManagementSecret,
-        @Named(AUTH_MANAGEMENT_TOKEN) authManagementToken: String
-    ): ManagementAPI {
-        return ManagementAPI
-            .newBuilder(auth0ManagementSecret.domain, authManagementToken)
-            .build()
-    }
-
-    @Provides
     @Named(PAGINATION_SECRET)
     fun providePaginationSecret(secretsManagerClient: SecretsManagerClient): String {
         return secretsManagerClient.getSecretValue {

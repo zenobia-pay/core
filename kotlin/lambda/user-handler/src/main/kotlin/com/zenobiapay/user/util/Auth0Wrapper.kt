@@ -1,5 +1,6 @@
 package com.zenobiapay.user.util
 
+import com.auth0.client.auth.AuthAPI
 import com.auth0.client.mgmt.ManagementAPI
 import com.auth0.json.mgmt.client.Client
 import com.auth0.json.mgmt.clientgrants.ClientGrant
@@ -7,13 +8,17 @@ import com.auth0.json.mgmt.users.User
 import com.auth0.net.Response
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.user.model.Auth0Exception
+import com.zenobiapay.user.model.Auth0ManagementSecret
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.UUID
 import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
-class Auth0Wrapper @Inject constructor(private val managementAPI: ManagementAPI) {
+class Auth0Wrapper @Inject constructor(
+    private val authAPI: AuthAPI,
+    private val secret: Auth0ManagementSecret,
+) {
     companion object {
         const val ROLE_KEY = "role"
         const val ZENOBIA_AUDIENCE = "https://dashboard.zenobiapay.com"
@@ -27,21 +32,21 @@ class Auth0Wrapper @Inject constructor(private val managementAPI: ManagementAPI)
             ROLE_KEY to UserPoolGroup.MERCHANT_M2M.value
         )
 
-        val createClientResponse = managementAPI.clients().create(client).execute()
+        val createClientResponse = getManagementApi().clients().create(client).execute()
         return getBodyOrThrow(createClientResponse, "Failed to create new m2m client").also {
             logger.info { "Successfully created m2m client with name ${it.name}" }
         }
     }
 
     fun createClientGrant(client: Client, audience: String): ClientGrant {
-        val response = managementAPI.clientGrants().create(client.clientId, audience, arrayOf()).execute()
+        val response = getManagementApi().clientGrants().create(client.clientId, audience, arrayOf()).execute()
         return getBodyOrThrow(response, "Failed to create new m2m client").also {
             logger.info { "Successfully added client id ${client.clientId} to audience ${audience}" }
         }
     }
 
     fun deleteClientCredentials(clientId: String) {
-        val response = managementAPI.clients().delete(clientId).execute()
+        val response = getManagementApi().clients().delete(clientId).execute()
         getBodyOrThrow(response, "Failed to delete m2m client").also {
             logger.info { "Successfully deleted client $clientId" }
         }
@@ -55,12 +60,23 @@ class Auth0Wrapper @Inject constructor(private val managementAPI: ManagementAPI)
         val updatedUser = User().apply {
             appMetadata = metadata + (user.appMetadata ?: mapOf<String, String>())
         }
-        getBodyOrThrow(managementAPI.users().update(userId, updatedUser).execute(), "Failed to update app metadata")
+        getBodyOrThrow(getManagementApi().users().update(userId, updatedUser).execute(), "Failed to update app metadata")
     }
 
     private fun getUser(userId: String): User {
-        val user = getBodyOrThrow(managementAPI.users().get(userId, null).execute(), "Failed to get auth0 user")
+        val user = getBodyOrThrow(getManagementApi().users().get(userId, null).execute(), "Failed to get auth0 user")
         return user
+    }
+
+    fun getManagementApi(): ManagementAPI {
+        return ManagementAPI
+            .newBuilder(secret.domain, getAuthManagementToken())
+            .build()
+    }
+
+    private fun getAuthManagementToken(): String {
+        logger.info { "Refreshed auth0 token" }
+        return authAPI.requestToken(secret.audience).execute().body.accessToken
     }
 
     private fun <T> getBodyOrThrow(response: Response<T>, message: String): T {
