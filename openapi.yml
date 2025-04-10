@@ -137,6 +137,11 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - created_at
+                - event_id
+                - event_type
+                - event_data
               properties:
                 created_at:
                   type: string
@@ -454,6 +459,13 @@ paths:
             type: string
             minLength: 1
             maxLength: 256
+        - name: merchantId
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 256
       responses:
         '200':
           description: "Successful response"
@@ -462,6 +474,8 @@ paths:
               schema:
                 type: object
                 properties:
+                  amount:
+                    type: integer
                   transferRequestId:
                     type: string
                   merchant:
@@ -508,6 +522,8 @@ paths:
                 properties:
                   transferRequestId:
                     type: string
+                  amount:
+                    type: integer
                   status:
                     $ref: "#/components/schemas/TransferStatus"
                   statementItems:

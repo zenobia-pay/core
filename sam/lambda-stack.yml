@@ -582,6 +582,8 @@ Resources:
                       schema:
                         type: object
                         properties:
+                          amount:
+                            type: integer
                           transferRequestId:
                             type: string
                           merchant:
@@ -630,6 +632,8 @@ Resources:
                         properties:
                           transferRequestId:
                             type: string
+                          amount:
+                            type: integer
                           status:
                             $ref: "#/components/schemas/TransferStatus"
                           statementItems:

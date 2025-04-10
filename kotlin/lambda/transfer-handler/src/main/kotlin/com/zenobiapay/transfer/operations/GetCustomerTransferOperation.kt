@@ -29,6 +29,7 @@ class GetCustomerTransferOperation @Inject constructor(
             .merchant(PaymentParticipantIdentity().id(transfer.data?.merchant?.id).name(transfer.data?.merchant?.name))
             .status(transfer.status.toApiTransferStatus())
             .statementItems(transfer.data?.statementItems?.map { it.toApiStatementItem() } ?: listOf())
+            .amount(transfer.amount)
             .statusMessage(transfer.data?.statusMessage)
     }
 

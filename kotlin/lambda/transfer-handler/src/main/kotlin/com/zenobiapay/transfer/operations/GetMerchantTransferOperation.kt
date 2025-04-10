@@ -25,6 +25,7 @@ class GetMerchantTransferOperation @Inject constructor(
             transferRequestId = request.id
         ) ?: throw ResourceNotFoundException("TRANSFER")
         return GetMerchantTransfer200Response()
+            .amount(transferItem.amount)
             .transferRequestId(request.id)
             .status(transferItem.status.toApiTransferStatus())
             .statementItems(transferItem.data?.statementItems?.map { it.toApiStatementItem() } ?: listOf())
