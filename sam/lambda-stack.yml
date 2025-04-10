@@ -567,6 +567,13 @@ Resources:
                     type: string
                     minLength: 1
                     maxLength: 256
+                - name: merchantId
+                  in: query
+                  required: true
+                  schema:
+                    type: string
+                    minLength: 1
+                    maxLength: 256
               responses:
                 '200':
                   description: "Successful response"
