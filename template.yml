@@ -31,6 +31,9 @@ Parameters:
   OrumSlackWebhook:
     Type: String
     Description: Slack webhook for orum channel
+  WebsocketServiceEndpoint:
+    Type: String
+    Description: Websocket endpoint to send transfer updates to.
 
 Resources:
   VpcStack:
@@ -68,6 +71,7 @@ Resources:
         OrumPublicCertificate: !Ref OrumPublicCertificate
         OrumIpAddresses: !Ref OrumIpAddresses
         OrumSlackWebhook: !Ref OrumSlackWebhook
+        WebsocketServiceEndpoint: !Ref WebsocketServiceEndpoint
 
   PayoutStack:
     Type: AWS::CloudFormation::Stack

@@ -41,6 +41,7 @@ class UserDao @Inject constructor(
     fun getUserItem(sub: String): UserItem? {
         val pk = UserItem.generatePk(sub)
         val sk = UserItem.generateSk()
+        logger.info { "Getting user item using pk $pk, sk $sk" }
         return try {
             userTable.getItem(
                 Key.builder().partitionValue(pk).sortValue(sk).build()

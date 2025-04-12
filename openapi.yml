@@ -367,6 +367,10 @@ paths:
                     type: string
                   merchantId:
                     type: string
+                  expiry:
+                    type: integer
+                  signature:
+                    type: string
         "400":
           $ref: "#/components/responses/BadRequest"
         "403":

@@ -56,6 +56,7 @@ dependencies {
     // AWS
     api(libs.aws.sqs)
     api(libs.aws.kms)
+    api(libs.aws.secretsmanager)
 
     // Testing
     testImplementation(libs.kotlin.test)

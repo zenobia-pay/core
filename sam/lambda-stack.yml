@@ -59,6 +59,9 @@ Parameters:
   OrumSlackWebhook:
     Type: String
     Description: Slack webhook for orum channel
+  WebsocketServiceEndpoint:
+    Type: String
+    Description: Websocket endpoint to send transfer updates to.
 
 Resources:
   ZenobiaApi:
@@ -471,6 +474,10 @@ Resources:
                           transferRequestId:
                             type: string
                           merchantId:
+                            type: string
+                          expiry:
+                            type: integer
+                          signature:
                             type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -1266,6 +1273,8 @@ Resources:
             SecretArn: !Ref OrumSecretsArn
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref PaginationSigningSecret
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref TransferStatusSigningSecret
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref TransferTableName
@@ -1419,6 +1428,17 @@ Resources:
         PasswordLength: 32
         ExcludeCharacters: "\"@/\\^`|&[](){}$"
 
+  TransferStatusSigningSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: transfer/hmac
+      Description: HMAC secret for signing transfer status updates
+      GenerateSecretString:
+        SecretStringTemplate: "{}"
+        GenerateStringKey: secret
+        PasswordLength: 32
+        ExcludeCharacters: "\"@/\\^`|&[](){}$"
+
   WebhookHandlerFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -1494,7 +1514,10 @@ Resources:
       Environment:
         Variables:
           WEBHOOK_KMS_ALIAS: !Ref WebhookSigningKeyAlias
+          WEBSOCKET_SERVICE_ENDPOINT: !Ref WebsocketServiceEndpoint
       Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref TransferStatusSigningSecret
         - DynamoDBStreamReadPolicy:
             TableName: !Ref TransferTableName
             StreamName: !Select [3, !Split ["/", !Ref TransferTableStreamArn]]
