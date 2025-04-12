@@ -1,0 +1,25 @@
+{
+  "resource": "/create-transfer-request",
+  "path": "/create-transfer-request",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"amount\":100}",
+  "isBase64Encoded": false,
+  "requestContext": {
+    "accountId": "123456789012",
+    "resourceId": "abc123",
+    "stage": "dev",
+    "requestId": "requestId1",
+    "identity": {
+      "sourceIp": "127.0.0.1"
+    },
+    "authorizer": {
+      "principalId": "user123",
+      "sub": "auth0|67f0a8703cc36ca458f5cf7b",
+      "email": "user@example.com",
+      "role": "MERCHANT"
+    }
+  }
+}

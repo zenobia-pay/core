@@ -10,5 +10,5 @@ fun signHmacSha256(payload: String, secret: String): String {
     val mac = Mac.getInstance(algorithm)
     mac.init(secretKeySpec)
     val hash = mac.doFinal(payload.toByteArray())
-    return Base64.getEncoder().encodeToString(hash)
+    return Base64.getUrlEncoder().withoutPadding().encodeToString(hash)
 }

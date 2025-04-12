@@ -14,7 +14,7 @@ data class TransferWebsocketBody(
     val status: TransferStatus
 ) {
     fun generateSignedPayload(objectMapper: ObjectMapper, hmacSecret: String): String {
-        val payload = Base64.getEncoder().encodeToString(objectMapper.writeValueAsBytes(this))
+        val payload = Base64.getUrlEncoder().withoutPadding().encodeToString(objectMapper.writeValueAsBytes(this))
         val signature = signHmacSha256(payload, hmacSecret)
         return "$payload.$signature"
     }

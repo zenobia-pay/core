@@ -1,5 +1,7 @@
 package com.zenobiapay.transfertableevent.di
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.table.model.HmacSecret
 import dagger.Module
 import dagger.Provides
 import software.amazon.awssdk.services.kms.KmsClient
@@ -30,10 +32,12 @@ class TransferTableEventModule {
 
     @Provides
     @Named(TRANSFER_NOTIFICATION_SECRET)
-    fun provideTransferNotificationSecret(secretsManagerClient: SecretsManagerClient): String {
-        return secretsManagerClient.getSecretValue {
+    fun provideTransferNotificationSecret(objectMapper: ObjectMapper, secretsManagerClient: SecretsManagerClient): String {
+        val valueString = secretsManagerClient.getSecretValue {
             it.secretId("transfer/hmac")
         }.secretString()
+        val hmacSecret = objectMapper.readValue(valueString, HmacSecret::class.java)
+        return hmacSecret.secret
     }
 
     @Provides

@@ -13,7 +13,7 @@ data class TransferRequestWebsocketSignature(
     val expiry: Long,
 ) {
     fun toSignedHmacString(objectMapper: ObjectMapper, hmacSecret: String): String {
-        val encodedBody = Base64.getEncoder().encodeToString(objectMapper.writeValueAsBytes(this))
+        val encodedBody = Base64.getUrlEncoder().withoutPadding().encodeToString(objectMapper.writeValueAsBytes(this))
         val signature = signHmacSha256(encodedBody, hmacSecret)
         return "$encodedBody.$signature"
     }
