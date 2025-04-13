@@ -73,6 +73,7 @@ data class TransferItem(
 data class TransferData(
     var customer: PaymentParticipantIdentity? = null,
     var merchant: PaymentParticipantIdentity? = null,
+    var customerBankAccount: BankAccount? = null,
     var statementItems: List<StatementItem> = listOf(),
     var statusMessage: String? = null,
     var creationTime: String = "",
@@ -106,6 +107,13 @@ data class TransferData(
 data class Signature(
     var signatureType: String = "",
     var signature: String = "",
+)
+
+@DynamoDbBean
+data class BankAccount(
+    var name: String = "",
+    var id: String = "",
+    var lastFourDigits: String = "",
 )
 
 @DynamoDbBean

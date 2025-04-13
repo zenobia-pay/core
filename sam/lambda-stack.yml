@@ -220,6 +220,17 @@ Resources:
                 zip5:
                   type: string
                   pattern: '^\d{5}$'
+            BankAccount:
+              type: object
+              required:
+                - name
+              properties:
+                bankAccountName:
+                  type: string
+                lastFourDigits:
+                  type: string
+                bankAccountId:
+                  type: string
 
         x-amazon-apigateway-request-validators:
           basic:
@@ -388,12 +399,7 @@ Resources:
                           items:
                             type: array
                             items:
-                              type: object
-                              properties:
-                                bankAccountId:
-                                  type: string
-                                bankAccountName:
-                                  type: string
+                              $ref: "#/components/schemas/BankAccount"
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -700,6 +706,8 @@ Resources:
                                   $ref: "#/components/schemas/TransferStatus"
                                 merchant:
                                   $ref: "#/components/schemas/PaymentParticipantIdentity"
+                                customerBankAccount:
+                                  $ref: "#/components/schemas/BankAccount"
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":

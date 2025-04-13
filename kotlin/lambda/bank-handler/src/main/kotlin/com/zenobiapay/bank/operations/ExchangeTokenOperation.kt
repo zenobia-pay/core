@@ -97,6 +97,7 @@ class ExchangeTokenOperation @Inject constructor(
         bankDao.putBankAccount(
             userId = userId,
             deviceId = request.deviceId,
+            lastFourDigits = ach.account.takeLast(4),
             plaidItemId = exchangeResponse.itemId,
             bankAccountId = account.accountId,
             bankAccountName = account.name,

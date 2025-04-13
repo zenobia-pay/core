@@ -14,6 +14,7 @@ import com.zenobiapay.table.transfer.model.TransferItem.Companion.GSI_1
 import com.zenobiapay.table.transfer.model.TransferItem.Companion.GSI_2
 import com.zenobiapay.table.transfer.model.TransferStatus
 import com.zenobiapay.table.transfer.di.TRANSFER_TABLE_NAME
+import com.zenobiapay.table.transfer.model.BankAccount
 import com.zenobiapay.table.transfer.model.Signature
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
@@ -83,6 +84,7 @@ class TransferDao @Inject constructor(
         transferItem: TransferItem,
         fulfillRequestId: String,
         customerIdentity: PaymentParticipantIdentity,
+        customerBankAccount: BankAccount,
         timestamp: Instant,
         webhookUrl: String?,
         signature: Signature,
@@ -94,6 +96,7 @@ class TransferDao @Inject constructor(
                 customer = customerIdentity,
                 webhookUrl = webhookUrl,
                 signature = signature,
+                customerBankAccount = customerBankAccount,
             ),
             gsi2Pk = TransferItem.generateGsi2Pk(customerIdentity.id),
             gsi2Sk = TransferItem.generateGsi2Sk(fulfillRequestId),

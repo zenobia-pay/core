@@ -3,6 +3,7 @@ package com.zenobiapay.transfer.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.api.generated.model.BankAccount
 import com.zenobiapay.api.generated.model.ListCustomerTransfers200Response
 import com.zenobiapay.api.generated.model.ListCustomerTransfers200ResponseItemsInner
 import com.zenobiapay.api.generated.model.ListCustomerTransfersRequest
@@ -36,6 +37,11 @@ class ListCustomerTransfersOperation @Inject constructor(
             .items(
                 transfers.map {
                     ListCustomerTransfers200ResponseItemsInner()
+                        .customerBankAccount(
+                            BankAccount()
+                                .bankAccountName(it.data?.customerBankAccount?.name)
+                                .lastFourDigits(it.data?.customerBankAccount?.lastFourDigits)
+                        )
                         .amount(it.amount)
                         .status(it.status.toApiTransferStatus())
                         .merchant(it.data!!.merchant!!.toApiParticipantIdentity())

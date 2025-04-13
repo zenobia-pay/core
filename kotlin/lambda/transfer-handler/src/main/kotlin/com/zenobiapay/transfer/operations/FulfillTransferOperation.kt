@@ -24,6 +24,7 @@ import com.zenobiapay.orum.util.generateCustomerOrumId
 import com.zenobiapay.table.bank.model.BankAccountItem
 import com.zenobiapay.table.bank.model.BankPermissions
 import com.zenobiapay.table.transfer.dao.TransferDao
+import com.zenobiapay.table.transfer.model.BankAccount
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
 import com.zenobiapay.table.transfer.model.Signature
 import com.zenobiapay.table.transfer.model.TransferStatus
@@ -116,6 +117,11 @@ class FulfillTransferOperation @Inject constructor(
             customerIdentity = creditorId,
             timestamp = fulfillTimestamp,
             webhookUrl = merchantItem.data.merchantData?.webhookUrl,
+            customerBankAccount = BankAccount(
+                name = customerBankAccountItem.data.bankAccountName,
+                id = customerBankAccountItem.data.bankAccountId,
+                lastFourDigits = customerBankAccountItem.data.lastFourDigits,
+            ),
             signature = Signature(
                 signatureType = request.signature.signatureType.value,
                 signature = request.signature.signatureValue
