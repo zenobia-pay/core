@@ -25,7 +25,9 @@ import javax.inject.Inject
 private val logger = KotlinLogging.logger {}
 
 class ResponseHandler @Inject constructor(val objectMapper: ObjectMapper) {
-    val validator: Validator = Validation.buildDefaultValidatorFactory().validator
+    private val validator: Validator by lazy {
+        Validation.buildDefaultValidatorFactory().validator
+    }
 
     fun <I, O> returnApiGwResponse(operation: Operation<I, O>, input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
         return wrapOperation {

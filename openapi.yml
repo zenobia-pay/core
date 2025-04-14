@@ -163,7 +163,7 @@ paths:
                 event_data:
                   type: object
       responses:
-        '200':
+        "200":
           description: "Successful response"
         "400":
           $ref: "#/components/responses/BadRequest"
@@ -196,7 +196,7 @@ paths:
                     - AUTH
                     - IDENTITY_VERIFICATION
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -248,7 +248,7 @@ paths:
               required:
                 - linkToken
       responses:
-        '200':
+        "200":
           description: "Successful response"
         "400":
           $ref: "#/components/responses/BadRequest"
@@ -281,7 +281,7 @@ paths:
                   type: string
                   maxLength: 255
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -326,7 +326,7 @@ paths:
                   maxLength: 255
                   minLength: 1
       responses:
-        '200':
+        "200":
           description: "Successful response"
         "400":
           $ref: "#/components/responses/BadRequest"
@@ -362,7 +362,7 @@ paths:
                   items:
                     $ref: "#/components/schemas/StatementItem"
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -430,7 +430,7 @@ paths:
                     - signatureType
                     - signatureValue
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -477,7 +477,7 @@ paths:
             minLength: 1
             maxLength: 256
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -523,7 +523,7 @@ paths:
             minLength: 1
             maxLength: 256
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -569,7 +569,7 @@ paths:
                   minLength: 1
                   maxLength: 256
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -620,7 +620,7 @@ paths:
                   minLength: 1
                   maxLength: 256
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -667,7 +667,7 @@ paths:
                   minLength: 1
                   maxLength: 256
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -707,7 +707,7 @@ paths:
       summary: "Fetches metadata associated with a merchant"
       operationId: "GetMerchantConfig"
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -761,12 +761,12 @@ paths:
                   maxLength: 256
                 webhookUrl:
                   type: string
-                  pattern: '^https://.*$'
+                  pattern: "^https://.*$"
                   maxLength: 1000
                 merchantLocation:
                   $ref: "#/components/schemas/Location"
       responses:
-        '200':
+        "200":
           description: "Successful response"
         "400":
           $ref: "#/components/responses/BadRequest"
@@ -791,14 +791,19 @@ paths:
             schema:
               type: object
               required:
-                - identityVerificationId
+                - firstName
+                - lastName
               properties:
-                identityVerificationId:
+                firstName:
+                  type: string
+                  minLength: 1
+                  maxLength: 256
+                lastName:
                   type: string
                   minLength: 1
                   maxLength: 256
       responses:
-        '200':
+        "200":
           description: "Successful response"
         "400":
           $ref: "#/components/responses/BadRequest"
@@ -872,9 +877,9 @@ paths:
                   type: string
                   pattern: '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
                 address:
-                  $ref: '#/components/schemas/Address'
+                  $ref: "#/components/schemas/Address"
       responses:
-        '200':
+        "200":
           description: "Successful response"
         "400":
           $ref: "#/components/responses/BadRequest"
@@ -893,7 +898,7 @@ paths:
       summary: "Fetches user profile, including onboarding status, user type, etc"
       operationId: "GetUserProfile"
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -903,7 +908,7 @@ paths:
                   hasOnboarded:
                     type: boolean
                   userType:
-                    $ref: '#/components/schemas/UserType'
+                    $ref: "#/components/schemas/UserType"
                   isApproved:
                     type: boolean
         "400":
@@ -923,7 +928,7 @@ paths:
       summary: "Creates m2m credentials for a merchant"
       operationId: "CreateM2mCredentials"
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -961,7 +966,7 @@ paths:
                   minLength: 1
                   maxLength: 256
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -1007,7 +1012,7 @@ paths:
                   minLength: 1
                   maxLength: 256
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:

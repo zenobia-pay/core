@@ -4,7 +4,7 @@ Description: Stack to store Lambda handlers
 
 Globals:
   Function:
-    Timeout: 30
+    Timeout: 60
     MemorySize: 512
     Runtime: java17
     Architectures:
@@ -186,13 +186,13 @@ Resources:
                   type: number
             UserType:
               type: string
-              enum: [ MERCHANT, CUSTOMER ]
+              enum: [MERCHANT, CUSTOMER]
             CertificateType:
               type: string
-              enum: [ EC ]
+              enum: [EC]
             SignatureType:
               type: string
-              enum: [ SHA256_WITH_ECDSA ]
+              enum: [SHA256_WITH_ECDSA]
             Address:
               type: object
               required:
@@ -216,7 +216,7 @@ Resources:
                   maxLength: 255
                 country:
                   type: string
-                  enum: [ US ]
+                  enum: [US]
                 zip5:
                   type: string
                   pattern: '^\d{5}$'
@@ -265,7 +265,7 @@ Resources:
                         event_data:
                           type: object
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -299,7 +299,7 @@ Resources:
                             - AUTH
                             - IDENTITY_VERIFICATION
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -352,7 +352,7 @@ Resources:
                       required:
                         - linkToken
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -387,7 +387,7 @@ Resources:
                           type: string
                           maxLength: 255
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -433,7 +433,7 @@ Resources:
                           maxLength: 255
                           minLength: 1
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -470,7 +470,7 @@ Resources:
                           items:
                             $ref: "#/components/schemas/StatementItem"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -539,7 +539,7 @@ Resources:
                             - signatureType
                             - signatureValue
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -588,7 +588,7 @@ Resources:
                     minLength: 1
                     maxLength: 256
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -636,7 +636,7 @@ Resources:
                     minLength: 1
                     maxLength: 256
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -684,7 +684,7 @@ Resources:
                           minLength: 1
                           maxLength: 256
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -737,7 +737,7 @@ Resources:
                           minLength: 1
                           maxLength: 256
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -785,7 +785,7 @@ Resources:
                           minLength: 1
                           maxLength: 256
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -827,7 +827,7 @@ Resources:
               summary: "Fetches metadata associated with a merchant"
               operationId: "GetMerchantConfig"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -882,12 +882,12 @@ Resources:
                           maxLength: 256
                         webhookUrl:
                           type: string
-                          pattern: '^https://.*$'
+                          pattern: "^https://.*$"
                           maxLength: 1000
                         merchantLocation:
                           $ref: "#/components/schemas/Location"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -913,14 +913,19 @@ Resources:
                     schema:
                       type: object
                       required:
-                        - identityVerificationId
+                        - firstName
+                        - lastName
                       properties:
-                        identityVerificationId:
+                        firstName:
+                          type: string
+                          minLength: 1
+                          maxLength: 256
+                        lastName:
                           type: string
                           minLength: 1
                           maxLength: 256
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -988,16 +993,16 @@ Resources:
                           pattern: '^\d{9}$'
                         taxIdType:
                           type: string
-                          enum: 
+                          enum:
                             - TIN
                             - EIN
                         incorporationDate:
                           type: string
                           pattern: '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
                         address:
-                          $ref: '#/components/schemas/Address'
+                          $ref: "#/components/schemas/Address"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -1017,7 +1022,7 @@ Resources:
               summary: "Fetches user profile, including onboarding status, user type, etc"
               operationId: "GetUserProfile"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -1027,7 +1032,7 @@ Resources:
                           hasOnboarded:
                             type: boolean
                           userType:
-                            $ref: '#/components/schemas/UserType'
+                            $ref: "#/components/schemas/UserType"
                           isApproved:
                             type: boolean
                 "400":
@@ -1048,7 +1053,7 @@ Resources:
               summary: "Creates m2m credentials for a merchant"
               operationId: "CreateM2mCredentials"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -1087,7 +1092,7 @@ Resources:
                           minLength: 1
                           maxLength: 256
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -1134,15 +1139,15 @@ Resources:
                           minLength: 1
                           maxLength: 256
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
                       schema:
                         type: object
                         properties:
-                         clientId:
-                           type: string
+                          clientId:
+                            type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -1502,7 +1507,7 @@ Resources:
                 kms:CallerAccount: !Ref AWS::AccountId
                 kms:ViaService: !Sub lambda.${AWS::Region}.amazonaws.com
               ArnLike: # Hack to tighten up kms to only be used by the transfer event handler. Cannot reference directly as there is a circular dependency
-                  aws:PrincipalArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/*-TransferTableEventHandler-*"
+                aws:PrincipalArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/*-TransferTableEventHandler-*"
 
   WebhookSigningKeyAlias:
     Type: AWS::KMS::Alias
@@ -1511,7 +1516,7 @@ Resources:
       TargetKeyId: !Ref WebhookSigningKey
 
   TransferTableEventHandler:
-    Type: 'AWS::Serverless::Function'
+    Type: "AWS::Serverless::Function"
     Metadata:
       SkipBuild: true
     Properties:
@@ -1532,12 +1537,12 @@ Resources:
         - KMSDecryptPolicy:
             KeyId: !Ref TransferKeyId
         - Statement:
-          - Sid: AllowKmsSignedWebhooks
-            Effect: Allow
-            Action:
-            - kms:GetPublicKey
-            - kms:Sign
-            Resource: !GetAtt WebhookSigningKey.Arn
+            - Sid: AllowKmsSignedWebhooks
+              Effect: Allow
+              Action:
+                - kms:GetPublicKey
+                - kms:Sign
+              Resource: !GetAtt WebhookSigningKey.Arn
       Events:
         DynamoDBStreamEvent:
           Type: DynamoDB
