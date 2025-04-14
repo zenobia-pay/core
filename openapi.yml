@@ -279,7 +279,7 @@ paths:
                   minLength: 1
                 continuationToken:
                   type: string
-                  maxLength: 255
+                  maxLength: 512
       responses:
         "200":
           description: "Successful response"
@@ -567,7 +567,7 @@ paths:
                 continuationToken:
                   type: string
                   minLength: 1
-                  maxLength: 256
+                  maxLength: 512
       responses:
         "200":
           description: "Successful response"
@@ -618,7 +618,7 @@ paths:
                 continuationToken:
                   type: string
                   minLength: 1
-                  maxLength: 256
+                  maxLength: 512
       responses:
         "200":
           description: "Successful response"
@@ -665,7 +665,7 @@ paths:
                 continuationToken:
                   type: string
                   minLength: 1
-                  maxLength: 256
+                  maxLength: 512
       responses:
         "200":
           description: "Successful response"
@@ -964,7 +964,7 @@ paths:
                 continuationToken:
                   type: string
                   minLength: 1
-                  maxLength: 256
+                  maxLength: 512
       responses:
         "200":
           description: "Successful response"
