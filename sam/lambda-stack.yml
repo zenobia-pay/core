@@ -698,6 +698,8 @@ Resources:
                             items:
                               type: object
                               properties:
+                                transferRequestId:
+                                  type: string
                                 amount:
                                   type: integer
                                 creationTime:
@@ -1264,7 +1266,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
-            Path: /delet-bank-account
+            Path: /delete-bank-account
             Method: POST
 
   TransferHandlerFunction:

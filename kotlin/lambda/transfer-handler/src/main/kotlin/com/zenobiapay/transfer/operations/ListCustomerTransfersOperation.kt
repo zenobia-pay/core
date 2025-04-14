@@ -37,6 +37,7 @@ class ListCustomerTransfersOperation @Inject constructor(
             .items(
                 transfers.map {
                     ListCustomerTransfers200ResponseItemsInner()
+                        .transferRequestId(it.requestId)
                         .customerBankAccount(
                             BankAccount()
                                 .bankAccountName(it.data?.customerBankAccount?.name)
