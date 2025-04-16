@@ -25,6 +25,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException
+import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -49,6 +50,62 @@ class UserDao @Inject constructor(
         } catch (e: ResourceNotFoundException) {
             null
         }
+    }
+
+    fun createTemporaryCustomer(
+        sub: String
+    ) {
+        userTable.putItem(
+            UserItem(
+                pk = UserItem.generatePk(sub),
+                sk = UserItem.generateSk(),
+                data = UserItemData(
+                    isApproved = false
+                ),
+                userType = UserType.CUSTOMER,
+                ttl = Instant.now().epochSecond + 3600 // one hour
+            )
+        )
+    }
+
+    fun updateTemporaryCustomerToPermanent(
+        sub: String,
+        firstName: String,
+        lastName: String,
+        orumId: String,
+        userType: UserType,
+        isApproved: Boolean,
+    ) {
+        val item = UserItem(
+            pk = UserItem.generatePk(sub),
+            sk = UserItem.generateSk(),
+            data = UserItemData(
+                orumId = orumId,
+                isApproved = isApproved,
+                firstName = firstName,
+                lastName = lastName,
+            ),
+            userType = userType,
+            ttl = null,
+        )
+        val updateRequest = UpdateItemEnhancedRequest.builder(UserItem::class.java)
+            .item(item)
+            .conditionExpression(
+                Expression.builder()
+                    .expression("attribute_exists(#ttl) AND #data.#approved = :val")
+                    .expressionNames(mapOf(
+                        "#ttl" to "ttl",
+                        "#data" to "data",
+                        "#approved" to "approved"
+                    ))
+                    .expressionValues(
+                        mapOf(
+                            ":val" to AttributeValue.fromBool(false)
+                        )
+                    )
+                    .build()
+            ).build()
+        userTable.updateItem(updateRequest)
     }
 
     fun putUser(

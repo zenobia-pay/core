@@ -12,6 +12,7 @@ import javax.inject.Named
 const val BANK_TABLE_NAME = "BANK_TABLE_NAME"
 const val TRANSFER_TABLE_NAME = "TRANSFER_TABLE_NAME"
 const val USER_TABLE_NAME = "USER_TABLE_NAME"
+const val CREDENTIALS_TABLE_NAME = "CREDENTIALS_TABLE_NAME"
 
 @Module
 class TableModule {
@@ -21,11 +22,15 @@ class TableModule {
 
     @Provides
     @Named(TRANSFER_TABLE_NAME)
-    fun provideTransferTableName(): String = System.getenv("TRANSFER_TABLE_NAME")
+    fun provideTransferTableName(): String = System.getenv("TRANSFER_TABLE_NAME")!!
 
     @Provides
     @Named(USER_TABLE_NAME)
-    fun provideUserTableName(): String = System.getenv("USER_TABLE_NAME")
+    fun provideUserTableName(): String = System.getenv("USER_TABLE_NAME")!!
+
+    @Provides
+    @Named(CREDENTIALS_TABLE_NAME)
+    fun provideCredentialsTableName(): String = System.getenv("CREDENTIALS_TABLE_NAME")!!
 
     @Provides
     fun provideDynamoDbClient(@Named(SAM_LOCAL) samLocal: String?): DynamoDbClient {

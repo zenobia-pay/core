@@ -2,40 +2,42 @@ package com.zenobiapay.bank.operations
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.plaid.client.model.Products
 import com.zenobiapay.api.generated.model.CreateLinkToken200Response
 import com.zenobiapay.api.generated.model.CreateLinkTokenRequest
-import com.zenobiapay.api.model.NoApiBody
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
-import com.zenobiapay.api.model.exception.UnauthorizedException
-import com.zenobiapay.api.util.getUserRole
 import com.zenobiapay.plaid.PlaidWrapper
+import com.zenobiapay.table.user.dao.UserDao
+import io.github.oshai.kotlinlogging.KotlinLogging
+import java.util.UUID
 import javax.inject.Inject
+
+private val logger = KotlinLogging.logger {}
 
 class CreateLinkTokenOperation @Inject constructor(
     private val plaidWrapper: PlaidWrapper,
+    private val userDao: UserDao,
 ): Operation<CreateLinkTokenRequest, CreateLinkToken200Response>() {
 
     override val inputType = CreateLinkTokenRequest::class.java
 
     override fun run(request: CreateLinkTokenRequest, input: APIGatewayProxyRequestEvent, context: Context, userId: String?): CreateLinkToken200Response {
-        if (input.requestContext.getUserRole() == UserPoolGroup.UNKNOWN &&
-            request.product != CreateLinkTokenRequest.ProductEnum.IDENTITY_VERIFICATION) {
-            throw UnauthorizedException()
-        }
-
-        val response = plaidWrapper.createLinkToken(userId!!, getPlaidProduct(request.product))
-        context.logger.log("Got plaid response $response")
-
-        return CreateLinkToken200Response().linkToken(response.linkToken)
+        val sub = userId
+            ?: UUID.randomUUID().toString().also {
+                logger.info { "Generated new random sub $it" }
+                userDao.createTemporaryCustomer(it)
+                logger.info { "Successfully wrote generated sub to user table" }
+            }
+        val response = plaidWrapper.createLinkToken(sub, getPlaidProducts(request.product))
+        return CreateLinkToken200Response()
+            .linkToken(response.linkToken)
+            .sub(sub)
     }
 
-    private fun getPlaidProduct(product: CreateLinkTokenRequest.ProductEnum): Products {
+    private fun getPlaidProducts(product: CreateLinkTokenRequest.ProductEnum): List<Products> {
         return when (product) {
-            CreateLinkTokenRequest.ProductEnum.AUTH -> Products.AUTH
-            CreateLinkTokenRequest.ProductEnum.IDENTITY_VERIFICATION -> Products.IDENTITY_VERIFICATION
+            CreateLinkTokenRequest.ProductEnum.AUTH -> listOf(Products.AUTH, Products.IDENTITY)
         }
     }
 

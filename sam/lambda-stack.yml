@@ -21,11 +21,15 @@ Globals:
         - !Ref SubnetId2
 
 Parameters:
+  CredentialsTableKeyId:
+    Type: String
   BankKeyId:
     Type: String
   TransferKeyId:
     Type: String
   UserKeyId:
+    Type: String
+  CredentialsTableName:
     Type: String
   BankTableName:
     Type: String
@@ -62,6 +66,12 @@ Parameters:
   WebsocketServiceEndpoint:
     Type: String
     Description: Websocket endpoint to send transfer updates to.
+  CustomerJwtSigningSecret:
+    Type: String
+    Description: Signing secret for jwt
+  RefreshTokenHashingSecret:
+    Type: String
+    Description: Hash secret for refresh tokens
 
 Resources:
   ZenobiaApi:
@@ -297,7 +307,6 @@ Resources:
                           type: string
                           enum:
                             - AUTH
-                            - IDENTITY_VERIFICATION
               responses:
                 "200":
                   description: "Successful response"
@@ -307,6 +316,8 @@ Resources:
                         type: object
                         properties:
                           linkToken:
+                            type: string
+                          sub:
                             type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -332,6 +343,9 @@ Resources:
                     schema:
                       type: object
                       properties:
+                        sub:
+                          type: string
+                          maxLength: 255
                         linkToken:
                           type: string
                           maxLength: 255
@@ -354,6 +368,15 @@ Resources:
               responses:
                 "200":
                   description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          refreshToken:
+                            type: string
+                          sub:
+                            type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -1229,6 +1252,8 @@ Resources:
       Environment:
         Variables:
           BANK_TABLE_NAME: !Ref BankTableName
+          USER_TABLE_NAME: !Ref UserTableName
+          CREDENTIALS_TABLE_NAME: !Ref CredentialsTableName
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref PlaidSecretsArn
@@ -1239,10 +1264,26 @@ Resources:
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref BankTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CredentialsTableName
         - KMSEncryptPolicy:
             KeyId: !Ref BankKeyId
         - KMSDecryptPolicy:
             KeyId: !Ref BankKeyId
+        - KMSEncryptPolicy:
+            KeyId: !Ref UserKeyId
+        - KMSDecryptPolicy:
+            KeyId: !Ref UserKeyId
+        - KMSDecryptPolicy:
+            KeyId: !Ref CredentialsTableKeyId
+        - KMSEncryptPolicy:
+            KeyId: !Ref CredentialsTableKeyId
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref CustomerJwtSigningSecret
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref RefreshTokenHashingSecret
       Events:
         GetCreateLinkToken:
           Type: Api

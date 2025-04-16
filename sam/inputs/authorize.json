@@ -1,5 +1,6 @@
 {
     "type": "TOKEN",
-    "authorizationToken": "Bearer test-token-123",
-    "methodArn": "arn:aws:execute-api:us-east-1:123456789012:example/prod/GET/request"
+    "authorizationToken": "",
+    "methodArn": "arn:aws:execute-api:us-east-1:123456789012:example/prod/GET/create-link-token",
+    "path": "/create-link-token"
 }

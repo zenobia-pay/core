@@ -194,7 +194,6 @@ paths:
                   type: string
                   enum:
                     - AUTH
-                    - IDENTITY_VERIFICATION
       responses:
         "200":
           description: "Successful response"
@@ -204,6 +203,8 @@ paths:
                 type: object
                 properties:
                   linkToken:
+                    type: string
+                  sub:
                     type: string
         "400":
           $ref: "#/components/responses/BadRequest"
@@ -228,6 +229,9 @@ paths:
             schema:
               type: object
               properties:
+                sub:
+                  type: string
+                  maxLength: 255
                 linkToken:
                   type: string
                   maxLength: 255
@@ -250,6 +254,15 @@ paths:
       responses:
         "200":
           description: "Successful response"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  refreshToken:
+                    type: string
+                  sub:
+                    type: string
         "400":
           $ref: "#/components/responses/BadRequest"
         "403":

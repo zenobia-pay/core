@@ -1,130 +1,34 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Authentication stack.
-Globals:
-  Function:
-    Timeout: 30
-    MemorySize: 512
-    Runtime: java17
-    Architectures:
-      - x86_64
-    AutoPublishAlias: prod
-    SnapStart:
-      ApplyOn: PublishedVersions
-    AutoPublishAliasAllProperties: true
-    VpcConfig:
-      SecurityGroupIds:
-        - !Ref SecurityGroupId
-      SubnetIds:
-        - !Ref SubnetId1
-        - !Ref SubnetId2
-
-Parameters:
-  UserTableName:
-    Type: String
-  UserKeyId:
-    Type: String
-  SecurityGroupId:
-    Type: String
-  SubnetId1:
-    Type: String
-  SubnetId2:
-    Type: String
 
 Resources:
-  # Cognito Resources
-  UserPool:
-    Type: AWS::Cognito::UserPool
+  CustomerJwtSigningSecret:
+    Type: AWS::SecretsManager::Secret
     Properties:
-      UserPoolName: !Sub ${AWS::StackName}-user-pool
-      AutoVerifiedAttributes:
-        - email
-      UsernameAttributes:
-        - email
-      MfaConfiguration: "OFF"
-      UserPoolAddOns:
-        AdvancedSecurityMode: "OFF"
-      LambdaConfig:
-        PostConfirmation: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:CognitoEventHandler
-      AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: false
-        InviteMessageTemplate:
-          EmailMessage: Your username is {username} and your temporary password is {####}
-          EmailSubject: Welcome to Zenobia
-          SMSMessage: Your username for Zenobia is {username} and your temporary password is {####}.
+      Name: jwt/customer/hmac
+      Description: HMAC secret for signing customer jwts
+      GenerateSecretString:
+        SecretStringTemplate: "{}"
+        GenerateStringKey: secret
+        PasswordLength: 64
+        ExcludeCharacters: "\"@/\\^`|&[](){}$=+"
 
-  MerchantGroup:
-    Type: AWS::Cognito::UserPoolGroup
+  RefreshTokenHashingSecret:
+    Type: AWS::SecretsManager::Secret
     Properties:
-      GroupName: MerchantGroup
-      UserPoolId: !Ref UserPool
-      Description: Merchant group with abilities to request transfers, set promos, etc.
-
-  CustomerGroup:
-    Type: AWS::Cognito::UserPoolGroup
-    Properties:
-      GroupName: CustomerGroup
-      UserPoolId: !Ref UserPool
-      Description: Customer group with abilities to make payments
-
-  UserPoolClient:
-    Type: AWS::Cognito::UserPoolClient
-    Properties:
-      UserPoolId: !Ref UserPool
-      ClientName: !Sub ${AWS::StackName}-client
-      ExplicitAuthFlows:
-        - ALLOW_USER_SRP_AUTH
-        - ALLOW_REFRESH_TOKEN_AUTH
-        - ALLOW_USER_PASSWORD_AUTH
-        - ALLOW_USER_AUTH
-      SupportedIdentityProviders:
-        - COGNITO
-      CallbackURLs:
-        - https://d84l1y8p4kdic.cloudfront.net
-      AllowedOAuthFlows:
-        - implicit
-        - code
-      AllowedOAuthScopes:
-        - email
-        - openid
-        - phone
-      AllowedOAuthFlowsUserPoolClient: true
-      # Enable the hosted UI for the managed login page
-      GenerateSecret: false # Set to true if a client secret is required for the app client
-      PreventUserExistenceErrors: ENABLED
-      EnableTokenRevocation: true
-      AuthSessionValidity: 15
-      RefreshTokenValidity: 30
-
-  CognitoDomain:
-    Type: AWS::Cognito::UserPoolDomain
-    Properties:
-      Domain: zenobia
-      UserPoolId: !Ref UserPool
-
-  CognitoResourceServer:
-    Type: AWS::Cognito::UserPoolResourceServer
-    Properties:
-      Identifier: Zenobia
-      Name: Zenobia Resource Server
-      UserPoolId: !Ref UserPool
-      Scopes:
-        - ScopeName: machine
-          ScopeDescription: "Scope for backend servers"
-
-  CognitoIdentityPool:
-    Type: 'AWS::Cognito::IdentityPool'
-    Properties:
-      IdentityPoolName: 'ZenobiaIdentityPool'
-      AllowUnauthenticatedIdentities: true
-      CognitoIdentityProviders:
-        - ClientId: !Ref UserPoolClient
-          ProviderName: !Sub 'cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}'
+      Name: credentials/refreshtoken/hmac
+      Description: HMAC secret for signing customer jwts
+      GenerateSecretString:
+        SecretStringTemplate: "{}"
+        GenerateStringKey: secret
+        PasswordLength: 64
+        ExcludeCharacters: "\"@/\\^`|&[](){}$=+"
 
 Outputs:
-  UserPoolArn:
-    Value: !GetAtt UserPool.Arn
-    Description: Cognito user pool arn.
-  IdentityPoolId:
-    Value: !Ref CognitoIdentityPool
-    Description: Cognito identity pool.
+  CustomerJwtSigningSecret:
+    Value: !Ref CustomerJwtSigningSecret
+    Description: Signing secret for jwt
+  RefreshTokenHashingSecret:
+    Value: !Ref RefreshTokenHashingSecret
+    Description: Signing secret for refresh tokens

@@ -16,6 +16,7 @@ data class UserItem(
     @get:DynamoDbAttribute("data")
     var data: UserItemData = UserItemData(),
     var userType: UserType? = null,
+    var ttl: Long? = null, // DO NOT change this value without changing user dao conditional expressions
 ) {
     companion object {
         fun generatePk(sub: String) = "USER#id_$sub"

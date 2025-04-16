@@ -14,36 +14,58 @@ import (
 func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 	println("Got path " + event.Path)
 
-	if event.Path == "/orum-webhook" {
-		println("Got webhook. Validating ip address")
-		orum_ip_addresses, ok := os.LookupEnv("VALID_ORUM_IP_ADDRESSES")
-		print("valid ip addresses: ")
-		fmt.Println(orum_ip_addresses)
-
-		if !ok {
-			panic("failed to fetch valid orum ip addresses")
-		}
-
-		allowedIps := strings.Split(orum_ip_addresses, ",")
-		ip := event.RequestContext.Identity.SourceIP
-		println("Got request ip: " + ip)
-		for _, allowedIp := range allowedIps {
-			if ip == allowedIp {
-				println("Matched ip address, allowing")
-				return generatePolicy("user", "Allow", event.MethodArn, map[string]interface{}{}), nil
-			}
-		}
-		println("IP address not recognized, denying")
-		return generatePolicy("user", "Deny", "*", map[string]interface{}{}), nil
-
-	} else {
-		token := extractToken(event.Headers["Authorization"])
-		println("Validating auth0 user")
-		claims, err := GetValidatedUserClaims(ctx, token)
-		isValid := err == nil
-		println(fmt.Sprintf("Got isValidApiToken: %t", isValid))
-		return generatePolicyResponse(isValid, getUserContext(claims), event.MethodArn), nil
+	var hasAuthorizationHeader = false
+	if authorization, ok := event.Headers["Authorization"]; ok {
+		hasAuthorizationHeader = authorization != "NONE" // Explicitly set by app if no auth is provided
 	}
+	if isValidPath(event.Path, validOrumRoutes) {
+		return handleOrumWebhookEndpoint(ctx, event)
+	} else if !hasAuthorizationHeader && isValidPath(event.Path, validUnauthenticatedRoutes) {
+		return handleUnprotectedEndpoint(ctx, event)
+	} else {
+		return handleProtectedEndpoint(ctx, event)
+	}
+}
+
+func handleOrumWebhookEndpoint(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
+	println("Got webhook. Validating ip address")
+	orum_ip_addresses, ok := os.LookupEnv("VALID_ORUM_IP_ADDRESSES")
+	print("valid ip addresses: ")
+	fmt.Println(orum_ip_addresses)
+
+	if !ok {
+		panic("failed to fetch valid orum ip addresses")
+	}
+
+	allowedIps := strings.Split(orum_ip_addresses, ",")
+	ip := event.RequestContext.Identity.SourceIP
+	println("Got request ip: " + ip)
+	for _, allowedIp := range allowedIps {
+		if ip == allowedIp {
+			println("Matched ip address, allowing")
+			return generatePolicy("user", "Allow", []string{event.MethodArn}, map[string]interface{}{}), nil
+		}
+	}
+	println("IP address not recognized, denying")
+	return generatePolicy("user", "Deny", []string{"*"}, map[string]interface{}{}), nil
+}
+
+func handleUnprotectedEndpoint(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
+	println("Validating unauthenticated user. Returning allow")
+	paths, err := generateUnauthenticatedArnPaths(event.MethodArn)
+	if err != nil {
+		return generatePolicyResponse(false, getUserContext(nil), []string{}), nil
+	}
+	return generatePolicyResponse(true, getUserContext(nil), paths), nil
+}
+
+func handleProtectedEndpoint(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
+	token := extractToken(event.Headers["Authorization"])
+	println("Validating auth0 user")
+	claims, err := GetValidatedUserClaims(ctx, token)
+	isValid := err == nil
+	println(fmt.Sprintf("Got isValidApiToken: %t", isValid))
+	return generatePolicyResponse(isValid, getUserContext(claims), []string{wildcardArn(event.MethodArn)}), nil
 }
 
 func extractToken(authHeader string) string {
@@ -74,25 +96,25 @@ func getUserContext(claims *validator.ValidatedClaims) map[string]interface{} {
 	return nil
 }
 
-func generatePolicyResponse(isValid bool, context map[string]interface{}, methodArn string) events.APIGatewayCustomAuthorizerResponse {
+func generatePolicyResponse(isValid bool, context map[string]interface{}, arns []string) events.APIGatewayCustomAuthorizerResponse {
 	if isValid {
-		return generatePolicy("user", "Allow", wildcardArn(methodArn), context)
+		return generatePolicy("user", "Allow", arns, context)
 	} else {
-		return generatePolicy("user", "Deny", "*", context)
+		return generatePolicy("user", "Deny", []string{"*"}, context)
 	}
 }
 
-func generatePolicy(principalId, effect, resource string, context map[string]interface{}) events.APIGatewayCustomAuthorizerResponse {
+func generatePolicy(principalId, effect string, resource []string, context map[string]interface{}) events.APIGatewayCustomAuthorizerResponse {
 	authResponse := events.APIGatewayCustomAuthorizerResponse{PrincipalID: principalId}
 
-	if effect != "" && resource != "" {
+	if effect != "" && len(resource) > 0 {
 		authResponse.PolicyDocument = events.APIGatewayCustomAuthorizerPolicy{
 			Version: "2012-10-17",
 			Statement: []events.IAMPolicyStatement{
 				{
 					Action:   []string{"execute-api:Invoke"},
 					Effect:   effect,
-					Resource: []string{resource},
+					Resource: resource,
 				},
 			},
 		}
@@ -102,6 +124,30 @@ func generatePolicy(principalId, effect, resource string, context map[string]int
 		authResponse.Context = context
 	}
 	return authResponse
+}
+
+func generateUnauthenticatedArnPaths(methodArn string) ([]string, error) {
+	var arns []string
+	for _, v := range validUnauthenticatedRoutes {
+		arn, err := getOperationArn(methodArn, v)
+		if err != nil {
+			return nil, err
+		}
+		arns = append(arns, *arn)
+	}
+	return arns, nil
+}
+
+func getOperationArn(methodArn string, route Route) (*string, error) {
+	parts := strings.Split(methodArn, "/")
+
+	if len(parts) < 4 {
+		return nil, fmt.Errorf("Invalid methodArn format %s", methodArn)
+	}
+
+	arn := fmt.Sprintf("%s/%s/%s", strings.Join(parts[:2], "/"), route.Method, route.Path)
+	println("Got generated arn:" + arn)
+	return &arn, nil
 }
 
 func wildcardArn(methodArn string) string {

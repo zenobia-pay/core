@@ -11,6 +11,37 @@ Parameters:
     Description: Unique identifier to avoid resource naming conflicts. Should only be needed for dev sandbox accounts
 
 Resources:
+  CredentialsTableKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Key to encrypt Bank DynamoDB table
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowRootAccount
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: "kms:*"
+            Resource: "*"
+
+  CredentialsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: CredentialsTable
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+        KMSMasterKeyId: !Ref BankKmsKey
+        SSEType: KMS
+
   BankKmsKey:
     Type: AWS::KMS::Key
     Properties:
@@ -155,8 +186,14 @@ Resources:
         SSEEnabled: true
         KMSMasterKeyId: !Ref UserKmsKey
         SSEType: KMS
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
 
 Outputs:
+  CredentialsTableKeyId:
+    Value: !Ref CredentialsTableKmsKey
+    Description: Credentials key that stores refresh token
   BankKeyId:
     Value: !Ref BankKmsKey
     Description: Bank table that stores plaid credentials
@@ -166,6 +203,9 @@ Outputs:
   UserKeyId:
     Value: !Ref UserKmsKey
     Description: Bank table that stores plaid credentials
+  CredentialsTableName:
+    Value: !Ref CredentialsTable
+    Description: Table that stores refresh tokens
   BankTableName:
     Value: !Ref BankTable
     Description: Bank table that stores plaid credentials

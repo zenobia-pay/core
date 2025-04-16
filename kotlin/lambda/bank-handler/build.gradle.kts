@@ -35,6 +35,8 @@ dependencies {
     api(project(":kotlin:shared:plaid"))
     api(project(":kotlin:shared:table"))
     api(project(":kotlin:shared:table:bank"))
+    api(project(":kotlin:shared:table:user"))
+    api(project(":kotlin:shared:table:credentials"))
 
     api(libs.kotlin.stdlib)
     api(libs.lambda.core)

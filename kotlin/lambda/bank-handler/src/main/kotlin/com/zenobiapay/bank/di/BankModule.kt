@@ -1,5 +1,8 @@
 package com.zenobiapay.bank.di
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.table.credentials.dao.REFRESH_TOKEN_HASHING_SECRET
+import com.zenobiapay.table.model.HmacSecret
 import dagger.Module
 import dagger.Provides
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
@@ -20,5 +23,15 @@ class BankModule {
         return secretsManagerClient.getSecretValue {
             it.secretId("pagination/hmac")
         }.secretString()
+    }
+
+    @Provides
+    @Named(REFRESH_TOKEN_HASHING_SECRET)
+    fun provideRefreshTokenHashingSecret(objectMapper: ObjectMapper, secretsManagerClient: SecretsManagerClient): String {
+        val secretString = secretsManagerClient.getSecretValue {
+            it.secretId("credentials/refreshtoken/hmac")
+        }.secretString()
+        val hmacSecret = objectMapper.readValue(secretString, HmacSecret::class.java)
+        return hmacSecret.secret
     }
 }
