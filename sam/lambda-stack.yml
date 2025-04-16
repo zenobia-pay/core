@@ -290,6 +290,37 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
+          /issue-jwt:
+            post:
+              summary: "Exchange refresh token for jwt"
+              operationId: "IssueJwt"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - refreshToken
+                      properties:
+                        refreshToken:
+                          type: string
+              responses:
+                "200":
+                  description: "Successful response"
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${JwtIssuerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
           /create-link-token:
             post:
               summary: "Creates a plaid link token"
@@ -1203,6 +1234,9 @@ Resources:
           AUTH_DOMAIN: !Ref Auth0Domain
           AUDIENCE: https://dashboard.zenobiapay.com
           VALID_ORUM_IP_ADDRESSES: !Ref OrumIpAddresses
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref CustomerJwtSigningSecret
 
   ApiGatewayLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1239,6 +1273,38 @@ Resources:
                   - logs:GetLogEvents
                   - logs:FilterLogEvents
                 Resource: "*"
+
+  JwtIssuerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      SkipBuild: true
+    Properties:
+      FunctionName: JwtIssuer
+      Handler: main
+      Runtime: provided.al2
+      CodeUri: ../golang/jwt-issuer/build/function.zip
+      Timeout: 30
+      SnapStart:
+        ApplyOn: None
+      Environment:
+        Variables:
+          CREDENTIALS_TABLE_NAME: !Ref CredentialsTableName
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref RefreshTokenHashingSecret
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref CustomerJwtSigningSecret
+        - DynamoDBReadPolicy:
+            TableName: !Ref CredentialsTableName
+        - KMSDecryptPolicy:
+            KeyId: !Ref CredentialsTableKeyId
+      Events:
+        IssueJwt:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /issue-jwt
+            Method: POST
 
   BankHandlerFunction:
     Type: AWS::Serverless::Function

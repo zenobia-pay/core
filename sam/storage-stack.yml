@@ -14,7 +14,7 @@ Resources:
   CredentialsTableKmsKey:
     Type: AWS::KMS::Key
     Properties:
-      Description: Key to encrypt Bank DynamoDB table
+      Description: Key to encrypt Credentials DynamoDB table
       EnableKeyRotation: true
       KeyPolicy:
         Version: "2012-10-17"
@@ -39,7 +39,7 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
-        KMSMasterKeyId: !Ref BankKmsKey
+        KMSMasterKeyId: !Ref CredentialsTableKmsKey
         SSEType: KMS
 
   BankKmsKey:
