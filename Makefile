@@ -11,8 +11,9 @@ go:
 		bash -c 'yum install -y golang zip && \
 				 GOOS=linux GOARCH=amd64 go build -buildvcs=false -o $$dir/build/bootstrap ./$$dir && \
 				 chmod +x $$dir/build/bootstrap && \
-				 cd build && \
-		         zip function.zip bootstrap'; \
+				 cd $$dir/build && \
+		         zip function.zip bootstrap && \
+				 cd ../../..'; \
 	done
 
 go-dev:
