@@ -17,6 +17,7 @@ type CustomerClaims struct {
 }
 
 var issuer string = "https://api.zenobiapay.com"
+var ExpiryTimeSeconds int = 900
 
 func IssueJWT(ctx context.Context, sub string) (string, error) {
 	hmacSecret := secrets.GetJwtTokenHashingSecret(ctx)
@@ -25,7 +26,7 @@ func IssueJWT(ctx context.Context, sub string) (string, error) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   sub,
 			Issuer:    issuer,
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(ExpiryTimeSeconds) * time.Second)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}

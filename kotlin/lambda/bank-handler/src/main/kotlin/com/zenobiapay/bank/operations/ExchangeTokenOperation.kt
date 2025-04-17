@@ -81,9 +81,6 @@ class ExchangeTokenOperation @Inject constructor(
                 ach = ach
             )
         }
-        if (userId == null) {
-            logger.info { "No user id found. Checking for temporary sub ${request.sub}" }
-        }
 
         return ExchangeToken200Response()
             .refreshToken(refreshToken)
@@ -117,7 +114,7 @@ class ExchangeTokenOperation @Inject constructor(
             firstName = firstName,
             lastName = lastName,
             socialSecurityNumber = null,
-            contacts = getContacts(owner.emails, owner.phoneNumbers)
+            contacts = getContacts(owner.emails, listOf())
         )
         logger.info { "Creating orum person" }
         orumWrapper.createPerson(createPersonRequest)

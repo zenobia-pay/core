@@ -302,12 +302,24 @@ Resources:
                       type: object
                       required:
                         - refreshToken
+                        - sub
                       properties:
                         refreshToken:
+                          type: string
+                        sub:
                           type: string
               responses:
                 "200":
                   description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          jwt:
+                            type: string
+                          expiresIn:
+                            type: integer
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":

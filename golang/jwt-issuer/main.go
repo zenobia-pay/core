@@ -43,15 +43,16 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 	if !isValidRefreshToken(ctx, sub, refreshToken) {
 		fmt.Printf("Token was invalid for sub %s", sub)
-		return generateInvalidRequestResponse(), nil
+		return generateUnauthorizedResponse(), nil
 	}
 
 	issuedJwt, error := jwt.IssueJWT(ctx, sub)
 	if error != nil {
 		panic("Failed to issue jwt")
 	}
-	body := map[string]string{
-		"jwt": issuedJwt,
+	body := map[string]any{
+		"jwt":       issuedJwt,
+		"expiresIn": jwt.ExpiryTimeSeconds,
 	}
 	marshalledBody, error := json.Marshal(body)
 	if error != nil {

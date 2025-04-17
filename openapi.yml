@@ -177,6 +177,48 @@ paths:
         uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebhookHandlerFunction.Arn}:prod/invocations
         httpMethod: POST
         type: aws_proxy
+  /issue-jwt:
+    post:
+      summary: "Exchange refresh token for jwt"
+      operationId: "IssueJwt"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+                - sub
+              properties:
+                refreshToken:
+                  type: string
+                sub:
+                  type: string
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jwt:
+                    type: string
+                  expiresIn:
+                    type: integer
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${JwtIssuerFunction.Arn}:prod/invocations
+        httpMethod: POST
+        type: aws_proxy
   /create-link-token:
     post:
       summary: "Creates a plaid link token"
