@@ -24,3 +24,5 @@ include(
     "kotlin:lambda:payout-handler",
     "kotlin:lambda:transfer-event-handler",
 )
+include("kotlin:shared:table:credentials")
+findProject(":kotlin:shared:table:credentials")?.name = "credentials"

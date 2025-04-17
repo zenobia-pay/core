@@ -146,5 +146,18 @@ This will:
    - Run `./build.sh` or `./dev.sh` again
 
 3. If build fails:
+
    - Ensure Java 17 is installed and set correctly
    - Try cleaning the build: `./gradlew clean`
+
+     04.13.25 How to develop locally, lambda stack
+
+Make changes to the lambda stack file for the args, lambda-stack.yml, and the corresponsding handler. eg for submit-customer-onboarding you see the route is defined in the UserHandler, which sends us to SubmitCustomerOnboardingOperation which is a class with a "run" handler. Make the necessary changes.
+
+Then run `make openapi` which writes the changes from the yml file to the openapi spec.
+
+Then run `make` (or just `make kotlin` if you're only changing kotlin files) which will read from the openapi spec.
+
+Then go to zenobia.awsapps.com/start/# and find the `teddyli sandbox` account (talk to us if you don't see it) and click access keys. Go to Option 1: Set AWS environment variables. Copy and paste those.
+
+Then run sam local. So for example to run the user handler lambda with the submit-customer-onboarding event as args call `sam local invoke UserHandlerFunction -e sam/inputs/submit-customer-onboarding.json --env-vars sam/inputs/env.json`

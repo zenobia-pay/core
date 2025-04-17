@@ -24,6 +24,7 @@ import com.zenobiapay.orum.util.generateCustomerOrumId
 import com.zenobiapay.table.bank.model.BankAccountItem
 import com.zenobiapay.table.bank.model.BankPermissions
 import com.zenobiapay.table.transfer.dao.TransferDao
+import com.zenobiapay.table.transfer.model.BankAccount
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
 import com.zenobiapay.table.transfer.model.Signature
 import com.zenobiapay.table.transfer.model.TransferStatus
@@ -60,12 +61,12 @@ class FulfillTransferOperation @Inject constructor(
         userId: String?
     ): FulfillTransfer200Response {
         val transferRequestId = request.transferRequestId
-        val merchantId = request.merchantId
         val bankAccountId = request.bankAccountId
 
         val date = LocalDate.now(ZoneOffset.UTC).also { logger.info { "Using date $it" } }
-        var transferRequestItem = transferDao.getMerchantTransfer(merchantId = merchantId, transferRequestId = transferRequestId)
+        var transferRequestItem = transferDao.getTransfer(transferRequestId = transferRequestId)
             ?: throw ResourceNotFoundException("TRANSFER")
+        logger.info { "Got transfer request item $transferRequestItem" }
         if (transferRequestItem.status != TransferStatus.NOT_STARTED) {
             throw TransferStatusException("Transfer status is no longer in NOT_STARTED state.")
         }
@@ -81,7 +82,10 @@ class FulfillTransferOperation @Inject constructor(
         if (customerBankAccountItem.data.bankPermissions != BankPermissions.SEND_ONLY) {
             throw InvalidRequestException("Bank account does not have permission to send funds.")
         }
-        val merchantItem = userDao.getUserItem(merchantId) ?: throw ResourceNotFoundException("MERCHANT")
+
+        val merchantItem = transferRequestItem.data?.merchant?.id?.let {
+            userDao.getUserItem(transferRequestItem.data!!.merchant!!.id)
+        } ?: throw ResourceNotFoundException("MERCHANT")
 
         validateRequestSignature(request, customerBankAccountItem)
 
@@ -116,6 +120,11 @@ class FulfillTransferOperation @Inject constructor(
             customerIdentity = creditorId,
             timestamp = fulfillTimestamp,
             webhookUrl = merchantItem.data.merchantData?.webhookUrl,
+            customerBankAccount = BankAccount(
+                name = customerBankAccountItem.data.bankAccountName,
+                id = customerBankAccountItem.data.bankAccountId,
+                lastFourDigits = customerBankAccountItem.data.lastFourDigits,
+            ),
             signature = Signature(
                 signatureType = request.signature.signatureType.value,
                 signature = request.signature.signatureValue
@@ -127,7 +136,7 @@ class FulfillTransferOperation @Inject constructor(
             .amount(transferAmount)
             .statementItems(statementItems)
             .merchant(com.zenobiapay.api.generated.model.PaymentParticipantIdentity()
-                .id(merchantId)
+                .id(transferRequestItem.data?.merchant?.id)
                 .name(merchantItem.data.merchantData?.displayName)
             )
     }

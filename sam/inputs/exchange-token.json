@@ -1,0 +1,24 @@
+{
+  "resource": "/exchange-token",
+  "path": "/exchange-token",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"deviceCertificate\":{\"certificateType\":\"EC\",\"certificateValue\":\"-----BEGIN PUBLIC KEY-----\\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcoTPOh9wGpelMfK8Bf44QLe1WL3l\\nTeB8X6b4QCaqhSID7jslPMkjblml3mLFvDKws3l5zXRIwO91UbPNXH+ZYA==\\n-----END PUBLIC KEY-----\"},\"sub\":\"841d7b8b-2c5e-4a3d-bdcb-8758a2aa51bb\",\"deviceId\":\"4D3B2938-001B-4A61-A01A-BDE5E5134A23\",\"linkToken\":\"public-sandbox-df1b91ea-0683-4499-9ea0-213c65c01a99\"}",
+  "isBase64Encoded": false,
+  "requestContext": {
+    "accountId": "123456789012",
+    "resourceId": "abc123",
+    "stage": "dev",
+    "requestId": "requestId1",
+    "identity": {
+      "sourceIp": "127.0.0.1"
+    },
+    "authorizer": {
+      "principalId": "user123",
+      "email": "user@example.com",
+      "role": "UNKNOWN"
+    }
+  }
+}

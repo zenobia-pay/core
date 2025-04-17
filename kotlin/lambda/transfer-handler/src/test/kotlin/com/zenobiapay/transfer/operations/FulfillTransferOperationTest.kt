@@ -9,6 +9,7 @@ import com.zenobiapay.api.generated.model.CertificateType
 import com.zenobiapay.api.generated.model.FulfillTransferRequest
 import com.zenobiapay.api.generated.model.FulfillTransferRequestSignature
 import com.zenobiapay.api.generated.model.SignatureType
+import com.zenobiapay.api.model.exception.TransferStatusException
 import com.zenobiapay.cryptography.util.isSignatureValid
 import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.table.bank.dao.BankDao
@@ -28,7 +29,6 @@ import com.zenobiapay.table.user.model.UserItemData
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -55,7 +55,7 @@ class FulfillTransferOperationTest {
     @Test
     fun `test validate request signature returns failure`() {
         every {
-            transferDao.getMerchantTransfer(MERCHANT_ID, TRANSFER_REQUEST_ID)
+            transferDao.getTransfer(TRANSFER_REQUEST_ID)
         } returns createTransferItem(100, TransferStatus.NOT_STARTED)
         every {
             bankDao.getBankAccount(USER_ID, BANK_ACCOUNT_ID, DEVICE_ID)
@@ -82,7 +82,7 @@ class FulfillTransferOperationTest {
     @Test
     fun `throws error on merchant transfer not existing`() {
         every {
-            transferDao.getMerchantTransfer(MERCHANT_ID, TRANSFER_REQUEST_ID)
+            transferDao.getTransfer(TRANSFER_REQUEST_ID)
         } returns null
         val operation = FulfillTransferOperation(
             orumWrapper,
@@ -96,6 +96,23 @@ class FulfillTransferOperationTest {
         }
     }
 
+    @Test
+    fun `throws error on merchant transfer in different status`() {
+        every {
+            transferDao.getTransfer(TRANSFER_REQUEST_ID)
+        } returns createTransferItem(100, TransferStatus.IN_FLIGHT)
+        val operation = FulfillTransferOperation(
+            orumWrapper,
+            transferDao,
+            bankDao,
+            userDao,
+            objectMapper,
+        )
+        assertThrows<TransferStatusException> {
+            operation.run(createRequest(), createMockGatewayEvent(), context, USER_ID)
+        }
+    }
+
     private fun createMockGatewayEvent(): APIGatewayProxyRequestEvent {
         val mockEvent = mockk<APIGatewayProxyRequestEvent>()
         return mockEvent
@@ -104,7 +121,6 @@ class FulfillTransferOperationTest {
     private fun createRequest(): FulfillTransferRequest {
         return FulfillTransferRequest()
             .transferRequestId(TRANSFER_REQUEST_ID)
-            .merchantId(MERCHANT_ID)
             .bankAccountId(BANK_ACCOUNT_ID)
             .deviceId(DEVICE_ID)
             .signature(FulfillTransferRequestSignature()
@@ -120,7 +136,7 @@ class FulfillTransferOperationTest {
             amount = amount,
             status = status,
             data = TransferData(
-                merchant = PaymentParticipantIdentity("id", "name")
+                merchant = PaymentParticipantIdentity(MERCHANT_ID, "name")
             )
         )
     }

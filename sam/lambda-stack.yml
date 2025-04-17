@@ -4,7 +4,7 @@ Description: Stack to store Lambda handlers
 
 Globals:
   Function:
-    Timeout: 30
+    Timeout: 60
     MemorySize: 512
     Runtime: java17
     Architectures:
@@ -21,11 +21,15 @@ Globals:
         - !Ref SubnetId2
 
 Parameters:
+  CredentialsTableKeyId:
+    Type: String
   BankKeyId:
     Type: String
   TransferKeyId:
     Type: String
   UserKeyId:
+    Type: String
+  CredentialsTableName:
     Type: String
   BankTableName:
     Type: String
@@ -59,6 +63,15 @@ Parameters:
   OrumSlackWebhook:
     Type: String
     Description: Slack webhook for orum channel
+  WebsocketServiceEndpoint:
+    Type: String
+    Description: Websocket endpoint to send transfer updates to.
+  CustomerJwtSigningSecret:
+    Type: String
+    Description: Signing secret for jwt
+  RefreshTokenHashingSecret:
+    Type: String
+    Description: Hash secret for refresh tokens
 
 Resources:
   ZenobiaApi:
@@ -183,13 +196,13 @@ Resources:
                   type: number
             UserType:
               type: string
-              enum: [ MERCHANT, CUSTOMER ]
+              enum: [MERCHANT, CUSTOMER]
             CertificateType:
               type: string
-              enum: [ EC ]
+              enum: [EC]
             SignatureType:
               type: string
-              enum: [ SHA256_WITH_ECDSA ]
+              enum: [SHA256_WITH_ECDSA]
             Address:
               type: object
               required:
@@ -213,10 +226,21 @@ Resources:
                   maxLength: 255
                 country:
                   type: string
-                  enum: [ US ]
+                  enum: [US]
                 zip5:
                   type: string
                   pattern: '^\d{5}$'
+            BankAccount:
+              type: object
+              required:
+                - name
+              properties:
+                bankAccountName:
+                  type: string
+                lastFourDigits:
+                  type: string
+                bankAccountId:
+                  type: string
 
         x-amazon-apigateway-request-validators:
           basic:
@@ -251,7 +275,7 @@ Resources:
                         event_data:
                           type: object
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -263,6 +287,49 @@ Resources:
                   $ref: "#/components/responses/InternalServerError"
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebhookHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /issue-jwt:
+            post:
+              summary: "Exchange refresh token for jwt"
+              operationId: "IssueJwt"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - refreshToken
+                        - sub
+                      properties:
+                        refreshToken:
+                          type: string
+                        sub:
+                          type: string
+              responses:
+                "200":
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          jwt:
+                            type: string
+                          expiresIn:
+                            type: integer
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${JwtIssuerFunction.Arn}:prod/invocations
                 httpMethod: POST
                 type: aws_proxy
 
@@ -283,9 +350,8 @@ Resources:
                           type: string
                           enum:
                             - AUTH
-                            - IDENTITY_VERIFICATION
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -293,6 +359,8 @@ Resources:
                         type: object
                         properties:
                           linkToken:
+                            type: string
+                          sub:
                             type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -318,6 +386,9 @@ Resources:
                     schema:
                       type: object
                       properties:
+                        sub:
+                          type: string
+                          maxLength: 255
                         linkToken:
                           type: string
                           maxLength: 255
@@ -338,8 +409,17 @@ Resources:
                       required:
                         - linkToken
               responses:
-                '200':
+                "200":
                   description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          refreshToken:
+                            type: string
+                          sub:
+                            type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -371,9 +451,9 @@ Resources:
                           minLength: 1
                         continuationToken:
                           type: string
-                          maxLength: 255
+                          maxLength: 512
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -385,12 +465,7 @@ Resources:
                           items:
                             type: array
                             items:
-                              type: object
-                              properties:
-                                bankAccountId:
-                                  type: string
-                                bankAccountName:
-                                  type: string
+                              $ref: "#/components/schemas/BankAccount"
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -424,7 +499,7 @@ Resources:
                           maxLength: 255
                           minLength: 1
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -461,7 +536,7 @@ Resources:
                           items:
                             $ref: "#/components/schemas/StatementItem"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -471,6 +546,10 @@ Resources:
                           transferRequestId:
                             type: string
                           merchantId:
+                            type: string
+                          expiry:
+                            type: integer
+                          signature:
                             type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -497,15 +576,11 @@ Resources:
                       type: object
                       required:
                         - transferRequestId
-                        - merchantId
                         - bankAccountId
                         - deviceId
                         - signature
                       properties:
                         transferRequestId:
-                          type: string
-                          maxLength: 255
-                        merchantId:
                           type: string
                           maxLength: 255
                         bankAccountId:
@@ -526,7 +601,7 @@ Resources:
                             - signatureType
                             - signatureValue
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -567,15 +642,8 @@ Resources:
                     type: string
                     minLength: 1
                     maxLength: 256
-                - name: merchantId
-                  in: query
-                  required: true
-                  schema:
-                    type: string
-                    minLength: 1
-                    maxLength: 256
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -623,7 +691,7 @@ Resources:
                     minLength: 1
                     maxLength: 256
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -669,9 +737,9 @@ Resources:
                         continuationToken:
                           type: string
                           minLength: 1
-                          maxLength: 256
+                          maxLength: 512
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -685,6 +753,8 @@ Resources:
                             items:
                               type: object
                               properties:
+                                transferRequestId:
+                                  type: string
                                 amount:
                                   type: integer
                                 creationTime:
@@ -693,6 +763,8 @@ Resources:
                                   $ref: "#/components/schemas/TransferStatus"
                                 merchant:
                                   $ref: "#/components/schemas/PaymentParticipantIdentity"
+                                customerBankAccount:
+                                  $ref: "#/components/schemas/BankAccount"
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -720,9 +792,9 @@ Resources:
                         continuationToken:
                           type: string
                           minLength: 1
-                          maxLength: 256
+                          maxLength: 512
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -768,9 +840,9 @@ Resources:
                         continuationToken:
                           type: string
                           minLength: 1
-                          maxLength: 256
+                          maxLength: 512
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -812,7 +884,7 @@ Resources:
               summary: "Fetches metadata associated with a merchant"
               operationId: "GetMerchantConfig"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -867,12 +939,12 @@ Resources:
                           maxLength: 256
                         webhookUrl:
                           type: string
-                          pattern: '^https://.*$'
+                          pattern: "^https://.*$"
                           maxLength: 1000
                         merchantLocation:
                           $ref: "#/components/schemas/Location"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -898,14 +970,19 @@ Resources:
                     schema:
                       type: object
                       required:
-                        - identityVerificationId
+                        - firstName
+                        - lastName
                       properties:
-                        identityVerificationId:
+                        firstName:
+                          type: string
+                          minLength: 1
+                          maxLength: 256
+                        lastName:
                           type: string
                           minLength: 1
                           maxLength: 256
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -973,16 +1050,16 @@ Resources:
                           pattern: '^\d{9}$'
                         taxIdType:
                           type: string
-                          enum: 
+                          enum:
                             - TIN
                             - EIN
                         incorporationDate:
                           type: string
                           pattern: '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
                         address:
-                          $ref: '#/components/schemas/Address'
+                          $ref: "#/components/schemas/Address"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -1002,7 +1079,7 @@ Resources:
               summary: "Fetches user profile, including onboarding status, user type, etc"
               operationId: "GetUserProfile"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -1012,7 +1089,7 @@ Resources:
                           hasOnboarded:
                             type: boolean
                           userType:
-                            $ref: '#/components/schemas/UserType'
+                            $ref: "#/components/schemas/UserType"
                           isApproved:
                             type: boolean
                 "400":
@@ -1033,7 +1110,7 @@ Resources:
               summary: "Creates m2m credentials for a merchant"
               operationId: "CreateM2mCredentials"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -1070,9 +1147,9 @@ Resources:
                         continuationToken:
                           type: string
                           minLength: 1
-                          maxLength: 256
+                          maxLength: 512
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -1119,15 +1196,15 @@ Resources:
                           minLength: 1
                           maxLength: 256
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
                       schema:
                         type: object
                         properties:
-                         clientId:
-                           type: string
+                          clientId:
+                            type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -1158,6 +1235,9 @@ Resources:
           AUTH_DOMAIN: !Ref Auth0Domain
           AUDIENCE: https://dashboard.zenobiapay.com
           VALID_ORUM_IP_ADDRESSES: !Ref OrumIpAddresses
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref CustomerJwtSigningSecret
 
   ApiGatewayLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1195,6 +1275,38 @@ Resources:
                   - logs:FilterLogEvents
                 Resource: "*"
 
+  JwtIssuerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      SkipBuild: true
+    Properties:
+      FunctionName: JwtIssuer
+      Handler: main
+      Runtime: provided.al2
+      CodeUri: ../golang/jwt-issuer/build/function.zip
+      Timeout: 30
+      SnapStart:
+        ApplyOn: None
+      Environment:
+        Variables:
+          CREDENTIALS_TABLE_NAME: !Ref CredentialsTableName
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref RefreshTokenHashingSecret
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref CustomerJwtSigningSecret
+        - DynamoDBReadPolicy:
+            TableName: !Ref CredentialsTableName
+        - KMSDecryptPolicy:
+            KeyId: !Ref CredentialsTableKeyId
+      Events:
+        IssueJwt:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /issue-jwt
+            Method: POST
+
   BankHandlerFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -1207,6 +1319,8 @@ Resources:
       Environment:
         Variables:
           BANK_TABLE_NAME: !Ref BankTableName
+          USER_TABLE_NAME: !Ref UserTableName
+          CREDENTIALS_TABLE_NAME: !Ref CredentialsTableName
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref PlaidSecretsArn
@@ -1217,10 +1331,26 @@ Resources:
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref BankTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CredentialsTableName
         - KMSEncryptPolicy:
             KeyId: !Ref BankKeyId
         - KMSDecryptPolicy:
             KeyId: !Ref BankKeyId
+        - KMSEncryptPolicy:
+            KeyId: !Ref UserKeyId
+        - KMSDecryptPolicy:
+            KeyId: !Ref UserKeyId
+        - KMSDecryptPolicy:
+            KeyId: !Ref CredentialsTableKeyId
+        - KMSEncryptPolicy:
+            KeyId: !Ref CredentialsTableKeyId
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref CustomerJwtSigningSecret
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref RefreshTokenHashingSecret
       Events:
         GetCreateLinkToken:
           Type: Api
@@ -1244,7 +1374,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
-            Path: /delet-bank-account
+            Path: /delete-bank-account
             Method: POST
 
   TransferHandlerFunction:
@@ -1266,6 +1396,8 @@ Resources:
             SecretArn: !Ref OrumSecretsArn
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref PaginationSigningSecret
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref TransferStatusSigningSecret
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref TransferTableName
@@ -1419,6 +1551,17 @@ Resources:
         PasswordLength: 32
         ExcludeCharacters: "\"@/\\^`|&[](){}$"
 
+  TransferStatusSigningSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: transfer/hmac
+      Description: HMAC secret for signing transfer status updates
+      GenerateSecretString:
+        SecretStringTemplate: "{}"
+        GenerateStringKey: secret
+        PasswordLength: 32
+        ExcludeCharacters: "\"@/\\^`|&[](){}$"
+
   WebhookHandlerFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -1474,7 +1617,7 @@ Resources:
                 kms:CallerAccount: !Ref AWS::AccountId
                 kms:ViaService: !Sub lambda.${AWS::Region}.amazonaws.com
               ArnLike: # Hack to tighten up kms to only be used by the transfer event handler. Cannot reference directly as there is a circular dependency
-                  aws:PrincipalArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/*-TransferTableEventHandler-*"
+                aws:PrincipalArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/*-TransferTableEventHandler-*"
 
   WebhookSigningKeyAlias:
     Type: AWS::KMS::Alias
@@ -1483,7 +1626,7 @@ Resources:
       TargetKeyId: !Ref WebhookSigningKey
 
   TransferTableEventHandler:
-    Type: 'AWS::Serverless::Function'
+    Type: "AWS::Serverless::Function"
     Metadata:
       SkipBuild: true
     Properties:
@@ -1494,19 +1637,22 @@ Resources:
       Environment:
         Variables:
           WEBHOOK_KMS_ALIAS: !Ref WebhookSigningKeyAlias
+          WEBSOCKET_SERVICE_ENDPOINT: !Ref WebsocketServiceEndpoint
       Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref TransferStatusSigningSecret
         - DynamoDBStreamReadPolicy:
             TableName: !Ref TransferTableName
             StreamName: !Select [3, !Split ["/", !Ref TransferTableStreamArn]]
         - KMSDecryptPolicy:
             KeyId: !Ref TransferKeyId
         - Statement:
-          - Sid: AllowKmsSignedWebhooks
-            Effect: Allow
-            Action:
-            - kms:GetPublicKey
-            - kms:Sign
-            Resource: !GetAtt WebhookSigningKey.Arn
+            - Sid: AllowKmsSignedWebhooks
+              Effect: Allow
+              Action:
+                - kms:GetPublicKey
+                - kms:Sign
+              Resource: !GetAtt WebhookSigningKey.Arn
       Events:
         DynamoDBStreamEvent:
           Type: DynamoDB

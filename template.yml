@@ -31,6 +31,9 @@ Parameters:
   OrumSlackWebhook:
     Type: String
     Description: Slack webhook for orum channel
+  WebsocketServiceEndpoint:
+    Type: String
+    Description: Websocket endpoint to send transfer updates to.
 
 Resources:
   VpcStack:
@@ -45,6 +48,11 @@ Resources:
       Parameters:
         Stage: !Ref Stage
         UniqueIdentifier: !Ref UniqueIdentifier
+  
+  AuthStack:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      TemplateURL: ./sam/auth-stack.yml
 
   LambdaStack:
     Type: AWS::CloudFormation::Stack
@@ -54,9 +62,11 @@ Resources:
         SecurityGroupId: !GetAtt VpcStack.Outputs.SecurityGroupId
         SubnetId1: !GetAtt VpcStack.Outputs.PrivateSubnetId1
         SubnetId2: !GetAtt VpcStack.Outputs.PrivateSubnetId2
+        CredentialsTableName: !GetAtt TableStack.Outputs.CredentialsTableName
         BankTableName: !GetAtt TableStack.Outputs.BankTableName
         UserTableName: !GetAtt TableStack.Outputs.UserTableName
         TransferTableName: !GetAtt TableStack.Outputs.TransferTableName
+        CredentialsTableKeyId: !GetAtt TableStack.Outputs.CredentialsTableKeyId
         BankKeyId: !GetAtt TableStack.Outputs.BankKeyId
         TransferKeyId: !GetAtt TableStack.Outputs.TransferKeyId
         UserKeyId: !GetAtt TableStack.Outputs.UserKeyId
@@ -68,6 +78,9 @@ Resources:
         OrumPublicCertificate: !Ref OrumPublicCertificate
         OrumIpAddresses: !Ref OrumIpAddresses
         OrumSlackWebhook: !Ref OrumSlackWebhook
+        WebsocketServiceEndpoint: !Ref WebsocketServiceEndpoint
+        CustomerJwtSigningSecret: !GetAtt AuthStack.Outputs.CustomerJwtSigningSecret
+        RefreshTokenHashingSecret: !GetAtt AuthStack.Outputs.RefreshTokenHashingSecret
 
   PayoutStack:
     Type: AWS::CloudFormation::Stack

@@ -3,10 +3,6 @@ package com.zenobiapay.user.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.plaid.client.model.IdentityVerificationGetResponse
-import com.plaid.client.model.IdentityVerificationStatus
-import com.zenobiapay.api.model.exception.IdentityFailedException
-import com.zenobiapay.api.model.exception.IdentityNotSuccessfulException
 import com.zenobiapay.api.generated.model.SubmitCustomerOnboardingRequest
 import com.zenobiapay.api.generated.model.UserType
 import com.zenobiapay.api.model.EmptyApiResponse
@@ -19,7 +15,6 @@ import com.zenobiapay.orum.model.Contact
 import com.zenobiapay.orum.model.OrumCreatePersonRequest
 import com.zenobiapay.orum.model.Person
 import com.zenobiapay.orum.util.generateCustomerOrumId
-import com.zenobiapay.plaid.PlaidWrapper
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.table.user.model.UserType as DdbUserType
 import com.zenobiapay.user.util.Auth0Wrapper
@@ -31,7 +26,6 @@ private val logger = KotlinLogging.logger {}
 
 class SubmitCustomerOnboardingOperation @Inject constructor(
     private val objectMapper: ObjectMapper,
-    private val plaidWrapper: PlaidWrapper,
     private val orumWrapper: OrumWrapper,
     private val auth0Wrapper: Auth0Wrapper,
     private val userDao: UserDao,
@@ -47,10 +41,8 @@ class SubmitCustomerOnboardingOperation @Inject constructor(
     ): EmptyApiResponse {
         userId!!
         val request = objectMapper.readValue(input.body, SubmitCustomerOnboardingRequest::class.java)
-        val identityVerificationResponse = plaidWrapper.getIdentityVerification(request.identityVerificationId)
-        checkStatus(identityVerificationResponse.status)
 
-        val person = createOrumPerson(userId, identityVerificationResponse, input.requestContext.getEmail()!!)
+        val person = createOrumPerson(userId, request, input.requestContext.getEmail()!!)
         auth0Wrapper.putAppMetadataOnUser(userId, mapOf(ROLE_KEY to UserType.CUSTOMER.name))
         userDao.putUser(
             userId,
@@ -64,23 +56,11 @@ class SubmitCustomerOnboardingOperation @Inject constructor(
         return EmptyApiResponse()
     }
 
-    private fun checkStatus(status: IdentityVerificationStatus) {
-        logger.info { "Checking identity verification status $status completed successfully" }
-        when (status) {
-            IdentityVerificationStatus.SUCCESS -> Unit
-            IdentityVerificationStatus.FAILED -> throw IdentityFailedException()
-            IdentityVerificationStatus.ACTIVE, IdentityVerificationStatus.EXPIRED, IdentityVerificationStatus.CANCELED, IdentityVerificationStatus.PENDING_REVIEW
-                -> throw IdentityNotSuccessfulException()
-            IdentityVerificationStatus.ENUM_UNKNOWN -> throw Exception("Failed to parse identity verification status")
-        }
-    }
-
-    private fun createOrumPerson(userId: String, identityResponse: IdentityVerificationGetResponse, email: String): Person {
-        val name = identityResponse.user.name ?: throw Exception("Could not get user name from identity response")
+    private fun createOrumPerson(userId: String, request: SubmitCustomerOnboardingRequest, email: String): Person {
         val createPersonRequest = OrumCreatePersonRequest(
             customerReferenceId = generateCustomerOrumId(userId),
-            firstName = name.givenName,
-            lastName = name.familyName,
+            firstName = request.firstName,
+            lastName = request.lastName,
             socialSecurityNumber = null,
             contacts = listOf(Contact(type = "email", value = email))
         )

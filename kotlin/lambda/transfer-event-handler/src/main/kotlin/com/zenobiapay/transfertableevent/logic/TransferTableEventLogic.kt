@@ -2,14 +2,19 @@ package com.zenobiapay.transfertableevent.logic
 
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent
 import com.zenobiapay.table.transfer.model.TransferItem
+import com.zenobiapay.table.transfer.model.TransferStatus
 import com.zenobiapay.transfertableevent.util.WebhookUtil
+import com.zenobiapay.transfertableevent.util.WebsocketUtil
 import com.zenobiapay.webhook.util.isValidWebhook
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
-class TransferTableEventLogic @Inject constructor(private val webhookUtil: WebhookUtil) {
+class TransferTableEventLogic @Inject constructor(
+    private val webhookUtil: WebhookUtil,
+    private val websocketUtil: WebsocketUtil,
+) {
     fun handleRecord(record: DynamodbEvent.DynamodbStreamRecord) {
         val hasOldImage = record.dynamodb.oldImage != null
         val hasNewImage = record.dynamodb.newImage != null
@@ -27,11 +32,13 @@ class TransferTableEventLogic @Inject constructor(private val webhookUtil: Webho
         if (record.dynamodb.newImage["pk"]!!.s.startsWith(TransferItem.PK_PREFIX)) {
             logger.info { "PK value: ${record.dynamodb.newImage["pk"]?.s}" }
             val newItem = TransferItem.fromAttributeValueMap(record.dynamodb.newImage)
+            val oldItem = TransferItem.fromAttributeValueMap(record.dynamodb.oldImage)
             logger.info { "Got new item $newItem" }
             val webhookUrl = newItem.data!!.webhookUrl
             val status = newItem.status
             val requestId = newItem.requestId
-            if (newItem.transferFulfillId != null && webhookUrl != null) {
+            val transferFulfilled = oldItem.status != newItem.status && newItem.status == TransferStatus.COMPLETED
+            if (transferFulfilled && webhookUrl != null) {
                 logger.info { "Sending status $status for request id $requestId to webhook $webhookUrl" }
                 if (!isValidWebhook(webhookUrl)) {
                     logger.warn { "Invalid webhook attempted to publish. Skipping" }
@@ -43,6 +50,13 @@ class TransferTableEventLogic @Inject constructor(private val webhookUtil: Webho
                     newItem.requestId,
                     newItem.status.toApiTransferStatus(),
                     newItem.amount!!
+                )
+            }
+            if (transferFulfilled) {
+                websocketUtil.sendWebsocketUpdate(
+                    newItem.requestId,
+                    newItem.data?.merchant!!.id,
+                    newItem.status.toApiTransferStatus()
                 )
             }
         } else {

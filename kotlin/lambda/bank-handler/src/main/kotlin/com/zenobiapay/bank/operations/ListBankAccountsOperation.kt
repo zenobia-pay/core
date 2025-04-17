@@ -3,8 +3,8 @@ package com.zenobiapay.bank.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.api.generated.model.BankAccount
 import com.zenobiapay.api.generated.model.ListBankAccounts200Response
-import com.zenobiapay.api.generated.model.ListBankAccounts200ResponseItemsInner
 import com.zenobiapay.api.generated.model.ListBankAccountsRequest
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
@@ -13,8 +13,11 @@ import com.zenobiapay.bank.di.PAGINATION_SECRET
 import com.zenobiapay.table.bank.dao.BankDao
 import com.zenobiapay.table.model.BadTokenException
 import com.zenobiapay.table.model.ContinuationToken
+import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 import javax.inject.Named
+
+private val logger = KotlinLogging.logger {}
 
 class ListBankAccountsOperation @Inject constructor(
     private val objectMapper: ObjectMapper,
@@ -25,7 +28,7 @@ class ListBankAccountsOperation @Inject constructor(
     override val inputType = ListBankAccountsRequest::class.java
 
     override fun run(request: ListBankAccountsRequest, input: APIGatewayProxyRequestEvent, context: Context, userId: String?): ListBankAccounts200Response {
-        context.logger.log("Got request $request")
+        logger.info { "Got request $request" }
 
         val decodedToken = request.continuationToken?.let {
             try {
@@ -39,12 +42,13 @@ class ListBankAccountsOperation @Inject constructor(
             request.deviceId,
             decodedToken
         )
-        context.logger.log("Got bank items $bankItems")
+        logger.info { "Got bank item count ${bankItems.size}" }
         return ListBankAccounts200Response().items(
             bankItems.map {
-                ListBankAccounts200ResponseItemsInner()
+                BankAccount()
                     .bankAccountId(it.data.bankAccountId)
                     .bankAccountName(it.data.bankAccountName)
+                    .lastFourDigits(it.data.lastFourDigits)
             }
         ).continuationToken(continuationToken?.encodeToken(objectMapper, paginationSecret))
     }

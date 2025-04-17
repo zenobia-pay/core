@@ -28,6 +28,7 @@ class BankDao @Inject constructor(
     fun putBankAccount(
         userId: String,
         deviceId: String?,
+        lastFourDigits: String,
         token: String,
         plaidItemId: String,
         bankAccountId: String,
@@ -55,6 +56,7 @@ class BankDao @Inject constructor(
                 data = BankData(
                     bankAccountId = bankAccountId,
                     bankAccountName = bankAccountName,
+                    lastFourDigits = lastFourDigits,
                     bankAccountType = bankAccountType,
                     orumId = orumId,
                     plaidItemId = plaidItemId,

@@ -34,6 +34,7 @@ data class BankAccountItem(
 data class BankData(
     var bankAccountId: String = "",
     var bankAccountName: String = "",
+    var lastFourDigits: String = "",
     var bankAccountType: String = "",
     var orumId: String = "",
     var plaidItemId: String = "",

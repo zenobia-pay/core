@@ -1,0 +1,25 @@
+{
+  "resource": "/submit-customer-onboarding",
+  "path": "/submit-customer-onboarding",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"firstName\":\"Teddy\",\"lastName\":\"Li\"}",
+  "isBase64Encoded": false,
+  "requestContext": {
+    "accountId": "123456789012",
+    "resourceId": "abc123",
+    "stage": "dev",
+    "requestId": "xyz789",
+    "identity": {
+      "sourceIp": "127.0.0.1"
+    },
+    "authorizer": {
+      "principalId": "user123",
+      "sub": "teddy-fake-sub-6",
+      "email": "user@example.com",
+      "role": "UNKNOWN"
+    }
+  }
+}
