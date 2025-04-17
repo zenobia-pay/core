@@ -20,10 +20,12 @@ class GetMerchantTransferOperation @Inject constructor(
     override fun run(request: NoApiBody, input: APIGatewayProxyRequestEvent, context: Context, userId: String?): GetMerchantTransfer200Response {
         val request = GetMerchantTransferRequest.from(input.queryStringParameters, objectMapper)
 
-        val transferItem = transferDao.getMerchantTransfer(
-            merchantId = userId!!,
+        val transferItem = transferDao.getTransfer(
             transferRequestId = request.id
-        ) ?: throw ResourceNotFoundException("TRANSFER")
+        )
+        if (transferItem == null || transferItem.data?.merchant?.id != userId) {
+            throw ResourceNotFoundException("TRANSFER")
+        }
         return GetMerchantTransfer200Response()
             .amount(transferItem.amount)
             .transferRequestId(request.id)

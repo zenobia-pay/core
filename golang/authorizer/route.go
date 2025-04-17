@@ -62,12 +62,13 @@ var validMerchantRoutes = []Route{
 	{"GET", "create-m2m-credentials"},
 	{"POST", "list-m2m-credentials"},
 	{"POST", "delete-m2m-credentials"},
+	{"POST", "delete-bank-account"},
 }
 var validCustomerRoutes = []Route{
 	{"POST", "create-link-token"},
 	{"POST", "exchange-token"},
 	{"POST", "list-bank-accounts"},
-	{"POST", "delete-bank-accounts"},
+	{"POST", "delete-bank-account"},
 	{"POST", "fulfill-transfer"},
 	{"GET", "get-customer-transfer"},
 	{"POST", "list-customer-transfers"},

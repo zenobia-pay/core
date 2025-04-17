@@ -44,8 +44,8 @@ class TransferDao @Inject constructor(
     private val payoutTable = client.table(transferTableName, TableSchema.fromBean(PayoutItem::class.java))
 
     fun putTransferRequest(merchantId: String, requestId: String, amountInCents: Int, merchantName: String, statementItems: List<StatementItem>) {
-        val pk = TransferItem.generatePk(merchantId)
-        val sk = TransferItem.generateSk(requestId)
+        val pk = TransferItem.generatePk(requestId)
+        val sk = TransferItem.generateSk()
         val gsi1Pk = TransferItem.generateGsi1Pk(merchantId)
         val gsi1Sk = TransferItem.generateGsi1Sk(requestId, Instant.now())
         val creationTime = Instant.now()
@@ -74,7 +74,7 @@ class TransferDao @Inject constructor(
         val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
             .item(transferItem.copy(
                 status = TransferStatus.IN_FLIGHT,
-            ))
+            ).also { "Updated transfer item: $it"})
             .build()
 
         return transferTable.updateItem(request)
@@ -99,9 +99,7 @@ class TransferDao @Inject constructor(
                 customerBankAccount = customerBankAccount,
             ),
             gsi2Pk = TransferItem.generateGsi2Pk(customerIdentity.id),
-            gsi2Sk = TransferItem.generateGsi2Sk(fulfillRequestId),
-            gsi3Pk = TransferItem.generateGsi3Pk(customerIdentity.id),
-            gsi3Sk = TransferItem.generateGsi3Sk(fulfillRequestId, timestamp)
+            gsi2Sk = TransferItem.generateGsi2Sk(fulfillRequestId, timestamp)
         )
 
         val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
@@ -111,25 +109,9 @@ class TransferDao @Inject constructor(
         transferTable.updateItem(request)
     }
 
-    fun getCustomerTransfer(customerId: String, fulfillRequestId: String): TransferItem? {
-        val pk = TransferItem.generateGsi2Pk(customerId)
-        val sk = TransferItem.generateGsi2Sk(fulfillRequestId)
-
-        val queryConditional = QueryConditional.keyEqualTo {
-            it.partitionValue(pk)
-                .sortValue(sk)
-        }
-
-        return transferTable.index(GSI_2).query(
-            QueryEnhancedRequest.builder()
-                .queryConditional(queryConditional)
-                .build()
-        ).first().items().firstOrNull()
-    }
-
-    fun getMerchantTransfer(merchantId: String, transferRequestId: String): TransferItem? {
-        val pk = TransferItem.generatePk(merchantId)
-        val sk = TransferItem.generateSk(transferRequestId)
+    fun getTransfer(transferRequestId: String): TransferItem? {
+        val pk = TransferItem.generatePk(transferRequestId)
+        val sk = TransferItem.generateSk()
         return try {
             transferTable.getItem {
                 it.key {
@@ -143,7 +125,7 @@ class TransferDao @Inject constructor(
 
     fun listCustomerTransfers(customerId: String, continuationToken: String?, paginationSecret: String): Pair<List<TransferItem>, ContinuationToken?> {
         val queryConditional = QueryConditional.keyEqualTo {
-            it.partitionValue(TransferItem.generateGsi3Pk(customerId))
+            it.partitionValue(TransferItem.generateGsi2Pk(customerId))
         }
         val queryRequestBuilder = QueryEnhancedRequest.builder()
             .queryConditional(queryConditional)
@@ -156,7 +138,7 @@ class TransferDao @Inject constructor(
             queryRequestBuilder.exclusiveStartKey(token.key)
         }
 
-        val page = transferTable.index(TransferItem.GSI_3)
+        val page = transferTable.index(GSI_2)
             .query(queryRequestBuilder.build())
             .iterator()
             .asSequence()

@@ -576,15 +576,11 @@ Resources:
                       type: object
                       required:
                         - transferRequestId
-                        - merchantId
                         - bankAccountId
                         - deviceId
                         - signature
                       properties:
                         transferRequestId:
-                          type: string
-                          maxLength: 255
-                        merchantId:
                           type: string
                           maxLength: 255
                         bankAccountId:
@@ -640,13 +636,6 @@ Resources:
               operationId: "GetCustomerTransfer"
               parameters:
                 - name: id
-                  in: query
-                  required: true
-                  schema:
-                    type: string
-                    minLength: 1
-                    maxLength: 256
-                - name: merchantId
                   in: query
                   required: true
                   schema:
