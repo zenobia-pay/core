@@ -10,8 +10,6 @@ Globals:
     Architectures:
       - x86_64
     AutoPublishAlias: prod
-    SnapStart:
-      ApplyOn: PublishedVersions
     AutoPublishAliasAllProperties: true
     VpcConfig:
       SecurityGroupIds:
