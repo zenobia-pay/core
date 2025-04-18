@@ -5,10 +5,10 @@ Description: Authentication stack.
 Resources:
   CustomerJwtSigningSecret:
     Type: AWS::SecretsManager::Secret
+    DeletionPolicy: Retain
     Properties:
       Name: jwt/customer/hmac
       Description: HMAC secret for signing customer jwts
-      DeletionPolicy: Retain
       GenerateSecretString:
         SecretStringTemplate: "{}"
         GenerateStringKey: secret
@@ -17,10 +17,10 @@ Resources:
 
   RefreshTokenHashingSecret:
     Type: AWS::SecretsManager::Secret
+    DeletionPolicy: Retain
     Properties:
       Name: credentials/refreshtoken/hmac
       Description: HMAC secret for signing customer jwts
-      DeletionPolicy: Retain
       GenerateSecretString:
         SecretStringTemplate: "{}"
         GenerateStringKey: secret
