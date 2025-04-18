@@ -8,6 +8,7 @@ Resources:
     Properties:
       Name: jwt/customer/hmac
       Description: HMAC secret for signing customer jwts
+      DeletionPolicy: Retain
       GenerateSecretString:
         SecretStringTemplate: "{}"
         GenerateStringKey: secret
@@ -19,6 +20,7 @@ Resources:
     Properties:
       Name: credentials/refreshtoken/hmac
       Description: HMAC secret for signing customer jwts
+      DeletionPolicy: Retain
       GenerateSecretString:
         SecretStringTemplate: "{}"
         GenerateStringKey: secret
