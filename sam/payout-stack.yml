@@ -11,6 +11,8 @@ Globals:
       - x86_64
 
 Parameters:
+  TransferTableStreamArn:
+    Type: String
   TransferTableName:
     Type: String
   UserTableName:
@@ -23,36 +25,80 @@ Parameters:
     Type: String
 
 Resources:
-  PayoutQueue:
-    Type: AWS::SQS::Queue
+  TransferStreamPipe:
+    Type: AWS::Pipes::Pipe
     Properties:
-      QueueName: PayoutQueue
+      Name: TransferStreamToBusPipe
+      RoleArn: !GetAtt PipeExecutionRole.Arn
+      Source: !Ref TransferTableStreamArn
+      SourceParameters:
+        DynamoDBStreamParameters:
+          StartingPosition: LATEST
+      Target: !GetAtt TransferEventBus.Arn
+      TargetParameters:
+        EventBridgeEventBusParameters:
+          DetailType: "ddb.record"
+          Source: "transfer.dynamodb"
 
-  PayoutDispatcherFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      SkipBuild: true
+  PipeExecutionRole:
+    Type: AWS::IAM::Role
     Properties:
-      FunctionName: PayoutDispatcher
-      CodeUri: ../kotlin/lambda/payout-handler/build/libs/lambda.jar
-      Handler: com.zenobiapay.payout.handlers.PayoutDispatcher::handleRequest
-      Environment:
-        Variables:
-           PAYOUT_QUEUE_URL: !Ref PayoutQueue
-           USER_TABLE_NAME: !Ref UserTableName
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: pipes.amazonaws.com
+            Action: sts:AssumeRole
       Policies:
-        - SQSSendMessagePolicy:
-            QueueName: !GetAtt PayoutQueue.QueueName
-        - DynamoDBReadPolicy:
-            TableName:
-              Ref: UserTableName
-        - KMSDecryptPolicy:
-            KeyId: !Ref UserKeyId
-      Events: 
-        DailyTrigger:
-          Type: Schedule
-          Properties:
-            Schedule: "cron(0 16 * * ? *)"  # Trigger at 4 PM UTC daily (8 AM PST)
+        - PolicyName: AllowPipeToSendToEventBus
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:DescribeStream
+                  - dynamodb:GetRecords
+                  - dynamodb:GetShardIterator
+                  - dynamodb:ListStreams
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource: !GetAtt TransferEventBus.Arn
+        - PolicyName: AllowDecryptTransferKeyId
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${TransferKeyId}
+
+  TransferEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: transfer-events
+
+  ImmediatePayoutRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: TransferTableRule
+      EventBusName: !Ref TransferEventBus
+      EventPattern: 
+        source:
+          - transfer.dynamodb
+        detail-type:
+          - "ddb.record"
+        detail:
+          dynamodb:
+            NewImage:
+              outboundStatus:
+                S:
+                  - IN_FLIGHT
+      Targets:
+        - Arn: !GetAtt PayoutProcessorFunction.Arn
+          Id: TransferLambdaTarget
 
   PayoutProcessorFunction:
     Type: AWS::Serverless::Function
@@ -67,8 +113,6 @@ Resources:
           TRANSFER_TABLE_NAME: !Ref TransferTableName
           USER_TABLE_NAME: !Ref UserTableName
       Policies:
-        - SQSPollerPolicy:
-            QueueName: !GetAtt PayoutQueue.QueueName
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref OrumSecretsArn
         - DynamoDBCrudPolicy:
@@ -85,8 +129,18 @@ Resources:
         - KMSEncryptPolicy:
             KeyId: !Ref TransferKeyId
       Events:
-        SQSTrigger:
-          Type: SQS
+        EventFromEventBridge:
+          Type: EventBridgeRule
           Properties:
-            Queue: !GetAtt PayoutQueue.Arn
-            BatchSize: 1
+            Pattern:
+              source:
+                - aws.dynamodb
+
+  TransferLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt PayoutProcessorFunction.Arn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ImmediatePayoutRule.Arn
+

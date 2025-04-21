@@ -12,9 +12,10 @@ import com.zenobiapay.table.transfer.model.TransferData
 import com.zenobiapay.table.transfer.model.TransferItem
 import com.zenobiapay.table.transfer.model.TransferItem.Companion.GSI_1
 import com.zenobiapay.table.transfer.model.TransferItem.Companion.GSI_2
-import com.zenobiapay.table.transfer.model.TransferStatus
 import com.zenobiapay.table.transfer.di.TRANSFER_TABLE_NAME
 import com.zenobiapay.table.transfer.model.BankAccount
+import com.zenobiapay.table.transfer.model.InboundTransferStatus
+import com.zenobiapay.table.transfer.model.OutboundTransferStatus
 import com.zenobiapay.table.transfer.model.Signature
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
@@ -68,19 +69,19 @@ class TransferDao @Inject constructor(
         )
     }
 
-    fun updateTransferRequestInFlight(
+    fun updateTransferRequestLocked(
         transferItem: TransferItem
     ): TransferItem {
         val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
             .item(transferItem.copy(
-                status = TransferStatus.IN_FLIGHT,
+                outboundStatus = OutboundTransferStatus.FULFILL_LOCKED,
             ).also { "Updated transfer item: $it"})
             .build()
 
         return transferTable.updateItem(request)
     }
 
-    fun updateTransferRequestSuccess(
+    fun updateTransferRequestFulfilled(
         transferItem: TransferItem,
         fulfillRequestId: String,
         customerIdentity: PaymentParticipantIdentity,
@@ -90,7 +91,8 @@ class TransferDao @Inject constructor(
         signature: Signature,
     ) {
         val updatedItem = transferItem.copy(
-            status = TransferStatus.COMPLETED,
+            inboundStatus = InboundTransferStatus.IN_FLIGHT,
+            outboundStatus = OutboundTransferStatus.IN_FLIGHT,
             transferFulfillId = fulfillRequestId,
             data = transferItem.data?.copy(
                 customer = customerIdentity,
