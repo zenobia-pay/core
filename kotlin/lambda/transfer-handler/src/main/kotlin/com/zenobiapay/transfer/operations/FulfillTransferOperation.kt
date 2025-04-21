@@ -17,10 +17,13 @@ import com.zenobiapay.api.model.exception.TransferFailedException
 import com.zenobiapay.api.model.exception.TransferStatusException
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
+import com.zenobiapay.api.model.exception.BalanceTimeOutException
 import com.zenobiapay.api.model.exception.ConcurrentModificationException
+import com.zenobiapay.api.model.exception.InsufficientFundsException
 import com.zenobiapay.cryptography.util.isSignatureValid
 import com.zenobiapay.orum.util.WaiterFailedException
 import com.zenobiapay.orum.util.generateCustomerOrumId
+import com.zenobiapay.plaid.PlaidWrapper
 import com.zenobiapay.table.bank.model.BankAccountItem
 import com.zenobiapay.table.bank.model.BankPermissions
 import com.zenobiapay.table.transfer.dao.TransferDao
@@ -29,22 +32,30 @@ import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
 import com.zenobiapay.table.transfer.model.Signature
 import com.zenobiapay.table.transfer.model.TransferStatus
 import com.zenobiapay.table.user.dao.UserDao
+import com.zenobiapay.transfer.di.AVAILABLE_BALANCE_BUFFER
 import com.zenobiapay.transfer.model.FulfillTransferRequestMixin
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 import javax.inject.Inject
+import javax.inject.Named
+import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}
 
 class FulfillTransferOperation @Inject constructor(
     private val orumWrapper: OrumWrapper,
+    private val plaidWrapper: PlaidWrapper,
     private val transferDao: TransferDao,
     private val bankDao: BankDao,
     private val userDao: UserDao,
     private val objectMapper: ObjectMapper,
+    @Named(AVAILABLE_BALANCE_BUFFER) private val availableBalanceBuffer: Double,
 ) : Operation<FulfillTransferRequest, FulfillTransfer200Response>() {
 
     override val inputType = FulfillTransferRequest::class.java
@@ -62,6 +73,7 @@ class FulfillTransferOperation @Inject constructor(
     ): FulfillTransfer200Response {
         val transferRequestId = request.transferRequestId
         val bankAccountId = request.bankAccountId
+        userId!!
 
         val date = LocalDate.now(ZoneOffset.UTC).also { logger.info { "Using date $it" } }
         var transferRequestItem = transferDao.getTransfer(transferRequestId = transferRequestId)
@@ -73,7 +85,7 @@ class FulfillTransferOperation @Inject constructor(
 
         logger.info { "Fetching bank item from userId $userId, accountId $bankAccountId" }
         val customerBankAccountItem = try {
-            bankDao.getBankAccount(userId!!, bankAccountId, request.deviceId)
+            bankDao.getBankAccount(userId, bankAccountId, request.deviceId)
         } catch (e: software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException) {
             logger.info { "Could not find bank id $bankAccountId" }
             throw ResourceNotFoundException("BANK_ACCOUNT")
@@ -97,6 +109,8 @@ class FulfillTransferOperation @Inject constructor(
             bankAccountId = bankAccountId
         )
         val fulfillRequestId = input.requestContext.requestId
+
+        assertHasAvailableFunds(transferAmount, customerBankAccountItem.accessToken, bankAccountId)
 
         transferRequestItem = try {
             transferDao.updateTransferRequestInFlight(transferRequestItem)
@@ -160,6 +174,23 @@ class FulfillTransferOperation @Inject constructor(
         )
         if (!isValid) {
             throw InvalidSignatureException()
+        }
+    }
+
+    private fun assertHasAvailableFunds(transferAmount: Int, accessToken: String, bankAccountId: String) {
+        logger.info { "Checking balance" }
+        val balance = try {
+            runBlocking {
+                withTimeout(20.seconds) {
+                    plaidWrapper.getAvailableBalance(accessToken, bankAccountId)
+                }
+            }
+        } catch (e: TimeoutCancellationException) {
+            throw BalanceTimeOutException()
+        }
+        logger.info { "Got balance $balance" }
+        if (transferAmount > balance * availableBalanceBuffer) {
+            throw InsufficientFundsException()
         }
     }
 

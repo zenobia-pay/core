@@ -12,6 +12,7 @@ import com.zenobiapay.api.generated.model.SignatureType
 import com.zenobiapay.api.model.exception.TransferStatusException
 import com.zenobiapay.cryptography.util.isSignatureValid
 import com.zenobiapay.orum.OrumWrapper
+import com.zenobiapay.plaid.PlaidWrapper
 import com.zenobiapay.table.bank.dao.BankDao
 import com.zenobiapay.table.bank.model.BankAccountItem
 import com.zenobiapay.table.bank.model.BankData
@@ -34,6 +35,8 @@ import org.junit.jupiter.api.assertThrows
 
 class FulfillTransferOperationTest {
     private val orumWrapper = mockk<OrumWrapper>()
+    private val plaidWrapper = mockk<PlaidWrapper>()
+    private val balanceFactor = 2.0
     private val transferDao = mockk<TransferDao>()
     private val bankDao = mockk<BankDao>()
     private val userDao = mockk<UserDao>()
@@ -69,10 +72,12 @@ class FulfillTransferOperationTest {
         } returns false
         val operation = FulfillTransferOperation(
             orumWrapper,
+            plaidWrapper,
             transferDao,
             bankDao,
             userDao,
             objectMapper,
+            balanceFactor,
         )
         assertThrows<InvalidSignatureException> {
             operation.run(createRequest(), createMockGatewayEvent(), context, USER_ID)
@@ -86,10 +91,12 @@ class FulfillTransferOperationTest {
         } returns null
         val operation = FulfillTransferOperation(
             orumWrapper,
+            plaidWrapper,
             transferDao,
             bankDao,
             userDao,
             objectMapper,
+            balanceFactor,
         )
         assertThrows<ResourceNotFoundException> {
             operation.run(createRequest(), createMockGatewayEvent(), context, USER_ID)
@@ -103,10 +110,12 @@ class FulfillTransferOperationTest {
         } returns createTransferItem(100, TransferStatus.IN_FLIGHT)
         val operation = FulfillTransferOperation(
             orumWrapper,
+            plaidWrapper,
             transferDao,
             bankDao,
             userDao,
             objectMapper,
+            balanceFactor,
         )
         assertThrows<TransferStatusException> {
             operation.run(createRequest(), createMockGatewayEvent(), context, USER_ID)

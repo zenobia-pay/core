@@ -10,11 +10,9 @@ import com.zenobiapay.table.model.ContinuationToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
-import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactDeleteItemEnhancedRequest
-import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -52,7 +50,7 @@ class BankDao @Inject constructor(
             BankAccountItem(
                 pk = pk,
                 sk = sk,
-                publicToken = token,
+                accessToken = token,
                 data = BankData(
                     bankAccountId = bankAccountId,
                     bankAccountName = bankAccountName,

@@ -1393,9 +1393,12 @@ Resources:
           TRANSFER_TABLE_NAME: !Ref TransferTableName
           BANK_TABLE_NAME: !Ref BankTableName
           USER_TABLE_NAME: !Ref UserTableName
+          AVAILABLE_BALANCE_BUFFER: "2"
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref OrumSecretsArn
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref PlaidSecretsArn
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref PaginationSigningSecret
         - AWSSecretsManagerGetSecretValuePolicy:

@@ -1,6 +1,7 @@
 package com.zenobiapay.plaid
 
 import com.plaid.client.model.AccountBase
+import com.plaid.client.model.AccountsBalanceGetRequest
 import com.plaid.client.model.AccountsGetRequest
 import com.plaid.client.model.AccountsGetResponse
 import com.plaid.client.model.AuthGetRequest
@@ -28,10 +29,12 @@ import com.plaid.client.request.PlaidApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import retrofit2.Response
 import javax.inject.Inject
+import kotlin.math.floor
 
 private val logger = KotlinLogging.logger {}
 
-class PlaidException(message: String) : Exception(message)
+open class PlaidException(message: String) : Exception(message)
+class PlaidBankAccountNotFoundException(): PlaidException("Could not find bank account")
 
 class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
     fun createLinkToken(userId: String, product: List<Products>): LinkTokenCreateResponse {
@@ -122,6 +125,21 @@ class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
         return getResponseOrThrowException("GetIdentityVerification") {
             plaidApi.identityVerificationGet(request).execute()
         }
+    }
+
+    fun getAvailableBalance(accessToken: String, accountId: String): Int {
+        val request = AccountsBalanceGetRequest()
+            .accessToken(accessToken);
+
+        val response = getResponseOrThrowException("AccountsBalanceGet") {
+            plaidApi.accountsBalanceGet(request).execute()
+        }
+        val matchingAccount = response.accounts.firstOrNull {
+            it.accountId == accountId
+        } ?: throw PlaidBankAccountNotFoundException()
+
+        val balance = matchingAccount.balances.available ?: matchingAccount.balances.current!!
+        return floor(balance * 100).toInt()
     }
 
     private fun <T> getResponseOrThrowException(operationName: String, block: () -> Response<T>): T {

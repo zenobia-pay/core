@@ -2,7 +2,6 @@ package com.zenobiapay.bank.operations
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.generated.model.DeleteBankAccountRequest
 import com.zenobiapay.api.model.EmptyApiResponse
 import com.zenobiapay.api.model.cognito.UserPoolGroup
@@ -36,7 +35,7 @@ class DeleteBankAccountOperation @Inject constructor(
             throw com.zenobiapay.api.model.exception.ResourceNotFoundException("BANK_ACCOUNT")
         }
         logger.info { "Removing plaid item" }
-        plaidWrapper.removeItem(item.publicToken)
+        plaidWrapper.removeItem(item.accessToken)
         logger.info { "Closing orum account" }
         orumWrapper.closeExternalAccount(item.data.orumId)
         logger.info { "Marking bank metadata as deleted" }

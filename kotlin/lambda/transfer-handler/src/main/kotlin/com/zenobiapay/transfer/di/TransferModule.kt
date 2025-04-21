@@ -9,6 +9,7 @@ import javax.inject.Named
 
 const val PAGINATION_SECRET = "PAGINATION_SECRET"
 const val TRANSFER_NOTIFICATION_SECRET = "TRANSFER_NOTIFICATION_SECRET"
+const val AVAILABLE_BALANCE_BUFFER = "AVAILABLE_BALANCE_BUFFER"
 
 @Module
 class TransferModule {
@@ -33,5 +34,11 @@ class TransferModule {
         }.secretString()
         val hmacSecret = objectMapper.readValue(valueString, HmacSecret::class.java)
         return hmacSecret.secret
+    }
+
+    @Provides
+    @Named(AVAILABLE_BALANCE_BUFFER)
+    fun provideAvailableBalanceBuffer(): Double {
+        return System.getenv("AVAILABLE_BALANCE_BUFFER")!!.toDouble()
     }
 }
