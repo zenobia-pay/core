@@ -40,17 +40,17 @@ class TransferTableEventLogic @Inject constructor(
             val transferFulfilled = oldItem.status != newItem.status && newItem.status == TransferStatus.COMPLETED
             if (transferFulfilled && webhookUrl != null) {
                 logger.info { "Sending status $status for request id $requestId to webhook $webhookUrl" }
-                if (!isValidWebhook(webhookUrl)) {
+                if (isValidWebhook(webhookUrl)) {
+                    webhookUtil.sendTransferStatus(
+                        webhookUrl,
+                        newItem.data?.merchant?.id!!,
+                        newItem.requestId,
+                        newItem.status.toApiTransferStatus(),
+                        newItem.amount!!
+                    )
+                } else {
                     logger.warn { "Invalid webhook attempted to publish. Skipping" }
-                    return
                 }
-                webhookUtil.sendTransferStatus(
-                    webhookUrl,
-                    newItem.data?.merchant?.id!!,
-                    newItem.requestId,
-                    newItem.status.toApiTransferStatus(),
-                    newItem.amount!!
-                )
             }
             if (transferFulfilled) {
                 websocketUtil.sendWebsocketUpdate(
