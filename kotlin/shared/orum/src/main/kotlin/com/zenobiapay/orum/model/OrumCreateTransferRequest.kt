@@ -7,7 +7,7 @@ data class OrumCreateTransferRequest(
     val transferReferenceId: String,
     val amount: Int,
     val currency: String = "USD",
-    val speed: String = "standard",
+    val speed: String = "asap",
     val source: TransferParticipant? = null,
     val destination: TransferParticipant? = null,
     val accountStatementDescriptor: String? = null
