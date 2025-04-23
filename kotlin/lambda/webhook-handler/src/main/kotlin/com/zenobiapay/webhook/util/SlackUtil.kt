@@ -1,6 +1,5 @@
 package com.zenobiapay.webhook.util
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.webhook.di.ORUM_SLACK_WEBHOOK
 import jakarta.inject.Inject
 import jakarta.inject.Named
@@ -15,11 +14,14 @@ enum class SlackChannel {
 
 class SlackUtil @Inject constructor(
     private val client: OkHttpClient,
-    @Named(ORUM_SLACK_WEBHOOK) private val orumSlackWebhook: String,
-    private val objectMapper: ObjectMapper
+    @Named(ORUM_SLACK_WEBHOOK) private val orumSlackWebhook: String
 ) {
     fun sendMessage(message: String, slackChannel: SlackChannel) {
-        val json = objectMapper.writeValueAsString(mapOf("text" to message))
+        val json = """
+            { 
+                "text": "$message"
+            }
+        """.trimIndent()
         val requestBody = json.toRequestBody("application/json".toMediaTypeOrNull())
 
         val request = Request.Builder()

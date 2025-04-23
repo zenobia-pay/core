@@ -15,9 +15,7 @@ import com.zenobiapay.payout.model.EventBridgeEvent
 import com.zenobiapay.payout.model.PayoutMessage
 import com.zenobiapay.payout.model.ScheduledEvent
 import com.zenobiapay.payout.util.EventBridgeEventSerializer
-import com.zenobiapay.table.transfer.dao.PAYOUT_PREFIX
 import com.zenobiapay.table.transfer.dao.TransferDao
-import com.zenobiapay.table.transfer.model.InboundTransferStatus
 import com.zenobiapay.table.transfer.model.OutboundTransferStatus
 import com.zenobiapay.table.transfer.model.TransferItem
 import com.zenobiapay.table.transfer.util.getFee
@@ -71,35 +69,12 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
         }
 
         logger.info { "Got transfer request id ${newImage?.requestId}"}
-        if (shouldPayout(oldImage?.inboundStatus, newImage?.inboundStatus, oldImage?.outboundStatus, newImage?.outboundStatus)) {
-            logger.info { "Paying out merchant" }
-            val transferItem = transferDao.getTransfer(newImage!!.requestId)
-                ?: throw Error("Could not find transfer item ${newImage.requestId}")
-            fulfillPayout(transferItem)
-        }
-    }
 
-    private fun shouldPayout(
-        oldInboundStatus: InboundTransferStatus?,
-        newInboundStatus: InboundTransferStatus?,
-        oldOutboundStatus: OutboundTransferStatus?,
-        newOutboundStatus: OutboundTransferStatus?,
-    ): Boolean {
-        val inboundStatusChanged = oldInboundStatus != newInboundStatus
-        val outboundStatusChanged = oldOutboundStatus != newOutboundStatus
-
-        if (inboundStatusChanged) {
-            logger.info { "Inbound status has changed to $newInboundStatus"}
-            return newInboundStatus == InboundTransferStatus.SETTLED
-        } else if (outboundStatusChanged) {
-            logger.info { "Outbound status has changed to $newOutboundStatus"}
-            return newOutboundStatus == OutboundTransferStatus.IN_FLIGHT
-        } else {
-            logger.info { "inbound, outbound status has not been updated from $oldInboundStatus, $oldOutboundStatus"}
-            return false
-        }.also {
-            logger.info { "Got shouldPayout: $it"}
+        if (newImage?.outboundStatus != OutboundTransferStatus.IN_FLIGHT) {
+            logger.info { "Request is not in flight. Skipping paying out"}
         }
+        val transferItem = transferDao.getTransfer(newImage!!.requestId) ?: throw Error("Could not find transfer item ${newImage.requestId}")
+        fulfillPayout(transferItem)
     }
 
     private fun fulfillPayout(transferItem: TransferItem) {
@@ -129,14 +104,15 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
         logger.info { "Sending orum payout response" }
         val transferResponse = orumWrapper.createTransfer(
             OrumCreateTransferRequest(
-                transferReferenceId = "$PAYOUT_PREFIX#${transferItem.requestId}",
+                transferReferenceId = "PAYOUT#${transferItem.requestId}",
                 amount = merchantPayout,
                 destination = TransferParticipant(
                     customerReferenceId = generateMerchantOrumId(merchantId),
                     accountReferenceId = bankAccountId,
                     statementDisplayName = merchantData.data.merchantData?.displayName?.filter { it.isLetterOrDigit() }?.take(10) ?: "ZenobiaPay"
                 )
-            )
+            ),
+            waitForCompletedState = true
         )
 
         logger.info { "Payout complete. Marking transfer as paid out." }

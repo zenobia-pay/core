@@ -13,7 +13,6 @@ import com.zenobiapay.api.model.exception.UnauthorizedException
 import com.zenobiapay.api.model.exception.UnknownPathException
 import com.zenobiapay.api.model.exception.ZenobiaExternalException
 import com.zenobiapay.api.generated.model.ErrorResponse
-import com.zenobiapay.api.model.exception.InsufficientFundsException
 import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.api.operation.Operation
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -88,7 +87,7 @@ class ResponseHandler @Inject constructor(val objectMapper: ObjectMapper) {
             .withHeaders(getCorsHeaders())
             .withBody(
                 objectMapper.writeValueAsString(
-                    ErrorResponse().error(getErrorString(error, errorCode)).message(status)
+                    ErrorResponse().error(getErrorString(errorCode)).message(status)
                 )
             )
     }
@@ -98,8 +97,7 @@ class ResponseHandler @Inject constructor(val objectMapper: ObjectMapper) {
         sub?.let { ThreadContext.put("sub", it) }
     }
 
-    private fun getErrorString(error: Exception, statusCode: Int): String {
-        if (error is InsufficientFundsException) return "InsufficientFunds"
+    private fun getErrorString(statusCode: Int): String {
         return when (statusCode) {
             404 -> "NotFound"
             403 -> "AccessDenied"

@@ -93,7 +93,7 @@ class OrumWrapper(
 
     }
 
-    fun createTransfer(createTransferRequest: OrumCreateTransferRequest): OrumCreateTransferResponse {
+    fun createTransfer(createTransferRequest: OrumCreateTransferRequest, waitForCompletedState: Boolean = false): OrumCreateTransferResponse {
         val accessToken = getAccessToken(orumCredentials)
         val body = objectMapper.writeValueAsString(
             createTransferRequest.copy(
@@ -112,18 +112,18 @@ class OrumWrapper(
         val response = getResponseOrThrowException(OrumCreateTransferResponse::class.java) {
             client.newCall(request).execute()
         }
-        waitForOrumTransferStatus(response.transfer.id)
+        waitForOrumTransferStatus(response.transfer.id, waitForCompletedState)
         return response
     }
 
-    private fun waitForOrumTransferStatus(transferId: String) {
+    private fun waitForOrumTransferStatus(transferId: String, waitForCompletedState: Boolean = false) {
         logger.info { "Waiting for completion of orum transfer with id $transferId" }
         waitUntilCondition(
             timeout = 10.seconds,
             sleep = 1.seconds,
             successCondition = { response ->
                 response.transfer.status.let {
-                    it == OrumTransferStatus.PENDING ||
+                    (!waitForCompletedState && it == OrumTransferStatus.PENDING) ||
                     it == OrumTransferStatus.SETTLED ||
                     it == OrumTransferStatus.COMPLETED
                 }

@@ -100,26 +100,6 @@ Resources:
         - Arn: !GetAtt PayoutProcessorFunction.Arn
           Id: TransferLambdaTarget
 
-  DelayedPayoutRule:
-    Type: AWS::Events::Rule
-    Properties:
-      Name: DelayedPayoutTransferTableRule
-      EventBusName: !Ref TransferEventBus
-      EventPattern:
-        source:
-          - transfer.dynamodb
-        detail-type:
-          - "ddb.record"
-        detail:
-          dynamodb:
-            NewImage:
-              inboundStatus:
-                S:
-                  - SETTLED
-      Targets:
-        - Arn: !GetAtt PayoutProcessorFunction.Arn
-          Id: TransferLambdaTarget
-
   PayoutProcessorFunction:
     Type: AWS::Serverless::Function
     Metadata:

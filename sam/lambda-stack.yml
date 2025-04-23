@@ -1582,15 +1582,8 @@ Resources:
         Variables:
           ORUM_PUBLIC_CERTIFICATE: !Ref OrumPublicCertificate
           ORUM_SLACK_WEBHOOK: !Ref OrumSlackWebhook
-          TRANSFER_TABLE_NAME: !Ref TransferTableName
       Policies:
         - AWSLambdaVPCAccessExecutionRole
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TransferTableName
-        - KMSEncryptPolicy:
-            KeyId: !Ref TransferKeyId
-        - KMSDecryptPolicy:
-            KeyId: !Ref TransferKeyId
       Events:
         OrumWebhook:
           Type: Api
