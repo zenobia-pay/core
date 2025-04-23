@@ -69,8 +69,6 @@ data class TransferItem(
 data class TransferData(
     var customer: PaymentParticipantIdentity? = null,
     var merchant: PaymentParticipantIdentity? = null,
-    var fee: Int? = null,
-    var orumPayoutId: String? = null,
     var customerBankAccount: BankAccount? = null,
     var statementItems: List<StatementItem> = listOf(),
     var statusMessage: String? = null,

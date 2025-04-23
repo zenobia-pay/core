@@ -111,42 +111,6 @@ class TransferDao @Inject constructor(
         transferTable.updateItem(request)
     }
 
-    fun updateTransferPayoutLocked(
-        transferItem: TransferItem
-    ) {
-        val updatedItem = transferItem.copy(
-            outboundStatus = OutboundTransferStatus.PAYOUT_LOCKED,
-        )
-
-        val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
-            .item(updatedItem)
-            .build()
-
-        transferTable.updateItem(request)
-    }
-
-    fun updateTransferPaidOut(
-        transferItem: TransferItem,
-        fee: Int?,
-        orumPayoutId: String,
-        version: Int,
-    ) {
-        val updatedItem = transferItem.copy(
-            outboundStatus = OutboundTransferStatus.COMPLETED,
-            data = transferItem.data?.copy(
-                fee = fee,
-                orumPayoutId = orumPayoutId,
-            ),
-            version = version
-        )
-
-        val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
-            .item(updatedItem)
-            .build()
-
-        transferTable.updateItem(request)
-    }
-
     fun getTransfer(transferRequestId: String): TransferItem? {
         val pk = TransferItem.generatePk(transferRequestId)
         val sk = TransferItem.generateSk()
@@ -157,7 +121,6 @@ class TransferDao @Inject constructor(
                 }
             }
         } catch (e: ResourceNotFoundException) {
-            logger.error(e) { "Got ddb error during get transfer" }
             return null
         }
     }
