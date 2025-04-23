@@ -38,7 +38,7 @@ class ListMerchantTransfersOperation @Inject constructor(
             .items(merchantTransfers.map {
                 ListMerchantTransfers200ResponseItemsInner()
                     .amount(it.amount)
-                    .status(it.status.name)
+                    .status(it.inboundStatus.name)
                     .transferRequestId(it.requestId)
             })
             .continuationToken(continuationToken?.encodeToken(objectMapper, paginationSecret))

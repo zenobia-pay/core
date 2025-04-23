@@ -22,7 +22,8 @@ import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
 import com.zenobiapay.table.transfer.model.TransferData
 import com.zenobiapay.table.transfer.model.TransferItem
-import com.zenobiapay.table.transfer.model.TransferStatus
+import com.zenobiapay.table.transfer.model.InboundTransferStatus
+import com.zenobiapay.table.transfer.model.OutboundTransferStatus
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.table.user.model.MerchantData
 import com.zenobiapay.table.user.model.UserItem
@@ -59,7 +60,7 @@ class FulfillTransferOperationTest {
     fun `test validate request signature returns failure`() {
         every {
             transferDao.getTransfer(TRANSFER_REQUEST_ID)
-        } returns createTransferItem(100, TransferStatus.NOT_STARTED)
+        } returns createTransferItem(100, InboundTransferStatus.NOT_STARTED, OutboundTransferStatus.NOT_STARTED)
         every {
             bankDao.getBankAccount(USER_ID, BANK_ACCOUNT_ID, DEVICE_ID)
         } returns createBankAccountItem(BankPermissions.SEND_ONLY, DeviceCertificate(CertificateType.EC.value, CERT_VALUE))
@@ -107,7 +108,7 @@ class FulfillTransferOperationTest {
     fun `throws error on merchant transfer in different status`() {
         every {
             transferDao.getTransfer(TRANSFER_REQUEST_ID)
-        } returns createTransferItem(100, TransferStatus.IN_FLIGHT)
+        } returns createTransferItem(100, InboundTransferStatus.IN_FLIGHT, OutboundTransferStatus.FULFILL_LOCKED)
         val operation = FulfillTransferOperation(
             orumWrapper,
             plaidWrapper,
@@ -139,11 +140,13 @@ class FulfillTransferOperationTest {
 
     private fun createTransferItem(
         amount: Int,
-        status: TransferStatus
+        inboundStatus: InboundTransferStatus,
+        outboundStatus: OutboundTransferStatus,
     ): TransferItem {
         return TransferItem(
             amount = amount,
-            status = status,
+            inboundStatus = inboundStatus,
+            outboundStatus = outboundStatus,
             data = TransferData(
                 merchant = PaymentParticipantIdentity(MERCHANT_ID, "name")
             )

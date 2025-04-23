@@ -2,7 +2,7 @@ package com.zenobiapay.transfertableevent.logic
 
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent
 import com.zenobiapay.table.transfer.model.TransferItem
-import com.zenobiapay.table.transfer.model.TransferStatus
+import com.zenobiapay.table.transfer.model.InboundTransferStatus
 import com.zenobiapay.transfertableevent.util.WebhookUtil
 import com.zenobiapay.transfertableevent.util.WebsocketUtil
 import com.zenobiapay.webhook.util.isValidWebhook
@@ -35,9 +35,9 @@ class TransferTableEventLogic @Inject constructor(
             val oldItem = TransferItem.fromAttributeValueMap(record.dynamodb.oldImage)
             logger.info { "Got new item $newItem" }
             val webhookUrl = newItem.data!!.webhookUrl
-            val status = newItem.status
+            val status = newItem.inboundStatus
             val requestId = newItem.requestId
-            val transferFulfilled = oldItem.status != newItem.status && newItem.status == TransferStatus.COMPLETED
+            val transferFulfilled = oldItem.inboundStatus != newItem.inboundStatus && newItem.inboundStatus == InboundTransferStatus.COMPLETED
             if (transferFulfilled && webhookUrl != null) {
                 logger.info { "Sending status $status for request id $requestId to webhook $webhookUrl" }
                 if (isValidWebhook(webhookUrl)) {
@@ -45,7 +45,7 @@ class TransferTableEventLogic @Inject constructor(
                         webhookUrl,
                         newItem.data?.merchant?.id!!,
                         newItem.requestId,
-                        newItem.status.toApiTransferStatus(),
+                        newItem.outboundStatus.toApiTransferStatus(),
                         newItem.amount!!
                     )
                 } else {
@@ -56,7 +56,7 @@ class TransferTableEventLogic @Inject constructor(
                 websocketUtil.sendWebsocketUpdate(
                     newItem.requestId,
                     newItem.data?.merchant!!.id,
-                    newItem.status.toApiTransferStatus()
+                    newItem.outboundStatus.toApiTransferStatus()
                 )
             }
         } else {

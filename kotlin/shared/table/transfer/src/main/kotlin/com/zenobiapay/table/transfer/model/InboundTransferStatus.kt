@@ -2,12 +2,11 @@ package com.zenobiapay.table.transfer.model
 
 import com.zenobiapay.api.generated.model.TransferStatus as ApiTransferStatus
 
-enum class TransferStatus {
+enum class InboundTransferStatus {
     NOT_STARTED,
     IN_FLIGHT,
     COMPLETED,
-    FAILED,
-    CANCELLED;
+    FAILED;
 
     fun toApiTransferStatus(): ApiTransferStatus {
         return when (this) {
@@ -15,7 +14,6 @@ enum class TransferStatus {
             IN_FLIGHT -> ApiTransferStatus.IN_FLIGHT
             COMPLETED -> ApiTransferStatus.COMPLETED
             FAILED -> ApiTransferStatus.FAILED
-            CANCELLED -> ApiTransferStatus.CANCELLED
         }
     }
 }
