@@ -33,8 +33,7 @@ class CreateTransferRequestOperation @Inject constructor(
     override val inputType = CreateTransferRequestRequest::class.java
 
     override fun run(request: CreateTransferRequestRequest, input: APIGatewayProxyRequestEvent, context: Context, sub: String?): CreateTransferRequest200Response {
-        // TODO: Add expiry ttl to requests
-        val expiry = Instant.now().plus(30, ChronoUnit.MINUTES).epochSecond
+        val expiry = Instant.now().plus(15, ChronoUnit.MINUTES).epochSecond
         val userId = when (input.requestContext.getUserRole()) {
             UserPoolGroup.MERCHANT -> sub!!
             UserPoolGroup.MERCHANT_M2M -> input.requestContext.getSubForM2M()
@@ -52,7 +51,8 @@ class CreateTransferRequestOperation @Inject constructor(
             merchantName,
             request.statementItems?.map {
                 StatementItem.fromApiRequestStatementItem(it)
-            } ?: listOf()
+            } ?: listOf(),
+            expiry,
         )
 
         return CreateTransferRequest200Response()

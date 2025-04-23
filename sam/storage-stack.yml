@@ -139,6 +139,9 @@ Resources:
         SSEType: KMS
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
 
   UserKmsKey:
     Type: AWS::KMS::Key

@@ -25,7 +25,7 @@ data class TransferItem(
     var riskScore: Int? = null,
     var transferFulfillId: String? = null,
     var deleted: Boolean = false,
-    var ttl: Int? = null,
+    var ttl: Long? = null,
     var data: TransferData? = null,
     @get:DynamoDbVersionAttribute var version: Int? = null
 ) {
@@ -57,7 +57,7 @@ data class TransferItem(
                 riskScore = map["riskScore"]?.n?.toInt(),
                 transferFulfillId = map["transferFulfillId"]?.s,
                 deleted = map["deleted"]!!.bool,
-                ttl = map["ttl"]?.n?.toInt(),
+                ttl = map["ttl"]?.n?.toLong(),
                 data = TransferData.fromAttributeValueMap(map["data"]!!.m),
                 version = map["version"]!!.n.toInt()
             )

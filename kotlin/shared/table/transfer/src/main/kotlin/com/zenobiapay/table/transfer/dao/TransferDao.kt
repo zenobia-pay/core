@@ -46,7 +46,14 @@ class TransferDao @Inject constructor(
     private val transferTable = client.table(transferTableName, TableSchema.fromBean(TransferItem::class.java))
     private val payoutTable = client.table(transferTableName, TableSchema.fromBean(PayoutItem::class.java))
 
-    fun putTransferRequest(merchantId: String, requestId: String, amountInCents: Int, merchantName: String, statementItems: List<StatementItem>) {
+    fun putTransferRequest(
+        merchantId: String,
+        requestId: String,
+        amountInCents: Int,
+        merchantName: String,
+        statementItems: List<StatementItem>,
+        expiry: Long
+    ) {
         val pk = TransferItem.generatePk(requestId)
         val sk = TransferItem.generateSk()
         val gsi1Pk = TransferItem.generateGsi1Pk(merchantId)
@@ -66,7 +73,8 @@ class TransferDao @Inject constructor(
                         name = merchantName
                     ),
                     creationTime = creationTime.toString()
-                )
+                ),
+                ttl = expiry
             )
         )
     }
@@ -78,6 +86,7 @@ class TransferDao @Inject constructor(
         val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
             .item(transferItem.copy(
                 inboundStatus = inboundTransferStatus,
+                ttl = null,
             ).also { "Updated transfer item: $it"})
             .build()
 
@@ -90,6 +99,7 @@ class TransferDao @Inject constructor(
         val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
             .item(transferItem.copy(
                 outboundStatus = OutboundTransferStatus.FULFILL_LOCKED,
+                ttl = null,
             ).also { "Updated transfer item: $it"})
             .build()
 
@@ -116,7 +126,8 @@ class TransferDao @Inject constructor(
                 customerBankAccount = customerBankAccount,
             ),
             gsi2Pk = TransferItem.generateGsi2Pk(customerIdentity.id),
-            gsi2Sk = TransferItem.generateGsi2Sk(fulfillRequestId, timestamp)
+            gsi2Sk = TransferItem.generateGsi2Sk(fulfillRequestId, timestamp),
+            ttl = null,
         )
 
         val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
@@ -131,6 +142,7 @@ class TransferDao @Inject constructor(
     ) {
         val updatedItem = transferItem.copy(
             outboundStatus = OutboundTransferStatus.PAYOUT_LOCKED,
+            ttl = null,
         )
 
         val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
@@ -152,7 +164,8 @@ class TransferDao @Inject constructor(
                 fee = fee,
                 orumPayoutId = orumPayoutId,
             ),
-            version = version
+            version = version,
+            ttl = null,
         )
 
         val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
