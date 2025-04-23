@@ -81,7 +81,7 @@ Resources:
   TransferKmsKey:
     Type: AWS::KMS::Key
     Properties:
-      Description: Key to encrypt Transfer DynamoDB table
+      Description: Key to encrypt Bank DynamoDB table
       EnableKeyRotation: true
       KeyPolicy:
         Version: "2012-10-17"

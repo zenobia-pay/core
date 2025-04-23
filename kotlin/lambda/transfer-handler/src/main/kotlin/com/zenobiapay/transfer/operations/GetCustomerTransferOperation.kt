@@ -11,7 +11,7 @@ import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.model.exception.ResourceNotFoundException
 import com.zenobiapay.api.model.transfer.GetCustomerTransferRequest
 import com.zenobiapay.table.transfer.dao.TransferDao
-import com.zenobiapay.table.transfer.model.InboundTransferStatus
+import com.zenobiapay.table.transfer.model.TransferStatus
 import javax.inject.Inject
 
 class GetCustomerTransferOperation @Inject constructor(
@@ -25,14 +25,14 @@ class GetCustomerTransferOperation @Inject constructor(
         val request = objectMapper.convertValue(input.queryStringParameters!!, GetCustomerTransferRequest::class.java)
         val transfer = transferDao.getTransfer(request.id) ?: throw ResourceNotFoundException("Transfer")
         // Validate that they are either accessing data they paid for or a not started transfer
-        if (transfer.inboundStatus != InboundTransferStatus.NOT_STARTED && transfer.data?.customer?.id != userId) {
+        if (transfer.status != TransferStatus.NOT_STARTED && transfer.data?.customer?.id != userId) {
             throw ResourceNotFoundException("Transfer")
         }
 
         return GetCustomerTransfer200Response()
             .transferRequestId(transfer.requestId)
             .merchant(PaymentParticipantIdentity().id(transfer.data?.merchant?.id).name(transfer.data?.merchant?.name))
-            .status(transfer.inboundStatus.toApiTransferStatus())
+            .status(transfer.status.toApiTransferStatus())
             .statementItems(transfer.data?.statementItems?.map { it.toApiStatementItem() } ?: listOf())
             .amount(transfer.amount)
             .statusMessage(transfer.data?.statusMessage)

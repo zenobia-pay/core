@@ -88,7 +88,6 @@ Resources:
       TemplateURL: ./sam/payout-stack.yml
       Parameters:
         TransferTableName: !GetAtt TableStack.Outputs.TransferTableName
-        TransferTableStreamArn: !GetAtt TableStack.Outputs.TransferTableStreamArn
         UserTableName: !GetAtt TableStack.Outputs.UserTableName
         TransferKeyId: !GetAtt TableStack.Outputs.TransferKeyId
         UserKeyId: !GetAtt TableStack.Outputs.UserKeyId

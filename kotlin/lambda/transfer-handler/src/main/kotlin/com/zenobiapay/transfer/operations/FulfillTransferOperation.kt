@@ -30,8 +30,7 @@ import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.BankAccount
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
 import com.zenobiapay.table.transfer.model.Signature
-import com.zenobiapay.table.transfer.model.InboundTransferStatus
-import com.zenobiapay.table.transfer.model.OutboundTransferStatus
+import com.zenobiapay.table.transfer.model.TransferStatus
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.transfer.di.AVAILABLE_BALANCE_BUFFER
 import com.zenobiapay.transfer.model.FulfillTransferRequestMixin
@@ -80,7 +79,7 @@ class FulfillTransferOperation @Inject constructor(
         var transferRequestItem = transferDao.getTransfer(transferRequestId = transferRequestId)
             ?: throw ResourceNotFoundException("TRANSFER")
         logger.info { "Got transfer request item $transferRequestItem" }
-        if (transferRequestItem.outboundStatus != OutboundTransferStatus.NOT_STARTED) {
+        if (transferRequestItem.status != TransferStatus.NOT_STARTED) {
             throw TransferStatusException("Transfer status is no longer in NOT_STARTED state.")
         }
 
@@ -114,11 +113,10 @@ class FulfillTransferOperation @Inject constructor(
         assertHasAvailableFunds(transferAmount, customerBankAccountItem.accessToken, bankAccountId)
 
         transferRequestItem = try {
-            transferDao.updateTransferRequestLocked(transferRequestItem)
+            transferDao.updateTransferRequestInFlight(transferRequestItem)
         } catch (e: ConditionalCheckFailedException) {
             throw ConcurrentModificationException()
         }
-
         logger.info { "Successfully set request to IN_FLIGHT" }
         val fulfillTimestamp = Instant.now()
         transferFunds(
@@ -130,7 +128,7 @@ class FulfillTransferOperation @Inject constructor(
         transferDao.addPayoutItemAmount(debtorId.id, transferAmount, date)
         logger.info { "Added payout item" }
         val statementItems = transferRequestData.statementItems.map { it.toApiStatementItem() }
-        transferDao.updateTransferRequestFulfilled(
+        transferDao.updateTransferRequestSuccess(
             transferItem = transferRequestItem,
             fulfillRequestId = fulfillRequestId,
             customerIdentity = creditorId,

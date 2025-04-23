@@ -44,7 +44,7 @@ class ListCustomerTransfersOperation @Inject constructor(
                                 .lastFourDigits(it.data?.customerBankAccount?.lastFourDigits)
                         )
                         .amount(it.amount)
-                        .status(it.inboundStatus.toApiTransferStatus())
+                        .status(it.status.toApiTransferStatus())
                         .merchant(it.data!!.merchant!!.toApiParticipantIdentity())
                         .creationTime(it.data!!.creationTime)
                 },
