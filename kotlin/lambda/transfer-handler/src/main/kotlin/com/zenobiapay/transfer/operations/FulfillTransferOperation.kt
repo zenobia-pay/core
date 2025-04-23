@@ -191,7 +191,8 @@ class FulfillTransferOperation @Inject constructor(
             throw BalanceTimeOutException()
         }
         logger.info { "Got balance $balance" }
-        if (transferAmount > balance * availableBalanceBuffer) {
+        if (transferAmount * availableBalanceBuffer > balance) {
+            logger.info { "Balance $balance was not greater than transfer amount $transferAmount with buffer $availableBalanceBuffer"}
             throw InsufficientFundsException()
         }
     }
