@@ -34,6 +34,8 @@ import javax.inject.Named
 
 private val logger = KotlinLogging.logger {}
 
+const val PAYOUT_PREFIX = "PAYOUT"
+
 class TransferDao @Inject constructor(
     private val client: DynamoDbEnhancedClient,
     private val lowLevelClient: DynamoDbClient,
@@ -67,6 +69,19 @@ class TransferDao @Inject constructor(
                 )
             )
         )
+    }
+
+    fun updateTransferInboundStatus(
+        transferItem: TransferItem,
+        inboundTransferStatus: InboundTransferStatus,
+    ): TransferItem {
+        val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
+            .item(transferItem.copy(
+                inboundStatus = inboundTransferStatus,
+            ).also { "Updated transfer item: $it"})
+            .build()
+
+        return transferTable.updateItem(request)
     }
 
     fun updateTransferRequestLocked(
