@@ -4,12 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.table.model.HmacSecret
 import dagger.Module
 import dagger.Provides
+import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
 import javax.inject.Named
 
 const val PAGINATION_SECRET = "PAGINATION_SECRET"
 const val TRANSFER_NOTIFICATION_SECRET = "TRANSFER_NOTIFICATION_SECRET"
 const val AVAILABLE_BALANCE_BUFFER = "AVAILABLE_BALANCE_BUFFER"
+
+private val logger = KotlinLogging.logger {}
 
 @Module
 class TransferModule {
@@ -39,6 +42,8 @@ class TransferModule {
     @Provides
     @Named(AVAILABLE_BALANCE_BUFFER)
     fun provideAvailableBalanceBuffer(): Double {
-        return System.getenv("AVAILABLE_BALANCE_BUFFER")!!.toDouble()
+        return System.getenv("AVAILABLE_BALANCE_BUFFER")!!.toDouble().also {
+            logger.info { "Got balance buffer $it" }
+        }
     }
 }
