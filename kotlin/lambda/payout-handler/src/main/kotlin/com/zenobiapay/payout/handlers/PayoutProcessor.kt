@@ -24,6 +24,7 @@ import com.zenobiapay.table.transfer.util.getFee
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.table.user.model.UserType
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.apache.logging.log4j.ThreadContext
 import javax.inject.Inject
 
 private val logger = KotlinLogging.logger {}
@@ -52,7 +53,6 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
     }
 
     override fun handleRequest(event: Map<String, Any>, context: Context?) {
-//        logger.info { "Got event $event" }
         val request = objectMapper.convertValue(event, EventBridgeEvent::class.java)
         if (request.detail?.eventName != "MODIFY") {
             logger.info { "Request is not a modification, ignoring." }
@@ -70,12 +70,23 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
             )
         }
 
-        logger.info { "Got transfer request id ${newImage?.requestId}"}
-        if (shouldPayout(oldImage?.inboundStatus, newImage?.inboundStatus, oldImage?.outboundStatus, newImage?.outboundStatus)) {
-            logger.info { "Paying out merchant" }
-            val transferItem = transferDao.getTransfer(newImage!!.requestId)
-                ?: throw Error("Could not find transfer item ${newImage.requestId}")
-            fulfillPayout(transferItem)
+        try {
+            newImage?.requestId.let { ThreadContext.put("transferId", it) }
+            logger.info { "Got transfer request id ${newImage?.requestId}" }
+            if (shouldPayout(
+                    oldImage?.inboundStatus,
+                    newImage?.inboundStatus,
+                    oldImage?.outboundStatus,
+                    newImage?.outboundStatus
+                )
+            ) {
+                logger.info { "Paying out merchant" }
+                val transferItem = transferDao.getTransfer(newImage!!.requestId)
+                    ?: throw Error("Could not find transfer item ${newImage.requestId}")
+                fulfillPayout(transferItem)
+            }
+        } finally {
+            ThreadContext.clearAll()
         }
     }
 

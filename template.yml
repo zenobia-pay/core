@@ -78,7 +78,6 @@ Resources:
         OrumPublicCertificate: !Ref OrumPublicCertificate
         OrumIpAddresses: !Ref OrumIpAddresses
         OrumSlackWebhook: !Ref OrumSlackWebhook
-        WebsocketServiceEndpoint: !Ref WebsocketServiceEndpoint
         CustomerJwtSigningSecret: !GetAtt AuthStack.Outputs.CustomerJwtSigningSecret
         RefreshTokenHashingSecret: !GetAtt AuthStack.Outputs.RefreshTokenHashingSecret
 
@@ -93,6 +92,7 @@ Resources:
         TransferKeyId: !GetAtt TableStack.Outputs.TransferKeyId
         UserKeyId: !GetAtt TableStack.Outputs.UserKeyId
         OrumSecretsArn: !Ref OrumSecretsArn
+        WebsocketServiceEndpoint: !Ref WebsocketServiceEndpoint
 
 Outputs:
   WebEndpoint:

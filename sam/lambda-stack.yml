@@ -61,9 +61,6 @@ Parameters:
   OrumSlackWebhook:
     Type: String
     Description: Slack webhook for orum channel
-  WebsocketServiceEndpoint:
-    Type: String
-    Description: Websocket endpoint to send transfer updates to.
   CustomerJwtSigningSecret:
     Type: String
     Description: Signing secret for jwt
@@ -1402,7 +1399,7 @@ Resources:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref PaginationSigningSecret
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Ref TransferStatusSigningSecret
+            SecretArn: !Ref WebsocketTransferSubscribeSigningSecret
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref TransferTableName
@@ -1558,11 +1555,11 @@ Resources:
         PasswordLength: 32
         ExcludeCharacters: "\"@/\\^`|&[](){}$"
 
-  TransferStatusSigningSecret:
+  WebsocketTransferSubscribeSigningSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: transfer/hmac
-      Description: HMAC secret for signing transfer status updates
+      Name: websocket/subscribe/hmac
+      Description: HMAC secret for merchant component to listen for updates
       GenerateSecretString:
         SecretStringTemplate: "{}"
         GenerateStringKey: secret
@@ -1600,80 +1597,6 @@ Resources:
             Method: POST
             Auth:
               Authorizer: SignatureAuthorizer
-
-  WebhookSigningKey:
-    Type: AWS::KMS::Key
-    Properties:
-      Description: "KMS Key for signing JWT webhooks"
-      KeyUsage: SIGN_VERIFY
-      KeySpec: RSA_2048
-      Enabled: true
-      EnableKeyRotation: false
-      KeyPolicy:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: AllowRootAccountAccess
-            Effect: Allow
-            Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
-            Action: "kms:*"
-            Resource: "*"
-          - Sid: AllowLambdaUse
-            Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action:
-              - kms:GetPublicKey
-              - kms:Sign
-            Resource: "*"
-            Condition:
-              StringEquals:
-                kms:CallerAccount: !Ref AWS::AccountId
-                kms:ViaService: !Sub lambda.${AWS::Region}.amazonaws.com
-              ArnLike: # Hack to tighten up kms to only be used by the transfer event handler. Cannot reference directly as there is a circular dependency
-                aws:PrincipalArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/*-TransferTableEventHandler-*"
-
-  WebhookSigningKeyAlias:
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: alias/webhook-signing-key
-      TargetKeyId: !Ref WebhookSigningKey
-
-  TransferTableEventHandler:
-    Type: "AWS::Serverless::Function"
-    Metadata:
-      SkipBuild: true
-    Properties:
-      FunctionName: TransferTableEventHandler
-      Handler: com.zenobiapay.transfertableevent.handlers.TransferTableEventHandler::handleRequest
-      Runtime: java17
-      CodeUri: ../kotlin/lambda/transfer-event-handler/build/libs/lambda.jar
-      Environment:
-        Variables:
-          WEBHOOK_KMS_ALIAS: !Ref WebhookSigningKeyAlias
-          WEBSOCKET_SERVICE_ENDPOINT: !Ref WebsocketServiceEndpoint
-      Policies:
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Ref TransferStatusSigningSecret
-        - DynamoDBStreamReadPolicy:
-            TableName: !Ref TransferTableName
-            StreamName: !Select [3, !Split ["/", !Ref TransferTableStreamArn]]
-        - KMSDecryptPolicy:
-            KeyId: !Ref TransferKeyId
-        - Statement:
-            - Sid: AllowKmsSignedWebhooks
-              Effect: Allow
-              Action:
-                - kms:GetPublicKey
-                - kms:Sign
-              Resource: !GetAtt WebhookSigningKey.Arn
-      Events:
-        DynamoDBStreamEvent:
-          Type: DynamoDB
-          Properties:
-            Stream: !Ref TransferTableStreamArn
-            StartingPosition: TRIM_HORIZON
-            BatchSize: 5
 
 Outputs:
   WebEndpoint:

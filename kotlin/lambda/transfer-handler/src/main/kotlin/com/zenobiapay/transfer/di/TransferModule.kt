@@ -33,7 +33,7 @@ class TransferModule {
     @Named(TRANSFER_NOTIFICATION_SECRET)
     fun provideTransferNotificationSecret(objectMapper: ObjectMapper, secretsManagerClient: SecretsManagerClient): String {
         val valueString = secretsManagerClient.getSecretValue {
-            it.secretId("transfer/hmac")
+            it.secretId("websocket/subscribe/hmac")
         }.secretString()
         val hmacSecret = objectMapper.readValue(valueString, HmacSecret::class.java)
         return hmacSecret.secret

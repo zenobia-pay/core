@@ -23,6 +23,9 @@ Parameters:
     Type: String
   OrumSecretsArn:
     Type: String
+  WebsocketServiceEndpoint:
+    Type: String
+    Description: Websocket endpoint to send transfer updates to.
 
 Resources:
   TransferStreamPipe:
@@ -148,6 +151,8 @@ Resources:
             KeyId: !Ref UserKeyId
         - KMSEncryptPolicy:
             KeyId: !Ref TransferKeyId
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt PayoutProcessorDLQ.QueueName
       Events:
         EventFromEventBridge:
           Type: EventBridgeRule
@@ -155,6 +160,14 @@ Resources:
             Pattern:
               source:
                 - aws.dynamodb
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt PayoutProcessorDLQ.Arn
+
+  PayoutProcessorDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: PayoutProcessorDLQ
 
   TransferLambdaPermission:
     Type: AWS::Lambda::Permission
@@ -164,3 +177,87 @@ Resources:
       Principal: events.amazonaws.com
       SourceArn: !GetAtt ImmediatePayoutRule.Arn
 
+  WebsocketTransferStatusSigningSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: websocket/update/hmac
+      Description: HMAC secret for signing transfer status updates
+      GenerateSecretString:
+        SecretStringTemplate: "{}"
+        GenerateStringKey: secret
+        PasswordLength: 32
+        ExcludeCharacters: "\"@/\\^`|&[](){}$"
+
+  TransferTableNotificationsHandler:
+    Type: "AWS::Serverless::Function"
+    Metadata:
+      SkipBuild: true
+    Properties:
+      FunctionName: TransferTableNotificationsHandler
+      Handler: com.zenobiapay.transfertableevent.handlers.TransferTableEventHandler::handleRequest
+      Runtime: java17
+      CodeUri: ../kotlin/lambda/transfer-event-handler/build/libs/lambda.jar
+      Environment:
+        Variables:
+          WEBHOOK_KMS_ALIAS: !Ref WebhookSignatureKeyAlias
+          WEBSOCKET_SERVICE_ENDPOINT: !Ref WebsocketServiceEndpoint
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref WebsocketTransferStatusSigningSecret
+        - DynamoDBStreamReadPolicy:
+            TableName: !Ref TransferTableName
+            StreamName: !Select [3, !Split ["/", !Ref TransferTableStreamArn]]
+        - KMSDecryptPolicy:
+            KeyId: !Ref TransferKeyId
+        - Statement:
+            - Sid: AllowKmsSignedWebhooks
+              Effect: Allow
+              Action:
+                - kms:GetPublicKey
+                - kms:Sign
+              Resource: !GetAtt WebhookSignatureKey.Arn
+      Events:
+        DynamoDBStreamEvent:
+          Type: DynamoDB
+          Properties:
+            Stream: !Ref TransferTableStreamArn
+            StartingPosition: TRIM_HORIZON
+            BatchSize: 5
+
+  WebhookSignatureKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: "KMS Key for signing JWT webhooks"
+      KeyUsage: SIGN_VERIFY
+      KeySpec: RSA_2048
+      Enabled: true
+      EnableKeyRotation: false
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowRootAccountAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
+            Resource: "*"
+          - Sid: AllowLambdaUse
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - kms:GetPublicKey
+              - kms:Sign
+            Resource: "*"
+            Condition:
+              StringEquals:
+                kms:CallerAccount: !Ref AWS::AccountId
+                kms:ViaService: !Sub lambda.${AWS::Region}.amazonaws.com
+              ArnLike: # Hack to tighten up kms to only be used by the transfer event handler. Cannot reference directly as there is a circular dependency
+                aws:PrincipalArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/*-TransferTableEventHandler-*"
+
+  WebhookSignatureKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/webhook-signature-key
+      TargetKeyId: !Ref WebhookSignatureKey

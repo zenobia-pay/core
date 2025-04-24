@@ -2,7 +2,7 @@ package com.zenobiapay.transfertableevent.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.generated.model.TransferStatus
-import com.zenobiapay.transfertableevent.di.TRANSFER_NOTIFICATION_SECRET
+import com.zenobiapay.transfertableevent.di.TRANSFER_STATUS_NOTIFICATION_SECRET
 import com.zenobiapay.transfertableevent.di.WEBSOCKET_SERVICE_ENDPOINT
 import com.zenobiapay.transfertableevent.model.TransferWebsocketBody
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -22,7 +22,7 @@ class WebsocketUtil @Inject constructor(
     private val objectMapper: ObjectMapper,
     @Named(WEBSOCKET_SERVICE_ENDPOINT)
     private val websocketUrl: String,
-    @Named(TRANSFER_NOTIFICATION_SECRET)
+    @Named(TRANSFER_STATUS_NOTIFICATION_SECRET)
     private val hmacSecret: String
 ) {
     fun sendWebsocketUpdate(transferRequestId: String, merchantId: String, status: TransferStatus) {

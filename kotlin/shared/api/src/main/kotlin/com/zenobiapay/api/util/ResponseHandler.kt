@@ -33,7 +33,7 @@ class ResponseHandler @Inject constructor(val objectMapper: ObjectMapper) {
     fun <I, O> returnApiGwResponse(operation: Operation<I, O>, input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
         return wrapOperation {
             val userId = input.requestContext.getUserId()
-            setLoggingContext(input.requestContext.requestId, userId)
+            setLoggingContext(input.requestContext.requestId, userId, input.path)
             logger.info { "Got operation ${operation.javaClass}, userId $userId, body ${input.body}"}
             val role = input.requestContext.getUserRole()
             if (role !in operation.getUserPoolAllowList()) {
@@ -64,6 +64,8 @@ class ResponseHandler @Inject constructor(val objectMapper: ObjectMapper) {
             generateSuccessResponse(body())
         } catch (e: Exception) {
             generateApiGatewayErrorResponse(e)
+        } finally {
+            ThreadContext.clearAll()
         }
     }
 
@@ -93,9 +95,10 @@ class ResponseHandler @Inject constructor(val objectMapper: ObjectMapper) {
             )
     }
 
-    private fun setLoggingContext(requestId: String?, sub: String?) {
+    private fun setLoggingContext(requestId: String?, sub: String?, path: String?) {
         requestId?.let { ThreadContext.put("requestId", it) }
         sub?.let { ThreadContext.put("sub", it) }
+        path?.let { ThreadContext.put("path", it) }
     }
 
     private fun getErrorString(error: Exception, statusCode: Int): String {
