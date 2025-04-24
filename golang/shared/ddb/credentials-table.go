@@ -23,13 +23,17 @@ func GetHashedRefreshTokenFromCredentialsTable(ctx context.Context, sub string) 
 	})
 
 	if err != nil {
-		fmt.Printf("Could not get ddb item %s\n", err.Error())
+		panic(fmt.Errorf("unexpected ddb error: %w", err))
+	}
+
+	if len(out.Item) == 0 {
+		fmt.Printf("Could not get ddb item %s\n", err)
 		return "", err
 	}
 
 	refreshToken, ok := out.Item["hashedRefreshToken"].(*types.AttributeValueMemberS)
 	if !ok {
-		panic("Unexpected type for credentials item hashedRefreshToken")
+		panic("unexpected type for credentials item hashedRefreshToken")
 	}
 	return refreshToken.Value, nil
 }

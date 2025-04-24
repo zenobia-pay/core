@@ -35,6 +35,7 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		println("Did not find sub")
 		return generateInvalidRequestResponse(), nil
 	}
+	fmt.Printf("Attempting to authorize sub %s", sub)
 	refreshToken, ok := requestMap["refreshToken"]
 	if !ok {
 		println("Did not find refreshToken")
