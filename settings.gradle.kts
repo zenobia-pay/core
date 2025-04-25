@@ -26,3 +26,5 @@ include(
 )
 include("kotlin:shared:table:credentials")
 findProject(":kotlin:shared:table:credentials")?.name = "credentials"
+include("kotlin:shared:events")
+findProject(":kotlin:shared:events")?.name = "events"

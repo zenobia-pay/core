@@ -103,6 +103,14 @@ Resources:
         - Arn: !GetAtt PayoutProcessorFunction.Arn
           Id: TransferLambdaTarget
 
+  ImmediatePayoutLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt PayoutProcessorFunction.Arn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ImmediatePayoutRule.Arn
+
   DelayedPayoutRule:
     Type: AWS::Events::Rule
     Properties:
@@ -122,6 +130,14 @@ Resources:
       Targets:
         - Arn: !GetAtt PayoutProcessorFunction.Arn
           Id: TransferLambdaTarget
+
+  DelayedPayoutLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt PayoutProcessorFunction.Arn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt DelayedPayoutRule.Arn
 
   PayoutProcessorFunction:
     Type: AWS::Serverless::Function
@@ -154,12 +170,10 @@ Resources:
         - SQSSendMessagePolicy:
             QueueName: !GetAtt PayoutProcessorDLQ.QueueName
       Events:
-        EventFromEventBridge:
-          Type: EventBridgeRule
+        EventFromRedriveQueue:
+          Type: SQS
           Properties:
-            Pattern:
-              source:
-                - aws.dynamodb
+            Queue: !GetAtt PayoutProcessorHandlerRedriveQueue.Arn
       DeadLetterQueue:
         Type: SQS
         TargetArn: !GetAtt PayoutProcessorDLQ.Arn
@@ -168,14 +182,13 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: PayoutProcessorDLQ
+      MessageRetentionPeriod: 1209600  # Max: 14 days (in seconds)
 
-  TransferLambdaPermission:
-    Type: AWS::Lambda::Permission
+  PayoutProcessorHandlerRedriveQueue:
+    Type: AWS::SQS::Queue
     Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt PayoutProcessorFunction.Arn
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt ImmediatePayoutRule.Arn
+      QueueName: PayoutProcessorHandlerRedriveQ
+      MessageRetentionPeriod: 1209600  # Max: 14 days (in seconds)
 
   WebsocketTransferStatusSigningSecret:
     Type: AWS::SecretsManager::Secret
@@ -187,6 +200,28 @@ Resources:
         GenerateStringKey: secret
         PasswordLength: 32
         ExcludeCharacters: "\"@/\\^`|&[](){}$"
+
+  TransferEventNotificationRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: TransferEventNotificationRule
+      EventBusName: !Ref TransferEventBus
+      EventPattern:
+        source:
+          - transfer.dynamodb
+        detail-type:
+          - "ddb.record"
+      Targets:
+        - Arn: !GetAtt TransferTableNotificationsHandler.Arn
+          Id: TransferLambdaTarget
+
+  TransferNotificationLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt TransferTableNotificationsHandler.Arn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt TransferEventNotificationRule.Arn
 
   TransferTableNotificationsHandler:
     Type: "AWS::Serverless::Function"
@@ -216,13 +251,29 @@ Resources:
                 - kms:GetPublicKey
                 - kms:Sign
               Resource: !GetAtt WebhookSignatureKey.Arn
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt TransferTableNotificationsHandlerDLQ.QueueName
       Events:
-        DynamoDBStreamEvent:
-          Type: DynamoDB
+        EventFromRedriveQueue:
+          Type: SQS
           Properties:
-            Stream: !Ref TransferTableStreamArn
-            StartingPosition: TRIM_HORIZON
-            BatchSize: 5
+            Queue: !GetAtt TransferTableNotificationsHandlerRedriveQ.Arn
+        
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt TransferTableNotificationsHandlerDLQ.Arn
+
+  TransferTableNotificationsHandlerDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: TransferTableNotificationsHandlerDLQ
+      MessageRetentionPeriod: 1209600  # Max: 14 days (in seconds)
+
+  TransferTableNotificationsHandlerRedriveQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: TransferTableNotificationsHandlerRedriveQ
+      MessageRetentionPeriod: 1209600  # Max: 14 days (in seconds)
 
   WebhookSignatureKey:
     Type: AWS::KMS::Key

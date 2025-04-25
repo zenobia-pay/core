@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.jvm)
     alias(libs.plugins.serialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.shadow)
 }
 
 java {
@@ -27,71 +26,43 @@ repositories {
 }
 
 dependencies {
-    api(project(":kotlin:shared"))
-    api(project(":kotlin:shared:webhook"))
-    api(project(":kotlin:shared:events"))
     implementation(project(":kotlin:shared:api:model"))
-    implementation(project(":kotlin:shared:table"))
-    implementation(project(":kotlin:shared:table:transfer"))
-
     api(libs.kotlin.stdlib)
     api(libs.lambda.core)
     api(libs.lambda.events)
 
     // Json processing
-    api(libs.jackson.databind)
+    implementation(libs.jackson.core)
     implementation(libs.jackson.kotlin)
+    api(libs.jackson.databind)
+    api(libs.jackson.annotations)
+    implementation(libs.hibernate)
+    implementation(libs.javax.inject)
 
     // Injection
     api(libs.dagger)
     ksp(libs.dagger.compiler)
-    api(libs.javax.inject)
 
-    // JSON
-    implementation(libs.jackson.core)
+    // HTTP
+    api(libs.okhttp)
 
     // Logging
     implementation(libs.kotlin.logging)
-    implementation(libs.slf4j)
-
-    // AWS
-    api(libs.aws.sqs)
-    api(libs.aws.kms)
-    api(libs.aws.secretsmanager)
+    implementation(libs.log4j)
+    runtimeOnly(libs.slf4j)
 
     // Testing
     testImplementation(libs.kotlin.test)
     testImplementation(libs.mockk)
     testImplementation(libs.mockk.dsl)
-    testImplementation(libs.junit.api)
     testImplementation(libs.junit)
+    testImplementation(libs.junit.api)
 }
 
 tasks.test {
     useJUnitPlatform()
 }
 
-sourceSets.main {
-    java.srcDir("${layout.buildDirectory}/generated/src/main/kotlin")
-}
-
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
-}
-
-tasks {
-    shadowJar {
-        archiveBaseName.set("lambda")
-        archiveClassifier.set("")
-        archiveVersion.set("")
-        manifest {
-            attributes(mapOf("Main-Class" to "com.zenobiapay.user.handlers.UserHandler"))
-        }
-    }
-    jar {
-        enabled = false
-    }
-    build {
-        dependsOn(shadowJar)
-    }
 }

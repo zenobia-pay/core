@@ -1,8 +1,7 @@
 package com.zenobiapay.transfertableevent.logic
 
-import com.amazonaws.services.lambda.runtime.events.DynamodbEvent
 import com.zenobiapay.table.transfer.model.TransferItem
-import com.zenobiapay.table.transfer.model.InboundTransferStatus
+import com.zenobiapay.table.transfer.model.OutboundTransferStatus
 import com.zenobiapay.transfertableevent.util.WebhookUtil
 import com.zenobiapay.transfertableevent.util.WebsocketUtil
 import com.zenobiapay.webhook.util.isValidWebhook
@@ -15,52 +14,59 @@ class TransferTableEventLogic @Inject constructor(
     private val webhookUtil: WebhookUtil,
     private val websocketUtil: WebsocketUtil,
 ) {
-    fun handleRecord(record: DynamodbEvent.DynamodbStreamRecord) {
-        val hasOldImage = record.dynamodb.oldImage != null
-        val hasNewImage = record.dynamodb.newImage != null
+    fun handleRecord(oldImage: TransferItem?, newImage: TransferItem?) {
+        val hasOldImage = oldImage != null
+        val hasNewImage = newImage != null
 
         if (!hasOldImage && hasNewImage) {
             logger.info { "Found new CREATE event" }
             logger.info { "No actions for create, skipping" }
         } else if (hasOldImage && hasNewImage) {
             logger.info { "Found new MODIFY event" }
-            handleModifyEvent(record)
+            handleModifyEvent(oldImage, newImage)
         }
     }
 
-    private fun handleModifyEvent(record: DynamodbEvent.DynamodbStreamRecord) {
-        if (record.dynamodb.newImage["pk"]!!.s.startsWith(TransferItem.PK_PREFIX)) {
-            logger.info { "PK value: ${record.dynamodb.newImage["pk"]?.s}" }
-            val newItem = TransferItem.fromAttributeValueMap(record.dynamodb.newImage)
-            val oldItem = TransferItem.fromAttributeValueMap(record.dynamodb.oldImage)
-            logger.info { "Got new item $newItem" }
-            val webhookUrl = newItem.data!!.webhookUrl
-            val status = newItem.inboundStatus
-            val requestId = newItem.requestId
-            val transferFulfilled = oldItem.inboundStatus != newItem.inboundStatus && newItem.inboundStatus == InboundTransferStatus.COMPLETED
-            if (transferFulfilled && webhookUrl != null) {
-                logger.info { "Sending status $status for request id $requestId to webhook $webhookUrl" }
-                if (isValidWebhook(webhookUrl)) {
-                    webhookUtil.sendTransferStatus(
-                        webhookUrl,
-                        newItem.data?.merchant?.id!!,
-                        newItem.requestId,
-                        newItem.outboundStatus.toApiTransferStatus(),
-                        newItem.amount!!
-                    )
-                } else {
-                    logger.warn { "Invalid webhook attempted to publish. Skipping" }
-                }
-            }
-            if (transferFulfilled) {
-                websocketUtil.sendWebsocketUpdate(
+    private fun handleModifyEvent(oldItem: TransferItem, newItem: TransferItem) {
+        logger.info { "Processing PK value: ${newItem.pk}" }
+        val webhookUrl = newItem.data!!.webhookUrl
+        val status = newItem.inboundStatus
+        val requestId = newItem.requestId
+        val transferCompleted = shouldSendStatus(oldItem, newItem)
+        if (transferCompleted && webhookUrl != null) {
+            logger.info { "Sending status $status for request id $requestId to webhook $webhookUrl" }
+            if (isValidWebhook(webhookUrl)) {
+                webhookUtil.sendTransferStatus(
+                    webhookUrl,
+                    newItem.data?.merchant?.id!!,
                     newItem.requestId,
-                    newItem.data?.merchant!!.id,
-                    newItem.outboundStatus.toApiTransferStatus()
+                    newItem.outboundStatus.toApiTransferStatus(),
+                    newItem.amount!!
                 )
+            } else {
+                logger.warn { "Invalid webhook attempted to publish. Skipping" }
             }
-        } else {
-            logger.info { "Item is not a transfer item, skipping" }
+        }
+        if (transferCompleted) {
+            websocketUtil.sendWebsocketUpdate(
+                newItem.requestId,
+                newItem.data?.merchant!!.id,
+                newItem.outboundStatus.toApiTransferStatus()
+            )
+        }
+    }
+
+    private fun shouldSendStatus(oldItem: TransferItem, newItem: TransferItem): Boolean {
+        val oldItemOutboundStatus = oldItem.outboundStatus
+        val newItemOutboundStatus = newItem.outboundStatus
+
+        if (oldItemOutboundStatus == newItemOutboundStatus) {
+            logger.info { "No change in outbound status. Ignoring." }
+        }
+
+        return newItemOutboundStatus == OutboundTransferStatus.COMPLETED ||
+                newItemOutboundStatus == OutboundTransferStatus.IN_FLIGHT.also {
+                    logger.info { "For status $newItemOutboundStatus, shouldSendStatus = $it" }
         }
     }
 }

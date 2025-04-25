@@ -1,12 +1,9 @@
-package com.zenobiapay.payout.util
+package com.zenobiapay.events.util
 
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue
 import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
-
-private val logger = KotlinLogging.logger {}
 
 class EventBridgeEventSerializer @Inject constructor(
     private val objectMapper: ObjectMapper,

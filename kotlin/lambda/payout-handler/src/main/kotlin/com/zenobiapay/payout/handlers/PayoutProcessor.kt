@@ -2,19 +2,14 @@ package com.zenobiapay.payout.handlers
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
-import com.amazonaws.services.lambda.runtime.events.DynamodbEvent
-import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.events.model.EventBridgeEvent
+import com.zenobiapay.events.util.EventBridgeEventSerializer
 import com.zenobiapay.orum.OrumWrapper
-import com.zenobiapay.model.ddb.transfer.PayoutId
 import com.zenobiapay.orum.model.OrumCreateTransferRequest
 import com.zenobiapay.orum.model.TransferParticipant
 import com.zenobiapay.orum.util.generateMerchantOrumId
 import com.zenobiapay.payout.di.DaggerAppComponent
-import com.zenobiapay.payout.model.EventBridgeEvent
-import com.zenobiapay.payout.model.PayoutMessage
-import com.zenobiapay.payout.model.ScheduledEvent
-import com.zenobiapay.payout.util.EventBridgeEventSerializer
 import com.zenobiapay.table.transfer.dao.PAYOUT_PREFIX
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.InboundTransferStatus

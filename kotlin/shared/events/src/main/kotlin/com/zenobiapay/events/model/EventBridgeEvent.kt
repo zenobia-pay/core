@@ -1,6 +1,5 @@
-package com.zenobiapay.payout.model
+package com.zenobiapay.events.model
 
-import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 

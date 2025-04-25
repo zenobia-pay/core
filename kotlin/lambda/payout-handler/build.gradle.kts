@@ -32,6 +32,7 @@ dependencies {
     implementation(project(":kotlin:shared:table"))
     implementation(project(":kotlin:shared:table:transfer"))
     implementation(project(":kotlin:shared:table:user"))
+    implementation(project(":kotlin:shared:events"))
 
     api(libs.kotlin.stdlib)
     api(libs.lambda.core)
