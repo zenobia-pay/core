@@ -2,8 +2,10 @@ package com.zenobiapay.payout.handlers
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
+import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.events.model.EventBridgeEvent
+import com.zenobiapay.events.model.SqsEvent
 import com.zenobiapay.events.util.EventBridgeEventSerializer
 import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.orum.model.OrumCreateTransferRequest
@@ -48,7 +50,13 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
     }
 
     override fun handleRequest(event: Map<String, Any>, context: Context?) {
-        val request = objectMapper.convertValue(event, EventBridgeEvent::class.java)
+        logger.info { "Got event ${objectMapper.writeValueAsString(event)}" }
+        val request = eventBridgeEventSerializer.getEventBridgeEvent(event)
+        if (request == null) {
+            logger.info { "Request is empty, returning early" }
+            return
+        }
+
         if (request.detail?.eventName != "MODIFY") {
             logger.info { "Request is not a modification, ignoring." }
             return

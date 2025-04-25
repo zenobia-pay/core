@@ -3,8 +3,10 @@ package com.zenobiapay.transfertableevent.handlers
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent
+import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.events.model.EventBridgeEvent
+import com.zenobiapay.events.model.SqsEvent
 import com.zenobiapay.events.util.EventBridgeEventSerializer
 import com.zenobiapay.table.transfer.model.TransferItem
 import com.zenobiapay.transfertableevent.di.DaggerAppComponent
@@ -30,8 +32,13 @@ class TransferTableEventHandler : RequestHandler<Map<String, Any>, Unit> {
     lateinit var eventBridgeEventSerializer: EventBridgeEventSerializer
 
     override fun handleRequest(event: Map<String, Any>, context: Context?) {
-        logger.info { "Got event $event" }
-        val request = objectMapper.convertValue(event, EventBridgeEvent::class.java)
+        logger.info { "Got transfer notification event ${objectMapper.writeValueAsString(event)}" }
+        val request = eventBridgeEventSerializer.getEventBridgeEvent(event)
+        if (request == null) {
+            logger.info { "Request is empty, returning early" }
+            return
+        }
+        logger.info { "Got serialized request $request" }
 
         val oldImage = request.detail?.dynamodb?.oldImage?.let {
             TransferItem.fromAttributeValueMap(
@@ -47,7 +54,6 @@ class TransferTableEventHandler : RequestHandler<Map<String, Any>, Unit> {
         try {
             newImage?.requestId.let { ThreadContext.put("transferId", it) }
             logic.handleRecord(oldImage, newImage)
-            throw Exception("Uh oh unexpected error!")
         } finally {
             ThreadContext.clearAll()
         }

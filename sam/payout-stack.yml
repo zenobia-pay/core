@@ -189,6 +189,9 @@ Resources:
     Properties:
       QueueName: PayoutProcessorHandlerRedriveQ
       MessageRetentionPeriod: 1209600  # Max: 14 days (in seconds)
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt PayoutProcessorDLQ.Arn
+        maxReceiveCount: 3
 
   WebsocketTransferStatusSigningSecret:
     Type: AWS::SecretsManager::Secret
@@ -274,6 +277,9 @@ Resources:
     Properties:
       QueueName: TransferTableNotificationsHandlerRedriveQ
       MessageRetentionPeriod: 1209600  # Max: 14 days (in seconds)
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt TransferTableNotificationsHandlerDLQ.Arn
+        maxReceiveCount: 3
 
   WebhookSignatureKey:
     Type: AWS::KMS::Key

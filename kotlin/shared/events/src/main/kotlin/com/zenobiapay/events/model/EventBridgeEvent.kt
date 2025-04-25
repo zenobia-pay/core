@@ -5,28 +5,28 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class EventBridgeEvent(
-    var version: String? = null,
-    var id: String? = null,
-    var source: String? = null,
-    var detail: DdbStreamDetail? = null,
+    val version: String,
+    val id: String,
+    val source: String,
+    val detail: DdbStreamDetail,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class DdbStreamDetail(
-    var eventName: String? = null,
-    var dynamodb: DynamoRecord? = null,
+    val eventName: String,
+    val dynamodb: DynamoRecord,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class DynamoRecord(
     @JsonProperty("ApproximateCreationDateTime")
-    var approximateCreationTime: Double? = null,
+    val approximateCreationTime: Double? = null,
     @JsonProperty("StreamViewType")
-    var streamViewType: String? = null,
+    val streamViewType: String? = null,
     @JsonProperty("Keys")
-    var keys: Map<String, Any>? = null,
+    val keys: Map<String, Any>? = null,
     @JsonProperty("NewImage")
-    var newImage: Map<String, Any>? = null,
+    val newImage: Map<String, Any>? = null,
     @JsonProperty("OldImage")
-    var oldImage: Map<String, Any>? = null,
+    val oldImage: Map<String, Any>? = null,
 )
