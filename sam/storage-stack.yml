@@ -41,6 +41,8 @@ Resources:
         SSEEnabled: true
         KMSMasterKeyId: !Ref CredentialsTableKmsKey
         SSEType: KMS
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
 
   BankKmsKey:
     Type: AWS::KMS::Key
@@ -71,12 +73,13 @@ Resources:
           AttributeType: S
         - AttributeName: sk
           AttributeType: S
-
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
         KMSMasterKeyId: !Ref BankKmsKey
         SSEType: KMS
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
 
   TransferKmsKey:
     Type: AWS::KMS::Key
@@ -142,6 +145,8 @@ Resources:
       TimeToLiveSpecification:
         AttributeName: ttl
         Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
 
   UserKmsKey:
     Type: AWS::KMS::Key
@@ -180,6 +185,8 @@ Resources:
       TimeToLiveSpecification:
         AttributeName: ttl
         Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
 
 Outputs:
   CredentialsTableKeyId:
