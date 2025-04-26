@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobia.metric.MetricHelper
 import com.zenobiapay.events.model.EventBridgeEvent
 import com.zenobiapay.events.model.SqsEvent
 import com.zenobiapay.events.util.EventBridgeEventSerializer
@@ -41,6 +42,9 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
 
     @Inject
     lateinit var objectMapper: ObjectMapper
+
+    @Inject
+    lateinit var metricHelper: MetricHelper
 
     @Inject
     lateinit var eventBridgeEventSerializer: EventBridgeEventSerializer
@@ -86,7 +90,9 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
                 logger.info { "Paying out merchant" }
                 val transferItem = transferDao.getTransfer(newImage!!.requestId)
                     ?: throw Error("Could not find transfer item ${newImage.requestId}")
-                fulfillPayout(transferItem)
+                metricHelper.emitSuccessMetric("PayoutSuccess", mapOf()) {
+                    fulfillPayout(transferItem)
+                }
             }
         } finally {
             ThreadContext.clearAll()
@@ -155,5 +161,8 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
 
         logger.info { "Payout complete. Marking transfer as paid out." }
         transferDao.updateTransferPaidOut(transferItem, fee, transferResponse.transfer.id, version = transferItem.version!! + 1)
+        metricHelper.putMetric("MerchantPayout", merchantPayout.toDouble(), mapOf())
+        metricHelper.putMetric("FeeCollected", fee.toDouble(), mapOf())
+        metricHelper.putMetric("TotalPayout", amount.toDouble(), mapOf())
     }
 }

@@ -3,6 +3,7 @@ package com.zenobiapay.transfer.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.zenobia.metric.MetricHelper
 import com.zenobiapay.api.model.exception.InvalidSignatureException
 import com.zenobiapay.api.model.exception.ResourceNotFoundException
 import com.zenobiapay.api.generated.model.CertificateType
@@ -43,6 +44,7 @@ class FulfillTransferOperationTest {
     private val userDao = mockk<UserDao>()
     private val objectMapper = jacksonObjectMapper()
     private val context = mockk<Context>()
+    private val metricHelper = mockk<MetricHelper>(relaxed = true)
 
     companion object {
         private val TRANSFER_REQUEST_ID = "transferRequestId"
@@ -79,6 +81,7 @@ class FulfillTransferOperationTest {
             userDao,
             objectMapper,
             balanceFactor,
+            metricHelper,
         )
         assertThrows<InvalidSignatureException> {
             operation.run(createRequest(), createMockGatewayEvent(), context, USER_ID)
@@ -98,6 +101,7 @@ class FulfillTransferOperationTest {
             userDao,
             objectMapper,
             balanceFactor,
+            metricHelper,
         )
         assertThrows<ResourceNotFoundException> {
             operation.run(createRequest(), createMockGatewayEvent(), context, USER_ID)
@@ -117,6 +121,7 @@ class FulfillTransferOperationTest {
             userDao,
             objectMapper,
             balanceFactor,
+            metricHelper,
         )
         assertThrows<TransferStatusException> {
             operation.run(createRequest(), createMockGatewayEvent(), context, USER_ID)

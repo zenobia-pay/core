@@ -3,6 +3,7 @@ package com.zenobiapay.transfer.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobia.metric.MetricHelper
 import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.api.model.exception.InvalidSignatureException
 import com.zenobiapay.orum.OrumWrapper
@@ -57,6 +58,7 @@ class FulfillTransferOperation @Inject constructor(
     private val userDao: UserDao,
     private val objectMapper: ObjectMapper,
     @Named(AVAILABLE_BALANCE_BUFFER) private val availableBalanceBuffer: Double,
+    private val metricHelper: MetricHelper,
 ) : Operation<FulfillTransferRequest, FulfillTransfer200Response>() {
 
     override val inputType = FulfillTransferRequest::class.java
@@ -127,7 +129,6 @@ class FulfillTransferOperation @Inject constructor(
             creditorId
         )
 
-        transferDao.addPayoutItemAmount(debtorId.id, transferAmount, date)
         logger.info { "Added payout item" }
         val statementItems = transferRequestData.statementItems.map { it.toApiStatementItem() }
         transferDao.updateTransferRequestFulfilled(
@@ -146,7 +147,9 @@ class FulfillTransferOperation @Inject constructor(
                 signature = request.signature.signatureValue
             ),
         )
-        logger.info { "Updated transfer request" }
+
+        logger.info { "Updated transfer request to fulfilled" }
+        metricHelper.putMetric("TransactionAmount", transferAmount.toDouble(), mapOf())
 
         return FulfillTransfer200Response()
             .amount(transferAmount)

@@ -10,7 +10,7 @@ import jakarta.inject.Named
 const val METRIC_NAMESPACE = "namespace"
 
 class MetricHelper @Inject constructor(private val cloudwatchClient: CloudWatchClient, @Named(METRIC_NAMESPACE) private val namespace: String) {
-    fun putMetric(metricName: String, value: Double, dimensions: Map<String, String>) {
+    fun putMetric(metricName: String, value: Double, dimensions: Map<String, String> = mapOf()) {
         val dimensions: List<Dimension> = dimensions.map {
             Dimension.builder()
                 .name(it.key)
