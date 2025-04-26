@@ -11,7 +11,7 @@ import com.zenobiapay.plaid.PlaidWrapper
 import com.zenobiapay.table.bank.dao.BankDao
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 

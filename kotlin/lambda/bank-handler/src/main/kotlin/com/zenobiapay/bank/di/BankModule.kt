@@ -1,12 +1,14 @@
 package com.zenobiapay.bank.di
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobia.metric.METRIC_NAMESPACE
 import com.zenobiapay.table.credentials.dao.REFRESH_TOKEN_HASHING_SECRET
 import com.zenobiapay.table.model.HmacSecret
 import dagger.Module
 import dagger.Provides
+import software.amazon.awssdk.services.cloudwatch.CloudWatchClient
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
-import javax.inject.Named
+import jakarta.inject.Named
 
 const val PAGINATION_SECRET = "PAGINATION_SECRET"
 
@@ -33,5 +35,15 @@ class BankModule {
         }.secretString()
         val hmacSecret = objectMapper.readValue(secretString, HmacSecret::class.java)
         return hmacSecret.secret
+    }
+
+    @Provides
+    @Named(METRIC_NAMESPACE)
+    fun provideMetricNamespace() = "BankHandler"
+
+    @Provides
+    fun provideCloudwatchClient(): CloudWatchClient {
+        return CloudWatchClient.builder()
+            .build()
     }
 }

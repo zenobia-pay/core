@@ -17,7 +17,7 @@ import com.zenobiapay.user.operations.SubmitCustomerOnboardingOperation
 import com.zenobiapay.user.operations.SubmitMerchantOnboardingOperation
 import com.zenobiapay.user.operations.UpdateMerchantConfigOperation
 import io.github.oshai.kotlinlogging.KotlinLogging
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 

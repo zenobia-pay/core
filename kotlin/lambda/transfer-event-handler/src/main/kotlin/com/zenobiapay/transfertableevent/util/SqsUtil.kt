@@ -2,7 +2,7 @@ package com.zenobiapay.transfertableevent.util
 
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 class SqsUtil @Inject constructor(private val sqsClient: SqsClient) {
     companion object {

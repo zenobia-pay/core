@@ -6,7 +6,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import dagger.Module
 import dagger.Provides
 import okhttp3.OkHttpClient
-import javax.inject.Named
+import jakarta.inject.Named
 
 const val SAM_LOCAL = "SAM_LOCAL"
 

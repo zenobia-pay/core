@@ -28,7 +28,7 @@ import com.plaid.client.model.Products
 import com.plaid.client.request.PlaidApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import retrofit2.Response
-import javax.inject.Inject
+import jakarta.inject.Inject
 import kotlin.math.floor
 
 private val logger = KotlinLogging.logger {}

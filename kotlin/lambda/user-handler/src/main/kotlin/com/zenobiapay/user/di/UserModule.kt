@@ -3,12 +3,14 @@ package com.zenobiapay.user.di
 import com.auth0.client.auth.AuthAPI
 import com.auth0.client.mgmt.ManagementAPI
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobia.metric.METRIC_NAMESPACE
 import com.zenobiapay.user.model.Auth0ManagementSecret
 import dagger.Module
 import dagger.Provides
+import software.amazon.awssdk.services.cloudwatch.CloudWatchClient
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
-import javax.inject.Named
-import javax.inject.Singleton
+import jakarta.inject.Named
+import jakarta.inject.Singleton
 
 @Module
 class UserModule {
@@ -51,5 +53,15 @@ class UserModule {
         return secretsManagerClient.getSecretValue {
             it.secretId("pagination/hmac")
         }.secretString()
+    }
+
+    @Provides
+    @Named(METRIC_NAMESPACE)
+    fun provideMetricNamespace() = "UserHandler"
+
+    @Provides
+    fun provideCloudwatchClient(): CloudWatchClient {
+        return CloudWatchClient.builder()
+            .build()
     }
 }

@@ -11,7 +11,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.IOException
-import javax.inject.Named
+import jakarta.inject.Named
 
 private val logger = KotlinLogging.logger {}
 

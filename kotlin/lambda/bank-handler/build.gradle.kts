@@ -33,6 +33,7 @@ dependencies {
     api(project(":kotlin:shared:cryptography"))
     api(project(":kotlin:shared:orum"))
     api(project(":kotlin:shared:plaid"))
+    api(project(":kotlin:shared:metrics"))
     api(project(":kotlin:shared:table"))
     api(project(":kotlin:shared:table:bank"))
     api(project(":kotlin:shared:table:user"))
@@ -50,7 +51,7 @@ dependencies {
     // Injection
     api(libs.dagger)
     ksp(libs.dagger.compiler)
-    api(libs.javax.inject)
+    api(libs.jakarta.inject)
 
     // Logging
     implementation(libs.kotlin.logging)
@@ -60,6 +61,7 @@ dependencies {
     api(libs.aws.secretsmanager)
     implementation(libs.aws.dynamodb)
     api(libs.aws.dynamodb.enhanced)
+    api(libs.aws.cloudwatch)
 
     // Plaid
     implementation(libs.plaid)

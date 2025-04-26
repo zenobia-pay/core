@@ -1348,6 +1348,7 @@ Resources:
             SecretArn: !Ref CustomerJwtSigningSecret
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref RefreshTokenHashingSecret
+        - CloudWatchPutMetricPolicy: {}
       Events:
         GetCreateLinkToken:
           Type: Api
@@ -1401,6 +1402,7 @@ Resources:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref WebsocketTransferSubscribeSigningSecret
         - AWSLambdaVPCAccessExecutionRole
+        - CloudWatchPutMetricPolicy: {}
         - DynamoDBCrudPolicy:
             TableName: !Ref TransferTableName
         - DynamoDBReadPolicy:
@@ -1494,6 +1496,7 @@ Resources:
             SecretArn: !Ref PlaidSecretsArn
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref PaginationSigningSecret
+        - CloudWatchPutMetricPolicy: {}
       Events:
         UpdateMerchant:
           Type: Api
@@ -1588,6 +1591,7 @@ Resources:
             KeyId: !Ref TransferKeyId
         - KMSDecryptPolicy:
             KeyId: !Ref TransferKeyId
+        - CloudWatchPutMetricPolicy: {}
       Events:
         OrumWebhook:
           Type: Api

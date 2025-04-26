@@ -13,8 +13,8 @@ import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.util.getFee
 import com.zenobiapay.transfer.di.PAGINATION_SECRET
 import com.zenobiapay.transfer.model.ListMerchantTransfersRequest
-import javax.inject.Inject
-import javax.inject.Named
+import jakarta.inject.Inject
+import jakarta.inject.Named
 
 class ListMerchantPayoutsOperation @Inject constructor(
     private val transferDao: TransferDao,

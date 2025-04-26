@@ -12,7 +12,7 @@ import com.zenobiapay.api.model.exception.ResourceNotFoundException
 import com.zenobiapay.api.model.transfer.GetCustomerTransferRequest
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.InboundTransferStatus
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 class GetCustomerTransferOperation @Inject constructor(
     private val transferDao: TransferDao,

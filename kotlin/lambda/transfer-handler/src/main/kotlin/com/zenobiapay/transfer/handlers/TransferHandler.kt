@@ -16,7 +16,7 @@ import com.zenobiapay.transfer.operations.ListCustomerTransfersOperation
 import com.zenobiapay.transfer.operations.ListMerchantPayoutsOperation
 import com.zenobiapay.transfer.operations.ListMerchantTransfersOperation
 import io.github.oshai.kotlinlogging.KotlinLogging
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 

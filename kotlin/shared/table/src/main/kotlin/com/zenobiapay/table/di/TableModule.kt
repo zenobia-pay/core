@@ -7,7 +7,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import java.net.URI
-import javax.inject.Named
+import jakarta.inject.Named
 
 const val BANK_TABLE_NAME = "BANK_TABLE_NAME"
 const val TRANSFER_TABLE_NAME = "TRANSFER_TABLE_NAME"

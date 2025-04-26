@@ -7,8 +7,8 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
 import java.security.SecureRandom
 import java.util.Base64
-import javax.inject.Inject
-import javax.inject.Named
+import jakarta.inject.Inject
+import jakarta.inject.Named
 
 const val BYTE_LENGTH = 64
 const val REFRESH_TOKEN_HASHING_SECRET = "REFRESH_TOKEN_HASHING_SECRET"

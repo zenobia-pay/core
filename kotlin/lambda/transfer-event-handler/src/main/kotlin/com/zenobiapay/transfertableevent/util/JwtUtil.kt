@@ -10,8 +10,8 @@ import software.amazon.awssdk.services.kms.model.SigningAlgorithmSpec
 import java.time.Duration
 import java.time.Instant
 import java.util.Base64
-import javax.inject.Inject
-import javax.inject.Named
+import jakarta.inject.Inject
+import jakarta.inject.Named
 
 private val logger = KotlinLogging.logger {}
 

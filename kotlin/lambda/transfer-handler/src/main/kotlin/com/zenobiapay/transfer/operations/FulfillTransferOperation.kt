@@ -43,8 +43,8 @@ import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedExce
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
-import javax.inject.Inject
-import javax.inject.Named
+import jakarta.inject.Inject
+import jakarta.inject.Named
 import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}

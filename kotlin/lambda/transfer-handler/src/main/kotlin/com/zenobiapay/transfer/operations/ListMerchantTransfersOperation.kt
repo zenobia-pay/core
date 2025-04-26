@@ -12,8 +12,8 @@ import com.zenobiapay.table.model.BadTokenException
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.transfer.di.PAGINATION_SECRET
 import com.zenobiapay.transfer.model.ListMerchantTransfersRequest
-import javax.inject.Inject
-import javax.inject.Named
+import jakarta.inject.Inject
+import jakarta.inject.Named
 
 class ListMerchantTransfersOperation @Inject constructor(
     private val objectMapper: ObjectMapper,

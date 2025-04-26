@@ -18,8 +18,8 @@ import com.zenobiapay.transfer.model.TransferRequestWebsocketSignature
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import javax.inject.Inject
-import javax.inject.Named
+import jakarta.inject.Inject
+import jakarta.inject.Named
 
 private val logger = KotlinLogging.logger {}
 

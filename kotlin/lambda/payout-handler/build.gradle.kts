@@ -33,6 +33,7 @@ dependencies {
     implementation(project(":kotlin:shared:table:transfer"))
     implementation(project(":kotlin:shared:table:user"))
     implementation(project(":kotlin:shared:events"))
+    api(project(":kotlin:shared:metrics"))
 
     api(libs.kotlin.stdlib)
     api(libs.lambda.core)
@@ -45,7 +46,7 @@ dependencies {
     // Injection
     api(libs.dagger)
     ksp(libs.dagger.compiler)
-    api(libs.javax.inject)
+    api(libs.jakarta.inject)
 
     // JSON
     implementation(libs.jackson.core)
@@ -58,6 +59,7 @@ dependencies {
     api(libs.aws.dynamodb)
     api(libs.aws.dynamodb.enhanced)
     api(libs.aws.sqs)
+    api(libs.aws.cloudwatch)
 
     // Testing
     testImplementation(libs.kotlin.test)

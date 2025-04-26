@@ -1,12 +1,14 @@
 package com.zenobiapay.transfer.di
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobia.metric.METRIC_NAMESPACE
 import com.zenobiapay.table.model.HmacSecret
 import dagger.Module
 import dagger.Provides
 import io.github.oshai.kotlinlogging.KotlinLogging
+import software.amazon.awssdk.services.cloudwatch.CloudWatchClient
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
-import javax.inject.Named
+import jakarta.inject.Named
 
 const val PAGINATION_SECRET = "PAGINATION_SECRET"
 const val TRANSFER_NOTIFICATION_SECRET = "TRANSFER_NOTIFICATION_SECRET"
@@ -45,5 +47,15 @@ class TransferModule {
         return System.getenv("AVAILABLE_BALANCE_BUFFER")!!.toDouble().also {
             logger.info { "Got balance buffer $it" }
         }
+    }
+
+    @Provides
+    @Named(METRIC_NAMESPACE)
+    fun provideMetricNamespace() = "TransferHandler"
+
+    @Provides
+    fun provideCloudwatchClient(): CloudWatchClient {
+        return CloudWatchClient.builder()
+            .build()
     }
 }

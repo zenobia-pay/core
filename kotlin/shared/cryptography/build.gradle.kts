@@ -35,7 +35,7 @@ dependencies {
     ksp(libs.dagger.compiler)
 
     // deserialization
-    api(libs.javax.inject)
+    api(libs.jakarta.inject)
     testImplementation(libs.jackson.kotlin)
 
     // Logging

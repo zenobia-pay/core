@@ -6,7 +6,7 @@ import com.zenobiapay.transfertableevent.util.WebhookUtil
 import com.zenobiapay.transfertableevent.util.WebsocketUtil
 import com.zenobiapay.webhook.util.isValidWebhook
 import io.github.oshai.kotlinlogging.KotlinLogging
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 

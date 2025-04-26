@@ -33,7 +33,7 @@ import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.table.user.model.UserType
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 

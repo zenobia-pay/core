@@ -22,7 +22,7 @@ import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.table.user.model.UserType
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.logging.log4j.ThreadContext
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 

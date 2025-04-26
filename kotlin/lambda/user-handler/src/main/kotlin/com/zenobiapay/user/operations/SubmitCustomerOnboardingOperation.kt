@@ -20,7 +20,7 @@ import com.zenobiapay.table.user.model.UserType as DdbUserType
 import com.zenobiapay.user.util.Auth0Wrapper
 import com.zenobiapay.user.util.Auth0Wrapper.Companion.ROLE_KEY
 import io.github.oshai.kotlinlogging.KotlinLogging
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 

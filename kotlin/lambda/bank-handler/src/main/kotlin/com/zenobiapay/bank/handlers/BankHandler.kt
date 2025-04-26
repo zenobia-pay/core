@@ -13,7 +13,7 @@ import com.zenobiapay.bank.operations.DeleteBankAccountOperation
 import com.zenobiapay.bank.operations.ExchangeTokenOperation
 import com.zenobiapay.bank.operations.ListBankAccountsOperation
 import io.github.oshai.kotlinlogging.KotlinLogging
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 

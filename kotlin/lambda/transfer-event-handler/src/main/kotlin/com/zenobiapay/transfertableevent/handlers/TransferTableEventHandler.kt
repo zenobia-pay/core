@@ -13,7 +13,7 @@ import com.zenobiapay.transfertableevent.di.DaggerAppComponent
 import com.zenobiapay.transfertableevent.logic.TransferTableEventLogic
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.logging.log4j.ThreadContext
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 

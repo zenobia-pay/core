@@ -8,7 +8,7 @@ import com.zenobiapay.events.model.EventBridgeEvent
 import com.zenobiapay.events.model.SqsEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.lang.IllegalArgumentException
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 

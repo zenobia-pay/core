@@ -14,8 +14,8 @@ import com.zenobiapay.table.bank.dao.BankDao
 import com.zenobiapay.table.model.BadTokenException
 import com.zenobiapay.table.model.ContinuationToken
 import io.github.oshai.kotlinlogging.KotlinLogging
-import javax.inject.Inject
-import javax.inject.Named
+import jakarta.inject.Inject
+import jakarta.inject.Named
 
 private val logger = KotlinLogging.logger {}
 

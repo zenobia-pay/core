@@ -11,7 +11,7 @@ import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.user.util.Auth0Wrapper
 import com.zenobiapay.user.util.Auth0Wrapper.Companion.ZENOBIA_AUDIENCE
 import io.github.oshai.kotlinlogging.KotlinLogging
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 

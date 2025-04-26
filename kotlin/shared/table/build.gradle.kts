@@ -37,7 +37,7 @@ dependencies {
     // Injection
     api(libs.dagger)
     ksp(libs.dagger.compiler)
-    api(libs.javax.inject)
+    api(libs.jakarta.inject)
 
     // Logging
     implementation(libs.kotlin.logging)

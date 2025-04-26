@@ -13,8 +13,8 @@ import com.zenobiapay.table.model.ContinuationToken
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.user.di.UserModule.Companion.PAGINATION_SECRET
 import com.zenobiapay.user.model.ListM2mCredentialsRequest
-import javax.inject.Inject
-import javax.inject.Named
+import jakarta.inject.Inject
+import jakarta.inject.Named
 
 class ListM2MCredentialsOperation @Inject constructor(
     private val objectMapper: ObjectMapper,

@@ -11,7 +11,7 @@ import com.zenobiapay.user.model.Auth0Exception
 import com.zenobiapay.user.model.Auth0ManagementSecret
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.UUID
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 

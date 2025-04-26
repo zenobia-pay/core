@@ -10,7 +10,7 @@ import com.zenobiapay.api.model.NoApiBody
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.table.transfer.dao.TransferDao
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 class GetMerchantTransferOperation @Inject constructor(
     private val objectMapper: ObjectMapper,

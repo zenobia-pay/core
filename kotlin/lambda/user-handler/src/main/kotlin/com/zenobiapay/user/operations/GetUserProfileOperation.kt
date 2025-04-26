@@ -7,7 +7,7 @@ import com.zenobiapay.api.model.NoApiBody
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.table.user.dao.UserDao
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 class GetUserProfileOperation @Inject constructor(
     private val userDao: UserDao,

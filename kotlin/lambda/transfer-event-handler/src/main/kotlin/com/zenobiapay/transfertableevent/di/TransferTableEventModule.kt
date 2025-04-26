@@ -1,12 +1,14 @@
 package com.zenobiapay.transfertableevent.di
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobia.metric.METRIC_NAMESPACE
 import com.zenobiapay.table.model.HmacSecret
 import dagger.Module
 import dagger.Provides
+import software.amazon.awssdk.services.cloudwatch.CloudWatchClient
 import software.amazon.awssdk.services.kms.KmsClient
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
-import javax.inject.Named
+import jakarta.inject.Named
 
 const val WEBHOOK_KMS_ALIAS = "WEBHOOK_KMS_ALIAS"
 const val TRANSFER_STATUS_NOTIFICATION_SECRET = "TRANSFER_STATUS_NOTIFICATION_SECRET"
@@ -44,5 +46,15 @@ class TransferTableEventModule {
     @Named(WEBSOCKET_SERVICE_ENDPOINT)
     fun provideWebhookServiceEndpoint(): String {
         return System.getenv("WEBSOCKET_SERVICE_ENDPOINT")
+    }
+
+    @Provides
+    @Named(METRIC_NAMESPACE)
+    fun provideMetricNamespace() = "TransferTableNotificationHandler"
+
+    @Provides
+    fun provideCloudwatchClient(): CloudWatchClient {
+        return CloudWatchClient.builder()
+            .build()
     }
 }

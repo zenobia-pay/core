@@ -36,7 +36,7 @@ dependencies {
     // Injection
     api(libs.dagger)
     ksp(libs.dagger.compiler)
-    api(libs.javax.inject)
+    api(libs.jakarta.inject)
 
     // HTTP
     api(libs.okhttp)

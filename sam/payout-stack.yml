@@ -152,6 +152,7 @@ Resources:
           TRANSFER_TABLE_NAME: !Ref TransferTableName
           USER_TABLE_NAME: !Ref UserTableName
       Policies:
+        - CloudWatchPutMetricPolicy: {}
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref OrumSecretsArn
         - DynamoDBCrudPolicy:
@@ -240,6 +241,7 @@ Resources:
           WEBHOOK_KMS_ALIAS: !Ref WebhookSignatureKeyAlias
           WEBSOCKET_SERVICE_ENDPOINT: !Ref WebsocketServiceEndpoint
       Policies:
+        - CloudWatchPutMetricPolicy: {}
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref WebsocketTransferStatusSigningSecret
         - DynamoDBStreamReadPolicy:

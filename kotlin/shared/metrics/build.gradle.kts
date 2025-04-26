@@ -26,25 +26,12 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":kotlin:shared:api:model"))
     api(libs.kotlin.stdlib)
-    api(libs.lambda.core)
-    api(libs.lambda.events)
-
-    // Json processing
-    implementation(libs.jackson.core)
-    implementation(libs.jackson.kotlin)
-    api(libs.jackson.databind)
-    api(libs.jackson.annotations)
-    implementation(libs.hibernate)
-    implementation(libs.jakarta.inject)
 
     // Injection
     api(libs.dagger)
     ksp(libs.dagger.compiler)
-
-    // HTTP
-    api(libs.okhttp)
+    api(libs.aws.cloudwatch)
 
     // Logging
     implementation(libs.kotlin.logging)

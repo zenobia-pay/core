@@ -1,10 +1,12 @@
 package com.zenobiapay.payout.di
 
+import com.zenobia.metric.METRIC_NAMESPACE
 import dagger.Module
 import dagger.Provides
+import software.amazon.awssdk.services.cloudwatch.CloudWatchClient
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
 import software.amazon.awssdk.services.sqs.SqsClient
-import javax.inject.Named
+import jakarta.inject.Named
 
 const val PAYOUT_QUEUE_URL = "PAYOUT_QUEUE_URL"
 
@@ -23,4 +25,14 @@ class PayoutModule {
     @Provides
     @Named(PAYOUT_QUEUE_URL)
     fun providePayoutQueueUrl(): String = System.getenv("PAYOUT_QUEUE_URL")
+
+    @Provides
+    @Named(METRIC_NAMESPACE)
+    fun provideMetricNamespace() = "PayoutProcessor"
+
+    @Provides
+    fun provideCloudwatchClient(): CloudWatchClient {
+        return CloudWatchClient.builder()
+            .build()
+    }
 }
