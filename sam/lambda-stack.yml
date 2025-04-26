@@ -954,28 +954,21 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
-          /submit-customer-onboarding:
+          /submit-terms:
             post:
-              summary: "Onboards a customer, adding user metadata. Only called on first login."
-              operationId: "SubmitCustomerOnboarding"
+              summary: "Submits terms and conditions as agreed to by user"
+              operationId: "SubmitTerms"
               requestBody:
                 required: true
                 content:
                   application/json:
                     schema:
                       type: object
-                      required:
-                        - firstName
-                        - lastName
                       properties:
-                        firstName:
-                          type: string
-                          minLength: 1
-                          maxLength: 256
-                        lastName:
-                          type: string
-                          minLength: 1
-                          maxLength: 256
+                        debitAuthorization:
+                          type: boolean
+                        termsAuthorization:
+                          type: boolean
               responses:
                 "200":
                   description: "Successful response"
@@ -1086,6 +1079,10 @@ Resources:
                           userType:
                             $ref: "#/components/schemas/UserType"
                           isApproved:
+                            type: boolean
+                          agreedToPrivacyTerms:
+                            type: boolean
+                          agreedToDebitAuth:
                             type: boolean
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -1476,6 +1473,8 @@ Resources:
         Variables:
           USER_TABLE_NAME: !Ref UserTableName
           BANK_TABLE_NAME: !Ref BankTableName
+          PRIVACY_TERMS_VERSION: "v1"
+          DEBIT_AUTH_VERSION: "v1"
       Policies:
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
@@ -1516,11 +1515,11 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /get-user-profile
             Method: GET
-        SubmitCustomerOnboarding:
+        SubmitTerms:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
-            Path: /submit-customer-onboarding
+            Path: /submit-terms
             Method: POST
         SubmitMerchantOnboarding:
           Type: Api

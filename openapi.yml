@@ -826,28 +826,21 @@ paths:
         uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
         httpMethod: POST
         type: aws_proxy
-  /submit-customer-onboarding:
+  /submit-terms:
     post:
-      summary: "Onboards a customer, adding user metadata. Only called on first login."
-      operationId: "SubmitCustomerOnboarding"
+      summary: "Submits terms and conditions as agreed to by user"
+      operationId: "SubmitTerms"
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - firstName
-                - lastName
               properties:
-                firstName:
-                  type: string
-                  minLength: 1
-                  maxLength: 256
-                lastName:
-                  type: string
-                  minLength: 1
-                  maxLength: 256
+                debitAuthorization:
+                  type: boolean
+                termsAuthorization:
+                  type: boolean
       responses:
         "200":
           description: "Successful response"
@@ -956,6 +949,10 @@ paths:
                   userType:
                     $ref: "#/components/schemas/UserType"
                   isApproved:
+                    type: boolean
+                  agreedToPrivacyTerms:
+                    type: boolean
+                  agreedToDebitAuth:
                     type: boolean
         "400":
           $ref: "#/components/responses/BadRequest"

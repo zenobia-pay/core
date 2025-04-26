@@ -17,6 +17,8 @@ class UserModule {
     companion object {
         const val AUTH_MANAGEMENT_TOKEN = "AUTH_MANAGEMENT_TOKEN"
         const val PAGINATION_SECRET = "PAGINATION_SECRET"
+        const val PRIVACY_TERMS_VERSION = "PRIVACY_TERMS_VERSION"
+        const val DEBIT_AUTH_VERSION = "DEBIT_AUTH_VERSION"
     }
     @Provides
     fun provideSecretsManagerClient(): SecretsManagerClient {
@@ -63,5 +65,17 @@ class UserModule {
     fun provideCloudwatchClient(): CloudWatchClient {
         return CloudWatchClient.builder()
             .build()
+    }
+
+    @Provides
+    @Named(PRIVACY_TERMS_VERSION)
+    fun providePrivacyTermsVersion(): String {
+        return System.getenv("PRIVACY_TERMS_VERSION")
+    }
+
+    @Provides
+    @Named(DEBIT_AUTH_VERSION)
+    fun provideDebitAuthVersion(): String {
+        return System.getenv("DEBIT_AUTH_VERSION")
     }
 }

@@ -5,6 +5,7 @@ import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.table.MAX_LIST_ITEMS
 import com.zenobiapay.table.di.USER_TABLE_NAME
 import com.zenobiapay.table.model.ContinuationToken
+import com.zenobiapay.table.user.model.AgreementMetadata
 import com.zenobiapay.api.generated.model.Location as ApiLocation
 import com.zenobiapay.table.user.model.Location
 import com.zenobiapay.table.user.model.M2MCredentialsData
@@ -130,6 +131,29 @@ class UserDao @Inject constructor(
                 ),
                 userType = userType,
             )
+        )
+    }
+
+    fun updateTerms(sub: String, privacyTermsMetadata: AgreementMetadata?, debitAuthMetadata: AgreementMetadata?) {
+        val user = getUserItem(sub)!!
+        val debitAuthAgreements = debitAuthMetadata?.let {
+            user.data.debitAuthAgreements + debitAuthMetadata
+        } ?: user.data.debitAuthAgreements
+        val privacyTermsAgreements = privacyTermsMetadata?.let {
+            user.data.termsAndPrivacyAgreements + privacyTermsMetadata
+        } ?: user.data.termsAndPrivacyAgreements
+
+        val updatedUser = user.copy(
+            data = user.data.copy(
+                debitAuthAgreements = debitAuthAgreements,
+                termsAndPrivacyAgreements = privacyTermsAgreements,
+            )
+        )
+
+        userTable.updateItem(
+            UpdateItemEnhancedRequest.builder(UserItem::class.java)
+                .item(updatedUser)
+                .build()
         )
     }
 

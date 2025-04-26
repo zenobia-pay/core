@@ -13,8 +13,8 @@ import com.zenobiapay.user.operations.DeleteM2MCredentialsOperation
 import com.zenobiapay.user.operations.GetMerchantConfigOperation
 import com.zenobiapay.user.operations.GetUserProfileOperation
 import com.zenobiapay.user.operations.ListM2MCredentialsOperation
-import com.zenobiapay.user.operations.SubmitCustomerOnboardingOperation
 import com.zenobiapay.user.operations.SubmitMerchantOnboardingOperation
+import com.zenobiapay.user.operations.SubmitTermsOperation
 import com.zenobiapay.user.operations.UpdateMerchantConfigOperation
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
@@ -38,7 +38,7 @@ class UserHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
     lateinit var submitMerchantOnboardingOperation: SubmitMerchantOnboardingOperation
 
     @Inject
-    lateinit var submitCustomerOnboardingOperation: SubmitCustomerOnboardingOperation
+    lateinit var submitTermsOperation: SubmitTermsOperation
 
     @Inject
     lateinit var createM2MCredentialsOperation: CreateM2MCredentialsOperation
@@ -63,7 +63,7 @@ class UserHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
             "/get-merchant-config" -> getMerchantConfigOperation
             "/get-user-profile" -> getUserProfileOperation
             "/submit-merchant-onboarding" -> submitMerchantOnboardingOperation
-            "/submit-customer-onboarding" -> submitCustomerOnboardingOperation
+            "/submit-terms" -> submitTermsOperation
             "/create-m2m-credentials" -> createM2MCredentialsOperation
             "/list-m2m-credentials" -> listM2MCredentialsOperation
             "/delete-m2m-credentials" -> deleteM2MCredentialsOperation

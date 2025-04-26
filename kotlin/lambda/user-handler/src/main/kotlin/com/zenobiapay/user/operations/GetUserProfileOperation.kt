@@ -7,10 +7,14 @@ import com.zenobiapay.api.model.NoApiBody
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.table.user.dao.UserDao
+import com.zenobiapay.user.di.UserModule
 import jakarta.inject.Inject
+import jakarta.inject.Named
 
 class GetUserProfileOperation @Inject constructor(
     private val userDao: UserDao,
+    @Named(UserModule.DEBIT_AUTH_VERSION) private val debitAuthVersion: String,
+    @Named(UserModule.PRIVACY_TERMS_VERSION) private val privacyTermsVersion: String,
 ): Operation<NoApiBody, GetUserProfile200Response>() {
 
     override val inputType = NoApiBody::class.java
@@ -19,10 +23,15 @@ class GetUserProfileOperation @Inject constructor(
         userId!!
         val user = userDao.getUserItem(userId)
         val hasOnboarded = user != null
+        val agreedToDebitAuth = user?.data?.debitAuthAgreements?.any { it.version == debitAuthVersion } == true
+        val agreedToPrivacyTerms = user?.data?.termsAndPrivacyAgreements?.any { it.version == privacyTermsVersion } == true
+
         return GetUserProfile200Response()
             .hasOnboarded(hasOnboarded)
             .userType(user?.userType?.toApiUserType())
             .isApproved(user?.data?.isApproved == true)
+            .agreedToDebitAuth(agreedToDebitAuth)
+            .agreedToPrivacyTerms(agreedToPrivacyTerms)
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {

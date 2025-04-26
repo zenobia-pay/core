@@ -64,6 +64,7 @@ var validMerchantRoutes = []Route{
 	{"POST", "delete-m2m-credentials"},
 	{"POST", "delete-bank-account"},
 	{"POST", "list-bank-accounts"},
+	{"POST", "submit-terms"},
 }
 var validCustomerRoutes = []Route{
 	{"POST", "create-link-token"},
@@ -75,6 +76,7 @@ var validCustomerRoutes = []Route{
 	{"POST", "list-customer-transfers"},
 	{"POST", "submit-customer-onboarding"},
 	{"POST", "get-user-profile"},
+	{"POST", "submit-terms"},
 }
 
 var validOrumRoutes = []Route{
