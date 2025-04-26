@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"zenobia/shared/cloudwatch"
 	"zenobia/shared/jwt"
 	"zenobia/shared/secrets"
 
@@ -13,8 +14,11 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
+const namespace = "Authorizer"
+
 func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 	println("Got path " + event.Path)
+	fmt.Printf("Got requestId %s", event.RequestContext.RequestID)
 
 	var hasAuthorizationHeader = false
 	if authorization, ok := event.Headers["Authorization"]; ok {
@@ -28,6 +32,7 @@ func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequest
 		return handleProtectedEndpoint(ctx, event)
 	} else {
 		println("Could not find endpoint. Returning blanket deny.")
+		cloudwatch.PutMetric(context.Background(), "UnknownEndpoint", 1.0, namespace)
 		return generateDenyPolicyResponse(), nil
 	}
 }
@@ -48,10 +53,12 @@ func handleOrumWebhookEndpoint(ctx context.Context, event events.APIGatewayCusto
 	for _, allowedIp := range allowedIps {
 		if ip == allowedIp {
 			println("Matched ip address, allowing")
+			putSuccessMetric(true)
 			return generatePolicy("user", "Allow", []string{event.MethodArn}, map[string]interface{}{}), nil
 		}
 	}
 	println("IP address not recognized, denying")
+	putSuccessMetric(false)
 	return generatePolicy("user", "Deny", []string{"*"}, map[string]interface{}{}), nil
 }
 
@@ -61,6 +68,7 @@ func handleUnprotectedEndpoint(ctx context.Context, event events.APIGatewayCusto
 	if err != nil {
 		panic("Could not generate unauthenticated arn paths")
 	}
+	putSuccessMetric(true)
 	return generatePolicyResponse(true, getUserContext(nil), paths), nil
 }
 
@@ -74,6 +82,7 @@ func handleProtectedEndpoint(ctx context.Context, event events.APIGatewayCustomA
 			if err != nil {
 				panic("Could not generate authenticated customer arn paths")
 			}
+			putSuccessMetric(isValid)
 			return generatePolicyResponse(isValid, context, paths), nil
 		}
 	}
@@ -85,10 +94,12 @@ func handleProtectedEndpoint(ctx context.Context, event events.APIGatewayCustomA
 			if err != nil {
 				panic("Could not generate authenticated merchant arn paths")
 			}
+			putSuccessMetric(isValid)
 			return generatePolicyResponse(isValid, context, paths), nil
 		}
 
 	}
+	putSuccessMetric(false)
 	return generatePolicy("user", "Deny", []string{"*"}, map[string]interface{}{}), nil
 }
 
@@ -177,22 +188,18 @@ func generatePolicy(principalId, effect string, resource []string, context map[s
 	return authResponse
 }
 
-func wildcardArn(methodArn string) string {
-	// TODO: blocker! use restricted wildcard
-	// Example: arn:aws:execute-api:us-east-1:123456789012:abc123/prod/GET/resource
-	println("Got original method arn" + methodArn)
-	parts := strings.Split(methodArn, "/")
-
-	if len(parts) < 4 {
-		return methodArn
+func putSuccessMetric(success bool) {
+	var value float64
+	if success {
+		value = 1.0
+	} else {
+		value = 0.0
 	}
-	// Build: arn:aws:execute-api:{region}:{account}:{apiId}/{stage}/*/*
-	wildcardArn := fmt.Sprintf("%s/*/*", strings.Join(parts[:2], "/"))
-	println("Got wildcard arn " + wildcardArn)
-	return wildcardArn
+	cloudwatch.PutMetric(context.Background(), "Success", value, namespace)
 }
 
 func main() {
 	secrets.InitSecretsClient(context.Background())
+	cloudwatch.InitCloudWatch(context.Background())
 	lambda.Start(handler)
 }

@@ -1230,6 +1230,7 @@ Resources:
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref CustomerJwtSigningSecret
+        - CloudWatchPutMetricPolicy: {}
 
   ApiGatewayLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1291,6 +1292,7 @@ Resources:
             TableName: !Ref CredentialsTableName
         - KMSDecryptPolicy:
             KeyId: !Ref CredentialsTableKeyId
+        - CloudWatchPutMetricPolicy: {}
       Events:
         IssueJwt:
           Type: Api

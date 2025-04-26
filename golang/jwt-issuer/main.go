@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"zenobia/shared/cloudwatch"
 	"zenobia/shared/ddb"
 	"zenobia/shared/jwt"
 	"zenobia/shared/secrets"
@@ -12,8 +13,11 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
+const namespace = "JwtIssuer"
+
 func main() {
 	ddb.InitDDB(context.Background())
+	cloudwatch.InitCloudWatch(context.Background())
 	secrets.InitSecretsClient(context.Background())
 	lambda.Start(handler)
 }
@@ -49,6 +53,7 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 	issuedJwt, error := jwt.IssueJWT(ctx, sub)
 	if error != nil {
+		cloudwatch.PutMetric(context.Background(), "JwtIssueFailure", 1.0, namespace)
 		panic("Failed to issue jwt")
 	}
 	body := map[string]any{
@@ -59,6 +64,7 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	if error != nil {
 		panic("Failed to marshall body")
 	}
+	cloudwatch.PutMetric(context.Background(), "Success", 1.0, namespace)
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
 		Body:       string(marshalledBody),
@@ -66,15 +72,17 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 }
 
 func generateInvalidRequestResponse() events.APIGatewayProxyResponse {
+	cloudwatch.PutMetric(context.Background(), "InvalidRequest", 1.0, namespace)
 	return events.APIGatewayProxyResponse{
 		StatusCode: 400,
-		Body:       "",
+		Body:       "{}",
 	}
 }
 
 func generateUnauthorizedResponse() events.APIGatewayProxyResponse {
+	cloudwatch.PutMetric(context.Background(), "Unauthorized", 1.0, namespace)
 	return events.APIGatewayProxyResponse{
 		StatusCode: 403,
-		Body:       "",
+		Body:       "{}",
 	}
 }
