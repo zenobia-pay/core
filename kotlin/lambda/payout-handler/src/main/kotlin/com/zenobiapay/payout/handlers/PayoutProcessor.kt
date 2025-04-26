@@ -54,7 +54,7 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
     }
 
     override fun handleRequest(event: Map<String, Any>, context: Context?) {
-        logger.info { "Got event ${objectMapper.writeValueAsString(event)}" }
+        logger.info { "Got payout event ${objectMapper.writeValueAsString(event)}" }
         val request = eventBridgeEventSerializer.getEventBridgeEvent(event)
         if (request == null) {
             logger.info { "Request is empty, returning early" }
@@ -79,7 +79,6 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
 
         try {
             newImage?.requestId.let { ThreadContext.put("transferId", it) }
-            logger.info { "Got transfer request id ${newImage?.requestId}" }
             if (shouldPayout(
                     oldImage?.inboundStatus,
                     newImage?.inboundStatus,
@@ -108,12 +107,12 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
         val inboundStatusChanged = oldInboundStatus != newInboundStatus
         val outboundStatusChanged = oldOutboundStatus != newOutboundStatus
 
-        if (inboundStatusChanged) {
-            logger.info { "Inbound status has changed to $newInboundStatus"}
-            return newInboundStatus == InboundTransferStatus.SETTLED
-        } else if (outboundStatusChanged) {
+        if (outboundStatusChanged) {
             logger.info { "Outbound status has changed to $newOutboundStatus"}
-            return newOutboundStatus == OutboundTransferStatus.IN_FLIGHT
+            return newOutboundStatus == OutboundTransferStatus.IN_FLIGHT_APPROVED
+        } else if (inboundStatusChanged) {
+            logger.info { "Inbound status has changed to $newInboundStatus, outbound status $newOutboundStatus"}
+            return newInboundStatus == InboundTransferStatus.SETTLED && newOutboundStatus != OutboundTransferStatus.COMPLETED
         } else {
             logger.info { "inbound, outbound status has not been updated from $oldInboundStatus, $oldOutboundStatus"}
             return false
@@ -123,10 +122,6 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
     }
 
     private fun fulfillPayout(transferItem: TransferItem) {
-        if (transferItem.outboundStatus != OutboundTransferStatus.IN_FLIGHT) {
-            logger.info { "Outbound transfer status is not in flight. Skipping paying out." }
-        }
-
         val amount = transferItem.amount!!
         val fee = getFee(amount)
         val merchantPayout = amount - fee

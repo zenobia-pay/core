@@ -107,6 +107,7 @@ class TransferDao @Inject constructor(
     }
 
     fun updateTransferRequestFulfilled(
+        preApproved: Boolean,
         transferItem: TransferItem,
         fulfillRequestId: String,
         customerIdentity: PaymentParticipantIdentity,
@@ -117,7 +118,7 @@ class TransferDao @Inject constructor(
     ) {
         val updatedItem = transferItem.copy(
             inboundStatus = InboundTransferStatus.IN_FLIGHT,
-            outboundStatus = OutboundTransferStatus.IN_FLIGHT,
+            outboundStatus = if (preApproved) OutboundTransferStatus.IN_FLIGHT_APPROVED else OutboundTransferStatus.IN_FLIGHT_WAITING,
             transferFulfillId = fulfillRequestId,
             data = transferItem.data?.copy(
                 customer = customerIdentity,

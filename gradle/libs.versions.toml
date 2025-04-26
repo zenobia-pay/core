@@ -58,7 +58,7 @@ jakarta-glassfish = { module = "org.glassfish:jakarta.el", version = "5.0.0-M1" 
 hibernate = { module = "org.hibernate.validator:hibernate-validator", version = "9.0.0.CR1" }
 
 # Plaid
-plaid = { module = "com.plaid:plaid-java", version = "30.1.0" }
+plaid = { module = "com.plaid:plaid-java", version = "31.0.0" }
 json = { module = "org.json:json", version="20250107"}
 
 # Auth0

@@ -98,7 +98,7 @@ Resources:
             NewImage:
               outboundStatus:
                 S:
-                  - IN_FLIGHT
+                  - IN_FLIGHT_APPROVED
       Targets:
         - Arn: !GetAtt PayoutProcessorFunction.Arn
           Id: TransferLambdaTarget

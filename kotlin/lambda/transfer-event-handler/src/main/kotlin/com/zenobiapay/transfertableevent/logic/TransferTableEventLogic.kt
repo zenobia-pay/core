@@ -56,6 +56,10 @@ class TransferTableEventLogic @Inject constructor(
         }
     }
 
+    /**
+     * Sends out status of transfer. If completed, they immediately have the funds.
+     * If in flight waiting, we send in flight and they should wait for funds before sending merchandise.
+     */
     private fun shouldSendStatus(oldItem: TransferItem, newItem: TransferItem): Boolean {
         val oldItemOutboundStatus = oldItem.outboundStatus
         val newItemOutboundStatus = newItem.outboundStatus
@@ -65,7 +69,7 @@ class TransferTableEventLogic @Inject constructor(
         }
 
         return newItemOutboundStatus == OutboundTransferStatus.COMPLETED ||
-                newItemOutboundStatus == OutboundTransferStatus.IN_FLIGHT.also {
+                newItemOutboundStatus == OutboundTransferStatus.IN_FLIGHT_WAITING.also {
                     logger.info { "For status $newItemOutboundStatus, shouldSendStatus = $it" }
         }
     }

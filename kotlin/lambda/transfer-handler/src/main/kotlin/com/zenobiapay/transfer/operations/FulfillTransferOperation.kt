@@ -18,20 +18,20 @@ import com.zenobiapay.api.model.exception.TransferFailedException
 import com.zenobiapay.api.model.exception.TransferStatusException
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
-import com.zenobiapay.api.model.exception.BalanceTimeOutException
 import com.zenobiapay.api.model.exception.ConcurrentModificationException
+import com.zenobiapay.api.model.exception.DeclinedException
 import com.zenobiapay.api.model.exception.InsufficientFundsException
 import com.zenobiapay.cryptography.util.isSignatureValid
 import com.zenobiapay.orum.util.WaiterFailedException
 import com.zenobiapay.orum.util.generateCustomerOrumId
 import com.zenobiapay.plaid.PlaidWrapper
+import com.zenobiapay.plaid.model.SignalResult
 import com.zenobiapay.table.bank.model.BankAccountItem
 import com.zenobiapay.table.bank.model.BankPermissions
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.BankAccount
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
 import com.zenobiapay.table.transfer.model.Signature
-import com.zenobiapay.table.transfer.model.InboundTransferStatus
 import com.zenobiapay.table.transfer.model.OutboundTransferStatus
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.transfer.di.AVAILABLE_BALANCE_BUFFER
@@ -77,8 +77,6 @@ class FulfillTransferOperation @Inject constructor(
         val transferRequestId = request.transferRequestId
         val bankAccountId = request.bankAccountId
         userId!!
-
-        val date = LocalDate.now(ZoneOffset.UTC).also { logger.info { "Using date $it" } }
         var transferRequestItem = transferDao.getTransfer(transferRequestId = transferRequestId)
             ?: throw ResourceNotFoundException("TRANSFER")
         logger.info { "Got transfer request item $transferRequestItem" }
@@ -113,7 +111,7 @@ class FulfillTransferOperation @Inject constructor(
         )
         val fulfillRequestId = input.requestContext.requestId
 
-        assertHasAvailableFunds(transferAmount, customerBankAccountItem.accessToken, bankAccountId)
+        val shouldPreApprove = shouldPreApprove(transferAmount, customerBankAccountItem.accessToken, bankAccountId, transferRequestId, userId)
 
         transferRequestItem = try {
             transferDao.updateTransferRequestLocked(transferRequestItem)
@@ -132,6 +130,7 @@ class FulfillTransferOperation @Inject constructor(
         logger.info { "Added payout item" }
         val statementItems = transferRequestData.statementItems.map { it.toApiStatementItem() }
         transferDao.updateTransferRequestFulfilled(
+            preApproved = shouldPreApprove,
             transferItem = transferRequestItem,
             fulfillRequestId = fulfillRequestId,
             customerIdentity = creditorId,
@@ -182,22 +181,28 @@ class FulfillTransferOperation @Inject constructor(
         }
     }
 
-    private fun assertHasAvailableFunds(transferAmount: Int, accessToken: String, bankAccountId: String) {
+    private fun shouldPreApprove(transferAmount: Int, accessToken: String, bankAccountId: String, transferRequestId: String, sub: String): Boolean {
         logger.info { "Checking balance" }
-        val balance = try {
+        val signalResult = plaidWrapper.getRiskDecision(accessToken, bankAccountId, transferRequestId, transferAmount, sub)
+        logger.info { "Got signal result $signalResult" }
+        if (signalResult == SignalResult.DENY) throw DeclinedException()
+
+        try {
             runBlocking {
-                withTimeout(20.seconds) {
-                    plaidWrapper.getAvailableBalance(accessToken, bankAccountId)
+                withTimeout(15.seconds) {
+                    val balance = plaidWrapper.getAvailableBalance(accessToken, bankAccountId)
+                    logger.info { "Got balance $balance" }
+                    if (transferAmount * availableBalanceBuffer > balance) {
+                        logger.info { "Balance $balance was not greater than transfer amount $transferAmount with buffer $availableBalanceBuffer"}
+                        throw InsufficientFundsException()
+                    }
                 }
             }
         } catch (e: TimeoutCancellationException) {
-            throw BalanceTimeOutException()
+            logger.info { "Failed to fetch available funds for $bankAccountId. Returning signal result $signalResult" }
+            metricHelper.putMetric("PlaidBalanceGetTimeout", 1.0, mapOf("path" to "/fulfill-transfer"))
         }
-        logger.info { "Got balance $balance" }
-        if (transferAmount * availableBalanceBuffer > balance) {
-            logger.info { "Balance $balance was not greater than transfer amount $transferAmount with buffer $availableBalanceBuffer"}
-            throw InsufficientFundsException()
-        }
+        return signalResult == SignalResult.ACCEPT
     }
 
     private fun transferFunds(

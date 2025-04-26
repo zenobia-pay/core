@@ -13,6 +13,7 @@ import com.zenobiapay.api.model.exception.UnauthorizedException
 import com.zenobiapay.api.model.exception.UnknownPathException
 import com.zenobiapay.api.model.exception.ZenobiaExternalException
 import com.zenobiapay.api.generated.model.ErrorResponse
+import com.zenobiapay.api.model.exception.DeclinedException
 import com.zenobiapay.api.model.exception.InsufficientFundsException
 import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.api.operation.Operation
@@ -120,6 +121,7 @@ class ResponseHandler @Inject constructor(
 
     private fun getErrorString(error: Exception, statusCode: Int): String {
         if (error is InsufficientFundsException) return "InsufficientFunds"
+        if (error is DeclinedException) return "Declined"
         return when (statusCode) {
             404 -> "NotFound"
             403 -> "AccessDenied"

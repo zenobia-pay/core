@@ -25,7 +25,9 @@ import com.plaid.client.model.LinkTokenCreateRequestUser
 import com.plaid.client.model.LinkTokenCreateResponse
 import com.plaid.client.model.NumbersACH
 import com.plaid.client.model.Products
+import com.plaid.client.model.SignalEvaluateRequest
 import com.plaid.client.request.PlaidApi
+import com.zenobiapay.plaid.model.SignalResult
 import io.github.oshai.kotlinlogging.KotlinLogging
 import retrofit2.Response
 import jakarta.inject.Inject
@@ -140,6 +142,22 @@ class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
 
         val balance = matchingAccount.balances.available ?: matchingAccount.balances.current!!
         return floor(balance * 100).toInt()
+    }
+
+    fun getRiskDecision(accessToken: String, accountId: String, requestId: String, amount: Int, userId: String): SignalResult {
+        val request = SignalEvaluateRequest()
+            .accessToken(accessToken)
+            .accountId(accountId)
+            .clientTransactionId(requestId)
+            .amount(amount / 100.0)
+            .clientUserId(userId)
+            .defaultPaymentMethod("SAME_DAY_ACH")
+            .rulesetKey("zenobia-risk-rules")
+
+        val response = getResponseOrThrowException("SignalEvaluateRequest") {
+            plaidApi.signalEvaluate(request).execute()
+        }
+        return SignalResult.getResult(response.ruleset?.triggeredRuleDetails?.result)
     }
 
     private fun <T> getResponseOrThrowException(operationName: String, block: () -> Response<T>): T {
