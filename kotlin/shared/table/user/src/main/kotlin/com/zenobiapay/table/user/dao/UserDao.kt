@@ -5,6 +5,7 @@ import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.table.MAX_LIST_ITEMS
 import com.zenobiapay.table.di.USER_TABLE_NAME
 import com.zenobiapay.table.model.ContinuationToken
+import com.zenobiapay.table.user.model.AgreementMetadata
 import com.zenobiapay.api.generated.model.Location as ApiLocation
 import com.zenobiapay.table.user.model.Location
 import com.zenobiapay.table.user.model.M2MCredentialsData
@@ -25,8 +26,9 @@ import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException
-import javax.inject.Inject
-import javax.inject.Named
+import java.time.Instant
+import jakarta.inject.Inject
+import jakarta.inject.Named
 
 private val logger = KotlinLogging.logger {}
 
@@ -41,6 +43,7 @@ class UserDao @Inject constructor(
     fun getUserItem(sub: String): UserItem? {
         val pk = UserItem.generatePk(sub)
         val sk = UserItem.generateSk()
+        logger.info { "Getting user item using pk $pk, sk $sk" }
         return try {
             userTable.getItem(
                 Key.builder().partitionValue(pk).sortValue(sk).build()
@@ -48,6 +51,62 @@ class UserDao @Inject constructor(
         } catch (e: ResourceNotFoundException) {
             null
         }
+    }
+
+    fun createTemporaryCustomer(
+        sub: String
+    ) {
+        userTable.putItem(
+            UserItem(
+                pk = UserItem.generatePk(sub),
+                sk = UserItem.generateSk(),
+                data = UserItemData(
+                    isApproved = false
+                ),
+                userType = UserType.CUSTOMER,
+                ttl = Instant.now().epochSecond + 3600 // one hour
+            )
+        )
+    }
+
+    fun updateTemporaryCustomerToPermanent(
+        sub: String,
+        firstName: String,
+        lastName: String,
+        orumId: String,
+        userType: UserType,
+        isApproved: Boolean,
+    ) {
+        val item = UserItem(
+            pk = UserItem.generatePk(sub),
+            sk = UserItem.generateSk(),
+            data = UserItemData(
+                orumId = orumId,
+                isApproved = isApproved,
+                firstName = firstName,
+                lastName = lastName,
+            ),
+            userType = userType,
+            ttl = null,
+        )
+        val updateRequest = UpdateItemEnhancedRequest.builder(UserItem::class.java)
+            .item(item)
+            .conditionExpression(
+                Expression.builder()
+                    .expression("attribute_exists(#ttl) AND #data.#approved = :val")
+                    .expressionNames(mapOf(
+                        "#ttl" to "ttl",
+                        "#data" to "data",
+                        "#approved" to "approved"
+                    ))
+                    .expressionValues(
+                        mapOf(
+                            ":val" to AttributeValue.fromBool(false)
+                        )
+                    )
+                    .build()
+            ).build()
+        userTable.updateItem(updateRequest)
     }
 
     fun putUser(
@@ -72,6 +131,29 @@ class UserDao @Inject constructor(
                 ),
                 userType = userType,
             )
+        )
+    }
+
+    fun updateTerms(sub: String, privacyTermsMetadata: AgreementMetadata?, debitAuthMetadata: AgreementMetadata?) {
+        val user = getUserItem(sub)!!
+        val debitAuthAgreements = debitAuthMetadata?.let {
+            user.data.debitAuthAgreements + debitAuthMetadata
+        } ?: user.data.debitAuthAgreements
+        val privacyTermsAgreements = privacyTermsMetadata?.let {
+            user.data.termsAndPrivacyAgreements + privacyTermsMetadata
+        } ?: user.data.termsAndPrivacyAgreements
+
+        val updatedUser = user.copy(
+            data = user.data.copy(
+                debitAuthAgreements = debitAuthAgreements,
+                termsAndPrivacyAgreements = privacyTermsAgreements,
+            )
+        )
+
+        userTable.updateItem(
+            UpdateItemEnhancedRequest.builder(UserItem::class.java)
+                .item(updatedUser)
+                .build()
         )
     }
 
@@ -154,6 +236,7 @@ class UserDao @Inject constructor(
     fun listM2MCredentials(
         userId: String,
         continuationToken: String?,
+        paginationSecret: String?,
     ): Pair<List<M2MCredentialsItem>, ContinuationToken?> {
         logger.info { "Listing m2m credentials" }
         val queryConditional = QueryConditional.keyEqualTo {
@@ -166,7 +249,7 @@ class UserDao @Inject constructor(
 
         if (continuationToken != null) {
             logger.info { "Using continuation token $continuationToken" }
-            val token = ContinuationToken.decodeToken(continuationToken, objectMapper)
+            val token = ContinuationToken.decodeToken(continuationToken, objectMapper, paginationSecret!!)
             queryRequestBuilder.exclusiveStartKey(token.key)
         }
 

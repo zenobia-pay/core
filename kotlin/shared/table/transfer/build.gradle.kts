@@ -32,7 +32,7 @@ dependencies {
     api(libs.kotlin.stdlib)
 
     // Injection
-    api(libs.javax.inject)
+    api(libs.jakarta.inject)
 
     // Logging
     implementation(libs.kotlin.logging)

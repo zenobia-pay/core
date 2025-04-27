@@ -3,6 +3,17 @@ info:
   title: Zenobia API
   version: 1.0
 components:
+  securitySchemes:
+    SignatureAuthorizer:
+      type: apiKey
+      name: Signature
+      in: header
+      x-amazon-apigateway-authtype: custom
+      x-amazon-apigateway-authorizer:
+        type: request
+        authorizerUri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthorizerFunction.Arn}/invocations
+        identitySource: method.request.header.Signature
   responses:
     BadRequest:
       description: Bad request
@@ -108,12 +119,106 @@ components:
         zip5:
           type: string
           pattern: '^\d{5}$'
+    BankAccount:
+      type: object
+      required:
+        - name
+      properties:
+        bankAccountName:
+          type: string
+        lastFourDigits:
+          type: string
+        bankAccountId:
+          type: string
 x-amazon-apigateway-request-validators:
   basic:
     validateRequestParameters: true
     validateRequestBody: true
 x-amazon-apigateway-request-validator: basic
 paths:
+  /orum-webhook:
+    post:
+      summary: "Orum webhook endpoint"
+      security:
+        - SignatureAuthorizer: []
+      operationId: "OrumWebhook"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - created_at
+                - event_id
+                - event_type
+                - event_data
+              properties:
+                created_at:
+                  type: string
+                event_id:
+                  type: string
+                event_type:
+                  type: string
+                event_data:
+                  type: object
+      responses:
+        "200":
+          description: "Successful response"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebhookHandlerFunction.Arn}:prod/invocations
+        httpMethod: POST
+        type: aws_proxy
+  /issue-jwt:
+    post:
+      summary: "Exchange refresh token for jwt"
+      operationId: "IssueJwt"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+                - sub
+              properties:
+                refreshToken:
+                  type: string
+                sub:
+                  type: string
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jwt:
+                    type: string
+                  expiresIn:
+                    type: integer
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${JwtIssuerFunction.Arn}:prod/invocations
+        httpMethod: POST
+        type: aws_proxy
   /create-link-token:
     post:
       summary: "Creates a plaid link token"
@@ -131,9 +236,8 @@ paths:
                   type: string
                   enum:
                     - AUTH
-                    - IDENTITY_VERIFICATION
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -142,6 +246,16 @@ paths:
                 properties:
                   linkToken:
                     type: string
+                  sub:
+                    type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       x-amazon-apigateway-integration:
         uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
         httpMethod: POST
@@ -157,6 +271,9 @@ paths:
             schema:
               type: object
               properties:
+                sub:
+                  type: string
+                  maxLength: 255
                 linkToken:
                   type: string
                   maxLength: 255
@@ -177,8 +294,17 @@ paths:
               required:
                 - linkToken
       responses:
-        '200':
+        "200":
           description: "Successful response"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  refreshToken:
+                    type: string
+                  sub:
+                    type: string
         "400":
           $ref: "#/components/responses/BadRequest"
         "403":
@@ -208,9 +334,9 @@ paths:
                   minLength: 1
                 continuationToken:
                   type: string
-                  maxLength: 255
+                  maxLength: 512
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -222,12 +348,41 @@ paths:
                   items:
                     type: array
                     items:
-                      type: object
-                      properties:
-                        bankAccountId:
-                          type: string
-                        bankAccountName:
-                          type: string
+                      $ref: "#/components/schemas/BankAccount"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
+        httpMethod: POST
+        type: aws_proxy
+  /delete-bank-account:
+    post:
+      summary: "Deletes a bank account."
+      operationId: "DeleteBankAccount"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - bankAccountId
+              properties:
+                deviceId:
+                  type: string
+                  maxLength: 255
+                bankAccountId:
+                  type: string
+                  maxLength: 255
+                  minLength: 1
+      responses:
+        "200":
+          description: "Successful response"
         "400":
           $ref: "#/components/responses/BadRequest"
         "403":
@@ -262,7 +417,7 @@ paths:
                   items:
                     $ref: "#/components/schemas/StatementItem"
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -272,6 +427,10 @@ paths:
                   transferRequestId:
                     type: string
                   merchantId:
+                    type: string
+                  expiry:
+                    type: integer
+                  signature:
                     type: string
         "400":
           $ref: "#/components/responses/BadRequest"
@@ -297,15 +456,11 @@ paths:
               type: object
               required:
                 - transferRequestId
-                - merchantId
                 - bankAccountId
                 - deviceId
                 - signature
               properties:
                 transferRequestId:
-                  type: string
-                  maxLength: 255
-                merchantId:
                   type: string
                   maxLength: 255
                 bankAccountId:
@@ -326,7 +481,7 @@ paths:
                     - signatureType
                     - signatureValue
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -366,13 +521,15 @@ paths:
             minLength: 1
             maxLength: 256
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
               schema:
                 type: object
                 properties:
+                  amount:
+                    type: integer
                   transferRequestId:
                     type: string
                   merchant:
@@ -410,7 +567,7 @@ paths:
             minLength: 1
             maxLength: 256
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -419,6 +576,8 @@ paths:
                 properties:
                   transferRequestId:
                     type: string
+                  amount:
+                    type: integer
                   status:
                     $ref: "#/components/schemas/TransferStatus"
                   statementItems:
@@ -452,9 +611,9 @@ paths:
                 continuationToken:
                   type: string
                   minLength: 1
-                  maxLength: 256
+                  maxLength: 512
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -468,6 +627,8 @@ paths:
                     items:
                       type: object
                       properties:
+                        transferRequestId:
+                          type: string
                         amount:
                           type: integer
                         creationTime:
@@ -476,6 +637,8 @@ paths:
                           $ref: "#/components/schemas/TransferStatus"
                         merchant:
                           $ref: "#/components/schemas/PaymentParticipantIdentity"
+                        customerBankAccount:
+                          $ref: "#/components/schemas/BankAccount"
         "400":
           $ref: "#/components/responses/BadRequest"
         "403":
@@ -501,9 +664,9 @@ paths:
                 continuationToken:
                   type: string
                   minLength: 1
-                  maxLength: 256
+                  maxLength: 512
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -535,12 +698,62 @@ paths:
         uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
         httpMethod: POST
         type: aws_proxy
+  /list-merchant-payouts:
+    post:
+      summary: "Lists all payouts for a merchant"
+      operationId: "ListMerchantPayouts"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                continuationToken:
+                  type: string
+                  minLength: 1
+                  maxLength: 512
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  continuationToken:
+                    type: string
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        amount:
+                          type: integer
+                        fee:
+                          type: integer
+                        status:
+                          type: string
+                          enum:
+                            - PENDING
+                            - PAID
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+        httpMethod: POST
+        type: aws_proxy
   /get-merchant-config:
     get:
       summary: "Fetches metadata associated with a merchant"
       operationId: "GetMerchantConfig"
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -594,12 +807,12 @@ paths:
                   maxLength: 256
                 webhookUrl:
                   type: string
-                  pattern: '^https://.*$'
+                  pattern: "^https://.*$"
                   maxLength: 1000
                 merchantLocation:
                   $ref: "#/components/schemas/Location"
       responses:
-        '200':
+        "200":
           description: "Successful response"
         "400":
           $ref: "#/components/responses/BadRequest"
@@ -613,25 +826,23 @@ paths:
         uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
         httpMethod: POST
         type: aws_proxy
-  /submit-customer-onboarding:
+  /submit-terms:
     post:
-      summary: "Onboards a customer, adding user metadata. Only called on first login."
-      operationId: "SubmitCustomerOnboarding"
+      summary: "Submits terms and conditions as agreed to by user"
+      operationId: "SubmitTerms"
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - identityVerificationId
               properties:
-                identityVerificationId:
-                  type: string
-                  minLength: 1
-                  maxLength: 256
+                debitAuthorization:
+                  type: boolean
+                termsAuthorization:
+                  type: boolean
       responses:
-        '200':
+        "200":
           description: "Successful response"
         "400":
           $ref: "#/components/responses/BadRequest"
@@ -705,9 +916,9 @@ paths:
                   type: string
                   pattern: '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
                 address:
-                  $ref: '#/components/schemas/Address'
+                  $ref: "#/components/schemas/Address"
       responses:
-        '200':
+        "200":
           description: "Successful response"
         "400":
           $ref: "#/components/responses/BadRequest"
@@ -726,7 +937,7 @@ paths:
       summary: "Fetches user profile, including onboarding status, user type, etc"
       operationId: "GetUserProfile"
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -736,8 +947,12 @@ paths:
                   hasOnboarded:
                     type: boolean
                   userType:
-                    $ref: '#/components/schemas/UserType'
+                    $ref: "#/components/schemas/UserType"
                   isApproved:
+                    type: boolean
+                  agreedToPrivacyTerms:
+                    type: boolean
+                  agreedToDebitAuth:
                     type: boolean
         "400":
           $ref: "#/components/responses/BadRequest"
@@ -756,7 +971,7 @@ paths:
       summary: "Creates m2m credentials for a merchant"
       operationId: "CreateM2mCredentials"
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -792,9 +1007,9 @@ paths:
                 continuationToken:
                   type: string
                   minLength: 1
-                  maxLength: 256
+                  maxLength: 512
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:
@@ -840,7 +1055,7 @@ paths:
                   minLength: 1
                   maxLength: 256
       responses:
-        '200':
+        "200":
           description: "Successful response"
           content:
             application/json:

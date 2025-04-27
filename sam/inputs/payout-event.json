@@ -1,0 +1,244 @@
+{
+  "version": "0",
+  "id": "cf6e82a4-e241-b02d-f3cb-1449e8201088",
+  "detail-type": "ddb.record",
+  "source": "transfer.dynamodb",
+  "account": "816069139448",
+  "time": "2025-04-22T00:47:40Z",
+  "region": "us-east-1",
+  "resources": [],
+  "detail": {
+    "eventID": "4dc927c96a38083b1af41b8c634bca30",
+    "eventName": "MODIFY",
+    "eventVersion": "1.1",
+    "eventSource": "aws:dynamodb",
+    "awsRegion": "us-east-1",
+    "dynamodb": {
+      "ApproximateCreationDateTime": 1745282860,
+      "Keys": {
+        "sk": {
+          "S": "DETAILS"
+        },
+        "pk": {
+          "S": "TRANSFER#id_71d96005-736f-4890-843b-c198a901e27c"
+        }
+      },
+      "NewImage": {
+        "amount": {
+          "N": "3201"
+        },
+        "data": {
+          "M": {
+            "customerBankAccount": {
+              "M": {
+                "lastFourDigits": {
+                  "S": "0000"
+                },
+                "name": {
+                  "S": "Plaid Checking"
+                },
+                "id": {
+                  "S": "GP4Bk9zr75ikPEJD8A3otd4E579p1au6RNRno"
+                }
+              }
+            },
+            "creationTime": {
+              "S": "2025-04-22T00:47:31.976090150Z"
+            },
+            "signature": {
+              "M": {
+                "signature": {
+                  "S": "MEYCIQDHCsmmnhRFERUcKQFIrYeV4lg9rU+UBW2HRr+pcC4dpgIhAPFoEEQ1Ti2twy/ukfVmKcMkLq45YPIVgn+FrdJQiKpN"
+                },
+                "signatureType": {
+                  "S": "SHA256_WITH_ECDSA"
+                }
+              }
+            },
+            "merchant": {
+              "M": {
+                "bankAccountId": {
+                  "S": ""
+                },
+                "name": {
+                  "S": "Ryan Prendergast"
+                },
+                "id": {
+                  "S": "auth0|67f0a8703cc36ca458f5cf7b"
+                }
+              }
+            },
+            "statementItems": {
+              "L": [
+                {
+                  "M": {
+                    "amount": {
+                      "N": "650"
+                    },
+                    "name": {
+                      "S": "Ace Leather Sneakers"
+                    }
+                  }
+                },
+                {
+                  "M": {
+                    "amount": {
+                      "N": "2300"
+                    },
+                    "name": {
+                      "S": "GG Marmont Shoulder Bag"
+                    }
+                  }
+                }
+              ]
+            },
+            "statusMessage": {
+              "NULL": true
+            },
+            "webhookUrl": {
+              "S": "https://merchant-solid.pages.dev/webhooks"
+            },
+            "customer": {
+              "M": {
+                "bankAccountId": {
+                  "S": "GP4Bk9zr75ikPEJD8A3otd4E579p1au6RNRno"
+                },
+                "name": {
+                  "NULL": true
+                },
+                "id": {
+                  "S": "1e95821d-32a6-4e50-9dbd-6bfa39d61d43"
+                }
+              }
+            }
+          }
+        },
+        "gsi1Sk": {
+          "S": "CREATED#t_2025-04-22T00:47:31.975891190Z#id_71d96005-736f-4890-843b-c198a901e27c"
+        },
+        "gsi2Sk": {
+          "S": "CREATED#t_2025-04-22T00:47:38.838705773Z#id_7fa53267-b0da-4d73-af74-bfa0970c640e"
+        },
+        "gsi1Pk": {
+          "S": "TRANSFER#m_auth0|67f0a8703cc36ca458f5cf7b"
+        },
+        "transferFulfillId": {
+          "S": "7fa53267-b0da-4d73-af74-bfa0970c640e"
+        },
+        "inboundStatus": {
+          "S": "IN_FLIGHT"
+        },
+        "version": {
+          "N": "3"
+        },
+        "deleted": {
+          "BOOL": false
+        },
+        "gsi2Pk": {
+          "S": "TRANSFER#c_1e95821d-32a6-4e50-9dbd-6bfa39d61d43"
+        },
+        "sk": {
+          "S": "DETAILS"
+        },
+        "outboundStatus": {
+          "S": "IN_FLIGHT"
+        },
+        "pk": {
+          "S": "TRANSFER#id_71d96005-736f-4890-843b-c198a901e27c"
+        }
+      },
+      "OldImage": {
+        "amount": {
+          "N": "3201"
+        },
+        "deleted": {
+          "BOOL": false
+        },
+        "data": {
+          "M": {
+            "customerBankAccount": {
+              "NULL": true
+            },
+            "creationTime": {
+              "S": "2025-04-22T00:47:31.976090150Z"
+            },
+            "signature": {
+              "NULL": true
+            },
+            "merchant": {
+              "M": {
+                "bankAccountId": {
+                  "S": ""
+                },
+                "name": {
+                  "S": "Ryan Prendergast"
+                },
+                "id": {
+                  "S": "auth0|67f0a8703cc36ca458f5cf7b"
+                }
+              }
+            },
+            "statementItems": {
+              "L": [
+                {
+                  "M": {
+                    "amount": {
+                      "N": "650"
+                    },
+                    "name": {
+                      "S": "Ace Leather Sneakers"
+                    }
+                  }
+                },
+                {
+                  "M": {
+                    "amount": {
+                      "N": "2300"
+                    },
+                    "name": {
+                      "S": "GG Marmont Shoulder Bag"
+                    }
+                  }
+                }
+              ]
+            },
+            "statusMessage": {
+              "NULL": true
+            },
+            "webhookUrl": {
+              "NULL": true
+            },
+            "customer": {
+              "NULL": true
+            }
+          }
+        },
+        "gsi1Sk": {
+          "S": "CREATED#t_2025-04-22T00:47:31.975891190Z#id_71d96005-736f-4890-843b-c198a901e27c"
+        },
+        "gsi1Pk": {
+          "S": "TRANSFER#m_auth0|67f0a8703cc36ca458f5cf7b"
+        },
+        "sk": {
+          "S": "DETAILS"
+        },
+        "inboundStatus": {
+          "S": "NOT_STARTED"
+        },
+        "outboundStatus": {
+          "S": "FULFILL_LOCKED"
+        },
+        "pk": {
+          "S": "TRANSFER#id_71d96005-736f-4890-843b-c198a901e27c"
+        },
+        "version": {
+          "N": "2"
+        }
+      },
+      "SequenceNumber": "21485200000000073372242232",
+      "SizeBytes": 1735,
+      "StreamViewType": "NEW_AND_OLD_IMAGES"
+    },
+    "eventSourceARN": "arn:aws:dynamodb:us-east-1:816069139448:table/TransferTable/stream/2025-04-17T19:23:17.514"
+  }
+}

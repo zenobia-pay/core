@@ -1,0 +1,25 @@
+{
+  "resource": "/delete-bank-account",
+  "path": "/delete-bank-account",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"bankAccountId\":\"pQkm6rbvKJH75AQ7JBGQtjRKeyz7JVfpoBvnK\"}",
+  "isBase64Encoded": false,
+  "requestContext": {
+    "accountId": "123456789012",
+    "resourceId": "abc123",
+    "stage": "dev",
+    "requestId": "xyz789",
+    "identity": {
+      "sourceIp": "127.0.0.1"
+    },
+    "authorizer": {
+      "principalId": "user123",
+      "role": "CUSTOMER",
+      "email": "user@example.com",
+      "sub": "64d874c8-b011-70f9-efde-43a92ba4c98d"
+    }
+  }
+}

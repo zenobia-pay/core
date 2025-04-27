@@ -1,0 +1,25 @@
+{
+  "resource": "/list-merchant-payouts",
+  "path": "/list-merchant-payouts",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{}",
+  "isBase64Encoded": false,
+  "requestContext": {
+    "accountId": "123456789012",
+    "resourceId": "abc123",
+    "stage": "dev",
+    "requestId": "xyz789",
+    "identity": {
+      "sourceIp": "127.0.0.1"
+    },
+    "authorizer": {
+      "principalId": "user123",
+      "role": "MERCHANT",
+      "email": "user@example.com",
+      "sub": "5458a488-4051-70f4-f9ec-0fd1eb28cff9"
+    }
+  }
+}

@@ -4,14 +4,12 @@ Description: Stack to store Lambda handlers
 
 Globals:
   Function:
-    Timeout: 30
+    Timeout: 60
     MemorySize: 512
     Runtime: java17
     Architectures:
       - x86_64
     AutoPublishAlias: prod
-    SnapStart:
-      ApplyOn: PublishedVersions
     AutoPublishAliasAllProperties: true
     VpcConfig:
       SecurityGroupIds:
@@ -21,11 +19,15 @@ Globals:
         - !Ref SubnetId2
 
 Parameters:
+  CredentialsTableKeyId:
+    Type: String
   BankKeyId:
     Type: String
   TransferKeyId:
     Type: String
   UserKeyId:
+    Type: String
+  CredentialsTableName:
     Type: String
   BankTableName:
     Type: String
@@ -50,21 +52,42 @@ Parameters:
   Auth0Domain:
     Type: String
     Description: Auth0 domain used for authentication
+  OrumPublicCertificate:
+    Type: String
+    Description: Orum public certificate used for webhook signing
+  OrumIpAddresses:
+    Type: String
+    Description: Valid orum ip addresses to accept requests from. Comma separated.
+  OrumSlackWebhook:
+    Type: String
+    Description: Slack webhook for orum channel
+  CustomerJwtSigningSecret:
+    Type: String
+    Description: Signing secret for jwt
+  RefreshTokenHashingSecret:
+    Type: String
+    Description: Hash secret for refresh tokens
 
 Resources:
   ZenobiaApi:
     Type: AWS::Serverless::Api
     Properties:
       Auth:
-        DefaultAuthorizer: CustomAuthorizer
+        DefaultAuthorizer: ApiAuthorizer
         AddDefaultAuthorizerToCorsPreflight: false
         Authorizers:
-          CustomAuthorizer:
+          ApiAuthorizer:
             FunctionPayloadType: REQUEST
             FunctionArn: !GetAtt CustomAuthorizerFunction.Arn
             Identity:
-              Headers: 
+              Headers:
                 - Authorization
+          SignatureAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn: !GetAtt CustomAuthorizerFunction.Arn
+            Identity:
+              Headers:
+                - Signature
       Cors:
         AllowCredentials: true
         AllowMethods: "'GET,POST,OPTIONS'"
@@ -86,6 +109,17 @@ Resources:
           title: Zenobia API
           version: 1.0
         components:
+          securitySchemes:
+            SignatureAuthorizer:
+              type: apiKey
+              name: Signature
+              in: header
+              x-amazon-apigateway-authtype: custom
+              x-amazon-apigateway-authorizer:
+                type: request
+                authorizerUri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthorizerFunction.Arn}/invocations
+                identitySource: method.request.header.Signature
           responses:
             BadRequest:
               description: Bad request
@@ -157,13 +191,13 @@ Resources:
                   type: number
             UserType:
               type: string
-              enum: [ MERCHANT, CUSTOMER ]
+              enum: [MERCHANT, CUSTOMER]
             CertificateType:
               type: string
-              enum: [ EC ]
+              enum: [EC]
             SignatureType:
               type: string
-              enum: [ SHA256_WITH_ECDSA ]
+              enum: [SHA256_WITH_ECDSA]
             Address:
               type: object
               required:
@@ -187,10 +221,21 @@ Resources:
                   maxLength: 255
                 country:
                   type: string
-                  enum: [ US ]
+                  enum: [US]
                 zip5:
                   type: string
                   pattern: '^\d{5}$'
+            BankAccount:
+              type: object
+              required:
+                - name
+              properties:
+                bankAccountName:
+                  type: string
+                lastFourDigits:
+                  type: string
+                bankAccountId:
+                  type: string
 
         x-amazon-apigateway-request-validators:
           basic:
@@ -198,6 +243,91 @@ Resources:
             validateRequestBody: true
         x-amazon-apigateway-request-validator: basic
         paths:
+          /orum-webhook:
+            post:
+              summary: "Orum webhook endpoint"
+              security:
+                - SignatureAuthorizer: []
+              operationId: "OrumWebhook"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - created_at
+                        - event_id
+                        - event_type
+                        - event_data
+                      properties:
+                        created_at:
+                          type: string
+                        event_id:
+                          type: string
+                        event_type:
+                          type: string
+                        event_data:
+                          type: object
+              responses:
+                "200":
+                  description: "Successful response"
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebhookHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /issue-jwt:
+            post:
+              summary: "Exchange refresh token for jwt"
+              operationId: "IssueJwt"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - refreshToken
+                        - sub
+                      properties:
+                        refreshToken:
+                          type: string
+                        sub:
+                          type: string
+              responses:
+                "200":
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          jwt:
+                            type: string
+                          expiresIn:
+                            type: integer
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${JwtIssuerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
           /create-link-token:
             post:
               summary: "Creates a plaid link token"
@@ -215,9 +345,8 @@ Resources:
                           type: string
                           enum:
                             - AUTH
-                            - IDENTITY_VERIFICATION
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -226,6 +355,16 @@ Resources:
                         properties:
                           linkToken:
                             type: string
+                          sub:
+                            type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
@@ -242,6 +381,9 @@ Resources:
                     schema:
                       type: object
                       properties:
+                        sub:
+                          type: string
+                          maxLength: 255
                         linkToken:
                           type: string
                           maxLength: 255
@@ -262,8 +404,17 @@ Resources:
                       required:
                         - linkToken
               responses:
-                '200':
+                "200":
                   description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          refreshToken:
+                            type: string
+                          sub:
+                            type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -295,9 +446,9 @@ Resources:
                           minLength: 1
                         continuationToken:
                           type: string
-                          maxLength: 255
+                          maxLength: 512
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -309,12 +460,42 @@ Resources:
                           items:
                             type: array
                             items:
-                              type: object
-                              properties:
-                                bankAccountId:
-                                  type: string
-                                bankAccountName:
-                                  type: string
+                              $ref: "#/components/schemas/BankAccount"
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /delete-bank-account:
+            post:
+              summary: "Deletes a bank account."
+              operationId: "DeleteBankAccount"
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - bankAccountId
+                      properties:
+                        deviceId:
+                          type: string
+                          maxLength: 255
+                        bankAccountId:
+                          type: string
+                          maxLength: 255
+                          minLength: 1
+              responses:
+                "200":
+                  description: "Successful response"
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -350,7 +531,7 @@ Resources:
                           items:
                             $ref: "#/components/schemas/StatementItem"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -360,6 +541,10 @@ Resources:
                           transferRequestId:
                             type: string
                           merchantId:
+                            type: string
+                          expiry:
+                            type: integer
+                          signature:
                             type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -386,15 +571,11 @@ Resources:
                       type: object
                       required:
                         - transferRequestId
-                        - merchantId
                         - bankAccountId
                         - deviceId
                         - signature
                       properties:
                         transferRequestId:
-                          type: string
-                          maxLength: 255
-                        merchantId:
                           type: string
                           maxLength: 255
                         bankAccountId:
@@ -415,7 +596,7 @@ Resources:
                             - signatureType
                             - signatureValue
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -457,13 +638,15 @@ Resources:
                     minLength: 1
                     maxLength: 256
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
                       schema:
                         type: object
                         properties:
+                          amount:
+                            type: integer
                           transferRequestId:
                             type: string
                           merchant:
@@ -503,7 +686,7 @@ Resources:
                     minLength: 1
                     maxLength: 256
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -512,6 +695,8 @@ Resources:
                         properties:
                           transferRequestId:
                             type: string
+                          amount:
+                            type: integer
                           status:
                             $ref: "#/components/schemas/TransferStatus"
                           statementItems:
@@ -547,9 +732,9 @@ Resources:
                         continuationToken:
                           type: string
                           minLength: 1
-                          maxLength: 256
+                          maxLength: 512
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -563,6 +748,8 @@ Resources:
                             items:
                               type: object
                               properties:
+                                transferRequestId:
+                                  type: string
                                 amount:
                                   type: integer
                                 creationTime:
@@ -571,6 +758,8 @@ Resources:
                                   $ref: "#/components/schemas/TransferStatus"
                                 merchant:
                                   $ref: "#/components/schemas/PaymentParticipantIdentity"
+                                customerBankAccount:
+                                  $ref: "#/components/schemas/BankAccount"
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -598,9 +787,9 @@ Resources:
                         continuationToken:
                           type: string
                           minLength: 1
-                          maxLength: 256
+                          maxLength: 512
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -628,6 +817,57 @@ Resources:
                   $ref: "#/components/responses/NotFound"
                 "500":
                   $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /list-merchant-payouts:
+            post:
+              summary: "Lists all payouts for a merchant"
+              operationId: "ListMerchantPayouts"
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        continuationToken:
+                          type: string
+                          minLength: 1
+                          maxLength: 512
+              responses:
+                "200":
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          continuationToken:
+                            type: string
+                          items:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                amount:
+                                  type: integer
+                                fee:
+                                  type: integer
+                                status:
+                                  type: string
+                                  enum:
+                                    - PENDING
+                                    - PAID
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
 
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
@@ -639,7 +879,7 @@ Resources:
               summary: "Fetches metadata associated with a merchant"
               operationId: "GetMerchantConfig"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -694,12 +934,12 @@ Resources:
                           maxLength: 256
                         webhookUrl:
                           type: string
-                          pattern: '^https://.*$'
+                          pattern: "^https://.*$"
                           maxLength: 1000
                         merchantLocation:
                           $ref: "#/components/schemas/Location"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -714,25 +954,23 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
-          /submit-customer-onboarding:
+          /submit-terms:
             post:
-              summary: "Onboards a customer, adding user metadata. Only called on first login."
-              operationId: "SubmitCustomerOnboarding"
+              summary: "Submits terms and conditions as agreed to by user"
+              operationId: "SubmitTerms"
               requestBody:
                 required: true
                 content:
                   application/json:
                     schema:
                       type: object
-                      required:
-                        - identityVerificationId
                       properties:
-                        identityVerificationId:
-                          type: string
-                          minLength: 1
-                          maxLength: 256
+                        debitAuthorization:
+                          type: boolean
+                        termsAuthorization:
+                          type: boolean
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -800,16 +1038,16 @@ Resources:
                           pattern: '^\d{9}$'
                         taxIdType:
                           type: string
-                          enum: 
+                          enum:
                             - TIN
                             - EIN
                         incorporationDate:
                           type: string
                           pattern: '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
                         address:
-                          $ref: '#/components/schemas/Address'
+                          $ref: "#/components/schemas/Address"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -829,7 +1067,7 @@ Resources:
               summary: "Fetches user profile, including onboarding status, user type, etc"
               operationId: "GetUserProfile"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -839,8 +1077,12 @@ Resources:
                           hasOnboarded:
                             type: boolean
                           userType:
-                            $ref: '#/components/schemas/UserType'
+                            $ref: "#/components/schemas/UserType"
                           isApproved:
+                            type: boolean
+                          agreedToPrivacyTerms:
+                            type: boolean
+                          agreedToDebitAuth:
                             type: boolean
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -860,7 +1102,7 @@ Resources:
               summary: "Creates m2m credentials for a merchant"
               operationId: "CreateM2mCredentials"
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -897,9 +1139,9 @@ Resources:
                         continuationToken:
                           type: string
                           minLength: 1
-                          maxLength: 256
+                          maxLength: 512
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
@@ -946,15 +1188,15 @@ Resources:
                           minLength: 1
                           maxLength: 256
               responses:
-                '200':
+                "200":
                   description: "Successful response"
                   content:
                     application/json:
                       schema:
                         type: object
                         properties:
-                         clientId:
-                           type: string
+                          clientId:
+                            type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -984,6 +1226,11 @@ Resources:
         Variables:
           AUTH_DOMAIN: !Ref Auth0Domain
           AUDIENCE: https://dashboard.zenobiapay.com
+          VALID_ORUM_IP_ADDRESSES: !Ref OrumIpAddresses
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref CustomerJwtSigningSecret
+        - CloudWatchPutMetricPolicy: {}
 
   ApiGatewayLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1021,6 +1268,39 @@ Resources:
                   - logs:FilterLogEvents
                 Resource: "*"
 
+  JwtIssuerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      SkipBuild: true
+    Properties:
+      FunctionName: JwtIssuer
+      Handler: main
+      Runtime: provided.al2
+      CodeUri: ../golang/jwt-issuer/build/function.zip
+      Timeout: 30
+      SnapStart:
+        ApplyOn: None
+      Environment:
+        Variables:
+          CREDENTIALS_TABLE_NAME: !Ref CredentialsTableName
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref RefreshTokenHashingSecret
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref CustomerJwtSigningSecret
+        - DynamoDBReadPolicy:
+            TableName: !Ref CredentialsTableName
+        - KMSDecryptPolicy:
+            KeyId: !Ref CredentialsTableKeyId
+        - CloudWatchPutMetricPolicy: {}
+      Events:
+        IssueJwt:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /issue-jwt
+            Method: POST
+
   BankHandlerFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -1030,21 +1310,44 @@ Resources:
       CodeUri: ../kotlin/lambda/bank-handler/build/libs/lambda.jar
       Handler: com.zenobiapay.bank.handlers.BankHandler::handleRequest
       MemorySize: 2048
+      ProvisionedConcurrencyConfig:
+        ProvisionedConcurrentExecutions: 3
       Environment:
         Variables:
           BANK_TABLE_NAME: !Ref BankTableName
+          USER_TABLE_NAME: !Ref UserTableName
+          CREDENTIALS_TABLE_NAME: !Ref CredentialsTableName
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref PlaidSecretsArn
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref OrumSecretsArn
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref PaginationSigningSecret
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref BankTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CredentialsTableName
         - KMSEncryptPolicy:
             KeyId: !Ref BankKeyId
         - KMSDecryptPolicy:
             KeyId: !Ref BankKeyId
+        - KMSEncryptPolicy:
+            KeyId: !Ref UserKeyId
+        - KMSDecryptPolicy:
+            KeyId: !Ref UserKeyId
+        - KMSDecryptPolicy:
+            KeyId: !Ref CredentialsTableKeyId
+        - KMSEncryptPolicy:
+            KeyId: !Ref CredentialsTableKeyId
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref CustomerJwtSigningSecret
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref RefreshTokenHashingSecret
+        - CloudWatchPutMetricPolicy: {}
       Events:
         GetCreateLinkToken:
           Type: Api
@@ -1064,6 +1367,12 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /list-bank-accounts
             Method: POST
+        DeleteBankAccount:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /delete-bank-account
+            Method: POST
 
   TransferHandlerFunction:
     Type: AWS::Serverless::Function
@@ -1074,15 +1383,25 @@ Resources:
       CodeUri: ../kotlin/lambda/transfer-handler/build/libs/lambda.jar
       Handler: com.zenobiapay.transfer.handlers.TransferHandler::handleRequest
       MemorySize: 2048
+      ProvisionedConcurrencyConfig:
+        ProvisionedConcurrentExecutions: 3
       Environment:
         Variables:
           TRANSFER_TABLE_NAME: !Ref TransferTableName
           BANK_TABLE_NAME: !Ref BankTableName
           USER_TABLE_NAME: !Ref UserTableName
+          AVAILABLE_BALANCE_BUFFER: "2"
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref OrumSecretsArn
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref PlaidSecretsArn
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref PaginationSigningSecret
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref WebsocketTransferSubscribeSigningSecret
         - AWSLambdaVPCAccessExecutionRole
+        - CloudWatchPutMetricPolicy: {}
         - DynamoDBCrudPolicy:
             TableName: !Ref TransferTableName
         - DynamoDBReadPolicy:
@@ -1134,6 +1453,12 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /list-merchant-transfers
             Method: POST
+        ListMerchantPayouts:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /list-merchant-payouts
+            Method: POST
 
   UserHandlerFunction:
     Type: AWS::Serverless::Function
@@ -1144,10 +1469,14 @@ Resources:
       CodeUri: ../kotlin/lambda/user-handler/build/libs/lambda.jar
       Handler: com.zenobiapay.user.handlers.UserHandler::handleRequest
       MemorySize: 2048
+      ProvisionedConcurrencyConfig:
+        ProvisionedConcurrentExecutions: 3
       Environment:
         Variables:
           USER_TABLE_NAME: !Ref UserTableName
           BANK_TABLE_NAME: !Ref BankTableName
+          PRIVACY_TERMS_VERSION: "v1"
+          DEBIT_AUTH_VERSION: "v1"
       Policies:
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
@@ -1166,6 +1495,9 @@ Resources:
             SecretArn: !Ref Auth0SecretsArn
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref PlaidSecretsArn
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref PaginationSigningSecret
+        - CloudWatchPutMetricPolicy: {}
       Events:
         UpdateMerchant:
           Type: Api
@@ -1185,11 +1517,11 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /get-user-profile
             Method: GET
-        SubmitCustomerOnboarding:
+        SubmitTerms:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
-            Path: /submit-customer-onboarding
+            Path: /submit-terms
             Method: POST
         SubmitMerchantOnboarding:
           Type: Api
@@ -1216,76 +1548,60 @@ Resources:
             Path: /delete-m2m-credentials
             Method: POST
 
-  WebhookSigningKey:
-    Type: AWS::KMS::Key
+  PaginationSigningSecret:
+    Type: AWS::SecretsManager::Secret
     Properties:
-      Description: "KMS Key for signing JWT webhooks"
-      KeyUsage: SIGN_VERIFY
-      KeySpec: RSA_2048
-      Enabled: true
-      EnableKeyRotation: false
-      KeyPolicy:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: AllowRootAccountAccess
-            Effect: Allow
-            Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
-            Action: "kms:*"
-            Resource: "*"
-          - Sid: AllowLambdaUse
-            Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action:
-              - kms:GetPublicKey
-              - kms:Sign
-            Resource: "*"
-            Condition:
-              StringEquals:
-                kms:CallerAccount: !Ref AWS::AccountId
-                kms:ViaService: !Sub lambda.${AWS::Region}.amazonaws.com
-              ArnLike: # Hack to tighten up kms to only be used by the transfer event handler. Cannot reference directly as there is a circular dependency
-                  aws:PrincipalArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/*-TransferTableEventHandler-*"
+      Name: pagination/hmac
+      Description: HMAC secret for signing pagination tokens
+      GenerateSecretString:
+        SecretStringTemplate: "{}"
+        GenerateStringKey: secret
+        PasswordLength: 32
+        ExcludeCharacters: "\"@/\\^`|&[](){}$"
 
-  WebhookSigningKeyAlias:
-    Type: AWS::KMS::Alias
+  WebsocketTransferSubscribeSigningSecret:
+    Type: AWS::SecretsManager::Secret
     Properties:
-      AliasName: alias/webhook-signing-key
-      TargetKeyId: !Ref WebhookSigningKey
+      Name: websocket/subscribe/hmac
+      Description: HMAC secret for merchant component to listen for updates
+      GenerateSecretString:
+        SecretStringTemplate: "{}"
+        GenerateStringKey: secret
+        PasswordLength: 32
+        ExcludeCharacters: "\"@/\\^`|&[](){}$"
 
-  TransferTableEventHandler:
-    Type: 'AWS::Serverless::Function'
+  WebhookHandlerFunction:
+    Type: AWS::Serverless::Function
     Metadata:
       SkipBuild: true
     Properties:
-      FunctionName: TransferTableEventHandler
-      Handler: com.zenobiapay.transfertableevent.handlers.TransferTableEventHandler::handleRequest
-      Runtime: java17
-      CodeUri: ../kotlin/lambda/transfer-event-handler/build/libs/lambda.jar
+      FunctionName: WebhookHandler
+      CodeUri: ../kotlin/lambda/webhook-handler/build/libs/lambda.jar
+      Handler: com.zenobiapay.webhook.handlers.WebhookHandler::handleRequest
+      MemorySize: 2048
       Environment:
         Variables:
-          WEBHOOK_KMS_ALIAS: !Ref WebhookSigningKeyAlias
+          ORUM_PUBLIC_CERTIFICATE: !Ref OrumPublicCertificate
+          ORUM_SLACK_WEBHOOK: !Ref OrumSlackWebhook
+          TRANSFER_TABLE_NAME: !Ref TransferTableName
       Policies:
-        - DynamoDBStreamReadPolicy:
+        - AWSLambdaVPCAccessExecutionRole
+        - DynamoDBCrudPolicy:
             TableName: !Ref TransferTableName
-            StreamName: !Select [3, !Split ["/", !Ref TransferTableStreamArn]]
+        - KMSEncryptPolicy:
+            KeyId: !Ref TransferKeyId
         - KMSDecryptPolicy:
             KeyId: !Ref TransferKeyId
-        - Statement:
-          - Sid: AllowKmsSignedWebhooks
-            Effect: Allow
-            Action:
-            - kms:GetPublicKey
-            - kms:Sign
-            Resource: !GetAtt WebhookSigningKey.Arn
+        - CloudWatchPutMetricPolicy: {}
       Events:
-        DynamoDBStreamEvent:
-          Type: DynamoDB
+        OrumWebhook:
+          Type: Api
           Properties:
-            Stream: !Ref TransferTableStreamArn
-            StartingPosition: TRIM_HORIZON
-            BatchSize: 5
+            RestApiId: !Ref ZenobiaApi
+            Path: /orum-webhook
+            Method: POST
+            Auth:
+              Authorizer: SignatureAuthorizer
 
 Outputs:
   WebEndpoint:

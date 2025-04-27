@@ -1,0 +1,25 @@
+{
+  "resource": "/list-customer-transfers",
+  "path": "/list-customer-transfers",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"continuationToken\":\"eyJzayI6IjdkNDY0OTFjLTllMGUtNDNhMC1iYzZlLTMyOTRhOTEzZjdjNCIsImdzaTNQayI6IlRSQU5TRkVSI2NfZ29vZ2xlLW9hdXRoMnwxMDE1NDQwMTA2NzI5ODA5NTkzNjAiLCJwayI6IlRSQU5TRkVSI21fYXV0aDB8NjdmMGE4NzAzY2MzNmNhNDU4ZjVjZjdiIiwiZ3NpM1NrIjoiQ1JFQVRFRCN0XzIwMjUtMDQtMTJUMDM6MzM6NDguMzcwOTEyNDAzWiNpZF9iNzBkNmYzNy1kOTc0LTQ0Y2MtYjA1NS0xNTNhMjQyNTViN2EifQ==.CKE4UUoGlAi+tA1xtHsRAB0NgCjJ+Z9MrxxDFSiuk2g=\"}",
+  "isBase64Encoded": false,
+  "requestContext": {
+    "accountId": "123456789012",
+    "resourceId": "abc123",
+    "stage": "dev",
+    "requestId": "xyz789",
+    "identity": {
+      "sourceIp": "127.0.0.1"
+    },
+    "authorizer": {
+      "principalId": "user123",
+      "role": "CUSTOMER",
+      "email": "user@example.com",
+      "sub": "google-oauth2|101544010672980959360"
+    }
+  }
+}

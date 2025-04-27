@@ -29,6 +29,8 @@ repositories {
 dependencies {
     api(project(":kotlin:shared"))
     api(project(":kotlin:shared:webhook"))
+    api(project(":kotlin:shared:events"))
+    api(project(":kotlin:shared:metrics"))
     implementation(project(":kotlin:shared:api:model"))
     implementation(project(":kotlin:shared:table"))
     implementation(project(":kotlin:shared:table:transfer"))
@@ -44,7 +46,7 @@ dependencies {
     // Injection
     api(libs.dagger)
     ksp(libs.dagger.compiler)
-    api(libs.javax.inject)
+    api(libs.jakarta.inject)
 
     // JSON
     implementation(libs.jackson.core)
@@ -56,6 +58,8 @@ dependencies {
     // AWS
     api(libs.aws.sqs)
     api(libs.aws.kms)
+    api(libs.aws.secretsmanager)
+    api(libs.aws.cloudwatch)
 
     // Testing
     testImplementation(libs.kotlin.test)

@@ -20,6 +20,13 @@ include(
     "kotlin:lambda:bank-handler",
     "kotlin:lambda:transfer-handler",
     "kotlin:lambda:user-handler",
+    "kotlin:lambda:webhook-handler",
     "kotlin:lambda:payout-handler",
     "kotlin:lambda:transfer-event-handler",
 )
+include("kotlin:shared:table:credentials")
+findProject(":kotlin:shared:table:credentials")?.name = "credentials"
+include("kotlin:shared:events")
+findProject(":kotlin:shared:events")?.name = "events"
+include("kotlin:shared:metrics")
+findProject(":kotlin:shared:metrics")?.name = "metrics"

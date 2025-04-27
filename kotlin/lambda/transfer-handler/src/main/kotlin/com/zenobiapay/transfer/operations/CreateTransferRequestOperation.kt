@@ -5,7 +5,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.generated.model.CreateTransferRequest200Response
 import com.zenobiapay.api.generated.model.CreateTransferRequestRequest
-import com.zenobiapay.api.generated.model.ListBankAccountsRequest
 import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
@@ -14,21 +13,33 @@ import com.zenobiapay.api.util.getUserRole
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.StatementItem
 import com.zenobiapay.table.user.dao.UserDao
-import javax.inject.Inject
+import com.zenobiapay.transfer.di.TRANSFER_NOTIFICATION_SECRET
+import com.zenobiapay.transfer.model.TransferRequestWebsocketSignature
+import io.github.oshai.kotlinlogging.KotlinLogging
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import jakarta.inject.Inject
+import jakarta.inject.Named
+
+private val logger = KotlinLogging.logger {}
 
 class CreateTransferRequestOperation @Inject constructor(
+    private val objectMapper: ObjectMapper,
     private val transferDao: TransferDao,
     private val userDao: UserDao,
+    @Named(TRANSFER_NOTIFICATION_SECRET) val transferNotificationSecret: String
 ): Operation<CreateTransferRequestRequest, CreateTransferRequest200Response>() {
 
     override val inputType = CreateTransferRequestRequest::class.java
 
     override fun run(request: CreateTransferRequestRequest, input: APIGatewayProxyRequestEvent, context: Context, sub: String?): CreateTransferRequest200Response {
+        val expiry = Instant.now().plus(15, ChronoUnit.MINUTES).epochSecond
         val userId = when (input.requestContext.getUserRole()) {
             UserPoolGroup.MERCHANT -> sub!!
             UserPoolGroup.MERCHANT_M2M -> input.requestContext.getSubForM2M()
             UserPoolGroup.CUSTOMER, UserPoolGroup.UNKNOWN -> throw InvalidRequestException("Invalid role for transfer request")
         }
+        logger.info { "Using userId = $userId" }
 
         val requestId = input.requestContext.requestId
         val merchantName = userDao.getUserItem(userId!!)?.data?.merchantData?.displayName
@@ -40,12 +51,18 @@ class CreateTransferRequestOperation @Inject constructor(
             merchantName,
             request.statementItems?.map {
                 StatementItem.fromApiRequestStatementItem(it)
-            } ?: listOf()
+            } ?: listOf(),
+            expiry,
         )
 
         return CreateTransferRequest200Response()
             .transferRequestId(requestId)
             .merchantId(userId)
+            .expiry(expiry.toInt())
+            .signature(
+                TransferRequestWebsocketSignature(requestId, userId, expiry)
+                    .toSignedHmacString(objectMapper, transferNotificationSecret)
+            )
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {

@@ -1,6 +1,7 @@
 package com.zenobiapay.orum
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.orum.model.OrumCloseExternalAccountResponse
 import com.zenobiapay.orum.model.OrumCreateBusinessRequest
 import com.zenobiapay.orum.model.OrumCreateBusinessResponse
 import com.zenobiapay.orum.model.OrumCreateExternalAccountRequest
@@ -78,6 +79,20 @@ class OrumWrapper(
         }
     }
 
+    fun closeExternalAccount(id: String): OrumCloseExternalAccountResponse {
+        val accessToken = getAccessToken(orumCredentials)
+        val request = Request.Builder()
+            .addOrumHeaders(accessToken.accessToken)
+            .url("https://api-sandbox.orum.io/deliver/external/accounts/$id")
+            .delete()
+            .build()
+
+        return getResponseOrThrowException(OrumCloseExternalAccountResponse::class.java) {
+            client.newCall(request).execute()
+        }
+
+    }
+
     fun createTransfer(createTransferRequest: OrumCreateTransferRequest): OrumCreateTransferResponse {
         val accessToken = getAccessToken(orumCredentials)
         val body = objectMapper.writeValueAsString(
@@ -109,8 +124,8 @@ class OrumWrapper(
             successCondition = { response ->
                 response.transfer.status.let {
                     it == OrumTransferStatus.PENDING ||
-                            it == OrumTransferStatus.SETTLED ||
-                            it == OrumTransferStatus.COMPLETED
+                    it == OrumTransferStatus.SETTLED ||
+                    it == OrumTransferStatus.COMPLETED
                 }
             },
             failCondition = { response -> response.transfer.status == OrumTransferStatus.FAILED }

@@ -25,7 +25,11 @@ parameter_overrides = [
     "PlaidSecretsArn=arn:aws:secretsmanager:us-east-1:816069139448:secret:plaid/secrets-9KwgUH",
     "OrumSecretsArn=arn:aws:secretsmanager:us-east-1:816069139448:secret:orum/secrets-JI6xIb",
     "Auth0SecretsArn=arn:aws:secretsmanager:us-east-1:816069139448:secret:auth0/secrets-Zc3U8o",
-    "Auth0Domain=dev-iols5y7cp32hlyr1.us.auth0.com"
+    "Auth0Domain=zenobia-beta.us.auth0.com",
+    "OrumPublicCertificate=LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUEwWkZhcE5GRWlwNG9ZRnA3UVptcQpIYlhyNTJ6Y0tGZWl0UkoyN2JnMkxDejNlajkwU2lIekgycHdaVm9LN3dyU2J3K0c4UWVsaWlpMjZqM3JzaUtyCllmRTBrSUc5TURiRkZDNm9GYnJyaGI1WEVFNmJYbVY5eEtBYmtrSHF0OGtOVHNLb0E5UjBWcExiZDJwTERxMGQKK3FKd1JtWS9xeUVtNno3b1U2WkUzcHF1Z3F1R3I5a2hGMC9tajdXWU9pQUIyQkNSNERqemxGdWdBVjI4Mk1tRwp6b1ZwdGtpVDRjRi9LRTZ5RVBaenI3S3NlMFBKeXozOWtTa0dxbnBpSmsrQjZmZTZtRmVYTlo3M1l3SnJDU281CjV2R05RR2ZmTmZ4OWllbjA3QWU1RnJlZmNMcFB5R3BVcHd6ZlNranNnT21RbHVKTHR1N0c1Z1JDOTNIQnBmUTkKYndJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==",
+    "OrumIpAddresses=34.232.246.7",
+    "OrumSlackWebhook=https://google.com",
+    "WebsocketServiceEndpoint=https://transfer-status.zenobiapay.com/update"
 ]
 
 [default.package.parameters]

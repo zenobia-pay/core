@@ -13,9 +13,10 @@ import com.zenobiapay.transfer.operations.FulfillTransferOperation
 import com.zenobiapay.transfer.operations.GetCustomerTransferOperation
 import com.zenobiapay.transfer.operations.GetMerchantTransferOperation
 import com.zenobiapay.transfer.operations.ListCustomerTransfersOperation
+import com.zenobiapay.transfer.operations.ListMerchantPayoutsOperation
 import com.zenobiapay.transfer.operations.ListMerchantTransfersOperation
 import io.github.oshai.kotlinlogging.KotlinLogging
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
@@ -44,6 +45,9 @@ class TransferHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayPr
     @Inject
     lateinit var listMerchantTransfersOperation: ListMerchantTransfersOperation
 
+    @Inject
+    lateinit var listMerchantPayoutsOperation: ListMerchantPayoutsOperation
+
     init {
         DaggerAppComponent.create().inject(this)
     }
@@ -57,6 +61,7 @@ class TransferHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayPr
             "/get-merchant-transfer" -> getMerchantTransferOperation
             "/list-customer-transfers" -> listCustomerTransfersOperation
             "/list-merchant-transfers" -> listMerchantTransfersOperation
+            "/list-merchant-payouts" -> listMerchantPayoutsOperation
             else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
         }
         return responseHandler.returnApiGwResponse(operation, input, context!!)

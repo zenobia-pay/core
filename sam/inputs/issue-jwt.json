@@ -1,0 +1,25 @@
+{
+  "resource": "/issue-jwt",
+  "path": "/issue-jwt",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"refreshToken\":\"Zooofa4VMUUYfNJJgd2e35cLYmJw6zqKD3hYoXNwx0LkEGjy6gs6NcBkb_3kCzVYX2xpl7Cjqw5kHCxJzIZYXA\",\"sub\":\"faa9c493-6ef3-4f3c-9346-409ec371bd3b\"}",
+  "isBase64Encoded": false,
+  "requestContext": {
+    "accountId": "123456789012",
+    "resourceId": "abc123",
+    "stage": "dev",
+    "requestId": "requestId1",
+    "identity": {
+      "sourceIp": "127.0.0.1"
+    },
+    "authorizer": {
+      "principalId": "user123",
+      "sub": "auth0|67f0a8703cc36ca458f5cf7b",
+      "email": "user@example.com",
+      "role": "UNKNOWN"
+    }
+  }
+}

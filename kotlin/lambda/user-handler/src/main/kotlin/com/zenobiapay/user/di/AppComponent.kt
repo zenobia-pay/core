@@ -6,10 +6,10 @@ import com.zenobiapay.plaid.di.PlaidModule
 import com.zenobiapay.table.di.TableModule
 import com.zenobiapay.user.handlers.UserHandler
 import dagger.Component
-import javax.inject.Singleton
+import jakarta.inject.Singleton
 
 @Singleton
-@Component(modules = [SharedModule::class, TableModule::class, OrumModule::class, Auth0Module::class, PlaidModule::class])
+@Component(modules = [SharedModule::class, TableModule::class, OrumModule::class, UserModule::class, PlaidModule::class])
 interface AppComponent {
     fun inject(handler: UserHandler)
 }

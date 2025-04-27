@@ -1,53 +1,60 @@
 package com.zenobiapay.plaid
 
 import com.plaid.client.model.AccountBase
+import com.plaid.client.model.AccountsBalanceGetRequest
 import com.plaid.client.model.AccountsGetRequest
 import com.plaid.client.model.AccountsGetResponse
 import com.plaid.client.model.AuthGetRequest
 import com.plaid.client.model.AuthGetResponse
 import com.plaid.client.model.CountryCode
-import com.plaid.client.model.IdentityVerification
+import com.plaid.client.model.DepositoryAccountSubtype
+import com.plaid.client.model.DepositoryFilter
+import com.plaid.client.model.IdentityGetRequest
+import com.plaid.client.model.IdentityGetResponse
 import com.plaid.client.model.IdentityVerificationGetRequest
 import com.plaid.client.model.IdentityVerificationGetResponse
 import com.plaid.client.model.ItemGetRequest
 import com.plaid.client.model.ItemGetResponse
 import com.plaid.client.model.ItemPublicTokenExchangeRequest
 import com.plaid.client.model.ItemPublicTokenExchangeResponse
+import com.plaid.client.model.ItemRemoveRequest
+import com.plaid.client.model.ItemRemoveResponse
+import com.plaid.client.model.LinkTokenAccountFilters
 import com.plaid.client.model.LinkTokenCreateRequest
-import com.plaid.client.model.LinkTokenCreateRequestIdentityVerification
 import com.plaid.client.model.LinkTokenCreateRequestUser
 import com.plaid.client.model.LinkTokenCreateResponse
 import com.plaid.client.model.NumbersACH
 import com.plaid.client.model.Products
+import com.plaid.client.model.SignalEvaluateRequest
 import com.plaid.client.request.PlaidApi
+import com.zenobiapay.plaid.model.SignalResult
 import io.github.oshai.kotlinlogging.KotlinLogging
 import retrofit2.Response
-import javax.inject.Inject
+import jakarta.inject.Inject
+import kotlin.math.floor
 
 private val logger = KotlinLogging.logger {}
 
-class PlaidException(message: String) : Exception(message)
+open class PlaidException(message: String) : Exception(message)
+class PlaidBankAccountNotFoundException(): PlaidException("Could not find bank account")
 
 class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
-    fun createLinkToken(userId: String, product: Products): LinkTokenCreateResponse {
+    fun createLinkToken(userId: String, product: List<Products>): LinkTokenCreateResponse {
         val user = LinkTokenCreateRequestUser()
             .clientUserId(userId)
 
+        val accountFilters = LinkTokenAccountFilters().depository(
+            DepositoryFilter().addAccountSubtypesItem(DepositoryAccountSubtype.CHECKING)
+        )
         // TODO: I think redirectUri should ONLY be passed if the request is from IOS
         var request = LinkTokenCreateRequest()
             .user(user)
             .clientName("Zenobia")
-            .products(listOf(product))
+            .products(product)
             .countryCodes((listOf(CountryCode.US)))
             .language("en")
+            .accountFilters(accountFilters)
             .redirectUri("https://zenobiapay.com/plaid")
-
-        if (product == Products.IDENTITY_VERIFICATION) {
-            request = request.identityVerification(
-                LinkTokenCreateRequestIdentityVerification()
-                    .templateId("idvtmp_aMnDHwUDRwYP2s") // TODO: make env var
-            )
-        }
 
         return getResponseOrThrowException("CreateLinkToken") {
             plaidApi.linkTokenCreate(request).execute()
@@ -62,11 +69,26 @@ class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
         }
     }
 
+    fun getIdentity(accessToken: String): IdentityGetResponse {
+        val request = IdentityGetRequest().accessToken(accessToken)
+        return getResponseOrThrowException("IdentityGet") {
+            plaidApi.identityGet(request).execute()
+        }
+    }
+
     fun getItem(accessToken: String): ItemGetResponse {
         val request = ItemGetRequest()
             .accessToken(accessToken)
         return getResponseOrThrowException("GetItem") {
             plaidApi.itemGet(request).execute()
+        }
+    }
+
+    fun removeItem(accessToken: String): ItemRemoveResponse {
+        val request = ItemRemoveRequest()
+            .accessToken(accessToken)
+        return getResponseOrThrowException("RemoveItem") {
+            plaidApi.itemRemove(request).execute()
         }
     }
 
@@ -105,6 +127,37 @@ class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
         return getResponseOrThrowException("GetIdentityVerification") {
             plaidApi.identityVerificationGet(request).execute()
         }
+    }
+
+    fun getAvailableBalance(accessToken: String, accountId: String): Int {
+        val request = AccountsBalanceGetRequest()
+            .accessToken(accessToken);
+
+        val response = getResponseOrThrowException("AccountsBalanceGet") {
+            plaidApi.accountsBalanceGet(request).execute()
+        }
+        val matchingAccount = response.accounts.firstOrNull {
+            it.accountId == accountId
+        } ?: throw PlaidBankAccountNotFoundException()
+
+        val balance = matchingAccount.balances.available ?: matchingAccount.balances.current!!
+        return floor(balance * 100).toInt()
+    }
+
+    fun getRiskDecision(accessToken: String, accountId: String, requestId: String, amount: Int, userId: String): SignalResult {
+        val request = SignalEvaluateRequest()
+            .accessToken(accessToken)
+            .accountId(accountId)
+            .clientTransactionId(requestId)
+            .amount(amount / 100.0)
+            .clientUserId(userId)
+            .defaultPaymentMethod("SAME_DAY_ACH")
+            .rulesetKey("zenobia-risk-rules")
+
+        val response = getResponseOrThrowException("SignalEvaluateRequest") {
+            plaidApi.signalEvaluate(request).execute()
+        }
+        return SignalResult.getResult(response.ruleset?.triggeredRuleDetails?.result)
     }
 
     private fun <T> getResponseOrThrowException(operationName: String, block: () -> Response<T>): T {

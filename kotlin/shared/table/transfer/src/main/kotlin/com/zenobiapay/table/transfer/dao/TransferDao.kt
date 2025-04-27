@@ -12,8 +12,10 @@ import com.zenobiapay.table.transfer.model.TransferData
 import com.zenobiapay.table.transfer.model.TransferItem
 import com.zenobiapay.table.transfer.model.TransferItem.Companion.GSI_1
 import com.zenobiapay.table.transfer.model.TransferItem.Companion.GSI_2
-import com.zenobiapay.table.transfer.model.TransferStatus
 import com.zenobiapay.table.transfer.di.TRANSFER_TABLE_NAME
+import com.zenobiapay.table.transfer.model.BankAccount
+import com.zenobiapay.table.transfer.model.InboundTransferStatus
+import com.zenobiapay.table.transfer.model.OutboundTransferStatus
 import com.zenobiapay.table.transfer.model.Signature
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
@@ -27,10 +29,12 @@ import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest
 import java.time.Instant
 import java.time.LocalDate
-import javax.inject.Inject
-import javax.inject.Named
+import jakarta.inject.Inject
+import jakarta.inject.Named
 
 private val logger = KotlinLogging.logger {}
+
+const val PAYOUT_PREFIX = "PAYOUT"
 
 class TransferDao @Inject constructor(
     private val client: DynamoDbEnhancedClient,
@@ -42,9 +46,16 @@ class TransferDao @Inject constructor(
     private val transferTable = client.table(transferTableName, TableSchema.fromBean(TransferItem::class.java))
     private val payoutTable = client.table(transferTableName, TableSchema.fromBean(PayoutItem::class.java))
 
-    fun putTransferRequest(merchantId: String, requestId: String, amountInCents: Int, merchantName: String, statementItems: List<StatementItem>) {
-        val pk = TransferItem.generatePk(merchantId)
-        val sk = TransferItem.generateSk(requestId)
+    fun putTransferRequest(
+        merchantId: String,
+        requestId: String,
+        amountInCents: Int,
+        merchantName: String,
+        statementItems: List<StatementItem>,
+        expiry: Long
+    ) {
+        val pk = TransferItem.generatePk(requestId)
+        val sk = TransferItem.generateSk()
         val gsi1Pk = TransferItem.generateGsi1Pk(merchantId)
         val gsi1Sk = TransferItem.generateGsi1Sk(requestId, Instant.now())
         val creationTime = Instant.now()
@@ -62,43 +73,62 @@ class TransferDao @Inject constructor(
                         name = merchantName
                     ),
                     creationTime = creationTime.toString()
-                )
+                ),
+                ttl = expiry
             )
         )
     }
 
-    fun updateTransferRequestInFlight(
-        transferItem: TransferItem
+    fun updateTransferInboundStatus(
+        transferItem: TransferItem,
+        inboundTransferStatus: InboundTransferStatus,
     ): TransferItem {
         val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
             .item(transferItem.copy(
-                status = TransferStatus.IN_FLIGHT,
-            ))
+                inboundStatus = inboundTransferStatus,
+                ttl = null,
+            ).also { "Updated transfer item: $it"})
             .build()
 
         return transferTable.updateItem(request)
     }
 
-    fun updateTransferRequestSuccess(
+    fun updateTransferRequestLocked(
+        transferItem: TransferItem
+    ): TransferItem {
+        val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
+            .item(transferItem.copy(
+                outboundStatus = OutboundTransferStatus.FULFILL_LOCKED,
+                ttl = null,
+            ).also { "Updated transfer item: $it"})
+            .build()
+
+        return transferTable.updateItem(request)
+    }
+
+    fun updateTransferRequestFulfilled(
+        preApproved: Boolean,
         transferItem: TransferItem,
         fulfillRequestId: String,
         customerIdentity: PaymentParticipantIdentity,
+        customerBankAccount: BankAccount,
         timestamp: Instant,
         webhookUrl: String?,
         signature: Signature,
     ) {
         val updatedItem = transferItem.copy(
-            status = TransferStatus.COMPLETED,
+            inboundStatus = InboundTransferStatus.IN_FLIGHT,
+            outboundStatus = if (preApproved) OutboundTransferStatus.IN_FLIGHT_APPROVED else OutboundTransferStatus.IN_FLIGHT_WAITING,
             transferFulfillId = fulfillRequestId,
             data = transferItem.data?.copy(
                 customer = customerIdentity,
                 webhookUrl = webhookUrl,
                 signature = signature,
+                customerBankAccount = customerBankAccount,
             ),
             gsi2Pk = TransferItem.generateGsi2Pk(customerIdentity.id),
-            gsi2Sk = TransferItem.generateGsi2Sk(fulfillRequestId),
-            gsi3Pk = TransferItem.generateGsi3Pk(customerIdentity.id),
-            gsi3Sk = TransferItem.generateGsi3Sk(fulfillRequestId, timestamp)
+            gsi2Sk = TransferItem.generateGsi2Sk(fulfillRequestId, timestamp),
+            ttl = null,
         )
 
         val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
@@ -108,25 +138,47 @@ class TransferDao @Inject constructor(
         transferTable.updateItem(request)
     }
 
-    fun getCustomerTransfer(customerId: String, fulfillRequestId: String): TransferItem? {
-        val pk = TransferItem.generateGsi2Pk(customerId)
-        val sk = TransferItem.generateGsi2Sk(fulfillRequestId)
+    fun updateTransferPayoutLocked(
+        transferItem: TransferItem
+    ) {
+        val updatedItem = transferItem.copy(
+            outboundStatus = OutboundTransferStatus.PAYOUT_LOCKED,
+            ttl = null,
+        )
 
-        val queryConditional = QueryConditional.keyEqualTo {
-            it.partitionValue(pk)
-                .sortValue(sk)
-        }
+        val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
+            .item(updatedItem)
+            .build()
 
-        return transferTable.index(GSI_2).query(
-            QueryEnhancedRequest.builder()
-                .queryConditional(queryConditional)
-                .build()
-        ).first().items().firstOrNull()
+        transferTable.updateItem(request)
     }
 
-    fun getMerchantTransfer(merchantId: String, transferRequestId: String): TransferItem? {
-        val pk = TransferItem.generatePk(merchantId)
-        val sk = TransferItem.generateSk(transferRequestId)
+    fun updateTransferPaidOut(
+        transferItem: TransferItem,
+        fee: Int?,
+        orumPayoutId: String,
+        version: Int,
+    ) {
+        val updatedItem = transferItem.copy(
+            outboundStatus = OutboundTransferStatus.COMPLETED,
+            data = transferItem.data?.copy(
+                fee = fee,
+                orumPayoutId = orumPayoutId,
+            ),
+            version = version,
+            ttl = null,
+        )
+
+        val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
+            .item(updatedItem)
+            .build()
+
+        transferTable.updateItem(request)
+    }
+
+    fun getTransfer(transferRequestId: String): TransferItem? {
+        val pk = TransferItem.generatePk(transferRequestId)
+        val sk = TransferItem.generateSk()
         return try {
             transferTable.getItem {
                 it.key {
@@ -134,13 +186,14 @@ class TransferDao @Inject constructor(
                 }
             }
         } catch (e: ResourceNotFoundException) {
+            logger.error(e) { "Got ddb error during get transfer" }
             return null
         }
     }
 
-    fun listCustomerTransfers(customerId: String, continuationToken: String?): Pair<List<TransferItem>, ContinuationToken?> {
+    fun listCustomerTransfers(customerId: String, continuationToken: String?, paginationSecret: String): Pair<List<TransferItem>, ContinuationToken?> {
         val queryConditional = QueryConditional.keyEqualTo {
-            it.partitionValue(TransferItem.generateGsi3Pk(customerId))
+            it.partitionValue(TransferItem.generateGsi2Pk(customerId))
         }
         val queryRequestBuilder = QueryEnhancedRequest.builder()
             .queryConditional(queryConditional)
@@ -149,11 +202,11 @@ class TransferDao @Inject constructor(
 
         if (continuationToken != null) {
             logger.info { "Using continuation token $continuationToken" }
-            val token = ContinuationToken.decodeToken(continuationToken, objectMapper)
+            val token = ContinuationToken.decodeToken(continuationToken, objectMapper, paginationSecret)
             queryRequestBuilder.exclusiveStartKey(token.key)
         }
 
-        val page = transferTable.index(TransferItem.GSI_3)
+        val page = transferTable.index(GSI_2)
             .query(queryRequestBuilder.build())
             .iterator()
             .asSequence()
@@ -168,7 +221,7 @@ class TransferDao @Inject constructor(
         }
     }
 
-    fun listMerchantTransfers(merchantId: String, continuationToken: String?): Pair<List<TransferItem>, ContinuationToken?> {
+    fun listMerchantTransfers(merchantId: String, continuationToken: String?, paginationSecret: String): Pair<List<TransferItem>, ContinuationToken?> {
         logger.info { "Got table name ${transferTable.tableName()}" }
         val queryConditional = QueryConditional.keyEqualTo {
             it.partitionValue(TransferItem.generateGsi1Pk(merchantId))
@@ -180,7 +233,7 @@ class TransferDao @Inject constructor(
 
         if (continuationToken != null) {
             logger.info { "Using continuation token $continuationToken" }
-            val token = ContinuationToken.decodeToken(continuationToken, objectMapper)
+            val token = ContinuationToken.decodeToken(continuationToken, objectMapper, paginationSecret)
             queryRequestBuilder.exclusiveStartKey(token.key)
         }
 
@@ -199,62 +252,34 @@ class TransferDao @Inject constructor(
         }
     }
 
-    fun addPayoutItemAmount(merchantId: String, amount: Int, date: LocalDate) {
-        val pk = PayoutItem.generatePk(merchantId)
-        val sk = PayoutItem.generateSk(date)
+    fun listMerchantPayouts(merchantId: String, continuationToken: String?, paginationSecret: String): Pair<List<PayoutItem>, ContinuationToken?> {
+        logger.info { "Got table name ${transferTable.tableName()}" }
+        val queryConditional = QueryConditional.keyEqualTo {
+            it.partitionValue(PayoutItem.generatePk(merchantId))
+        }
 
-        val updateRequest = UpdateItemRequest.builder()
-            .tableName(transferTableName)
-            .key(mapOf("pk" to AttributeValue.builder().s(pk).build(), "sk" to AttributeValue.builder().s(sk).build()))
-            .updateExpression("SET amount = if_not_exists(amount, :0) + :inc")
-            .expressionAttributeValues(
-                mapOf(
-                    ":0" to AttributeValue.builder().n("0").build(),
-                    ":inc" to AttributeValue.builder().n(amount.toString()).build()
-                )
-            ).build()
-        logger.info { "Calling payout item ddb update using request $updateRequest" }
-        lowLevelClient.updateItem(updateRequest)
-    }
+        val queryRequestBuilder = QueryEnhancedRequest.builder()
+            .queryConditional(queryConditional)
+            .scanIndexForward(false)
+            .limit(MAX_LIST_ITEMS)
 
-    fun updatePayoutMetadata(
-        item: PayoutItem,
-        merchantPaid: Boolean = false,
-        merchantPayoutId: PayoutId? = null,
-        merchantAmount: Int? = null,
-        feePaid: Boolean = false,
-        feeAmount: Int? = null,
-        feePayoutId: PayoutId? = null
-    ) {
-        val updatedItem = item.copy(
-            data = PayoutData(
-                merchantPaid = merchantPaid,
-                merchantAmount = merchantAmount,
-                merchantPayoutId = merchantPayoutId,
-                feePaid = feePaid,
-                feeAmount = feeAmount,
-                feePayoutId = feePayoutId
-            )
-        )
-        payoutTable.updateItem(updatedItem)
-        logger.info { "Updated payout metadata with item $item" }
-    }
+        if (continuationToken != null) {
+            logger.info { "Using continuation token $continuationToken" }
+            val token = ContinuationToken.decodeToken(continuationToken, objectMapper, paginationSecret)
+            queryRequestBuilder.exclusiveStartKey(token.key)
+        }
 
-    fun getPayoutItem(merchantId: String, date: String): PayoutItem? {
-        val pk = PayoutItem.generatePk(merchantId)
-        val sk = PayoutItem.generateSk(date)
-        return try {
-            payoutTable.getItem {
-                it.key {
-                    it.partitionValue(pk)
-                        .sortValue(sk)
-                }
-            }.also {
-                logger.info { "Found payout item $it" }
-            }
-        } catch (e: ResourceNotFoundException) {
-            logger.info { "Did not find payout item for merchant $merchantId, date $date" }
-            null
+        val page = payoutTable.query(queryRequestBuilder.build())
+            .iterator()
+            .asSequence()
+            .firstOrNull()
+
+        return if (page == null) {
+            listOf<PayoutItem>() to null
+        } else {
+            page.items() to page.lastEvaluatedKey()?.let { ContinuationToken(page.lastEvaluatedKey()) }
+        }.also {
+            logger.info { "Got ${it.first.size} items and continuation token ${it.second}" }
         }
     }
 }

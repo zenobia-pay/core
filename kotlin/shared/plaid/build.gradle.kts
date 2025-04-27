@@ -32,7 +32,7 @@ dependencies {
     ksp(libs.dagger.compiler)
 
     // deserialization
-    api(libs.javax.inject)
+    api(libs.jakarta.inject)
     runtimeOnly(libs.jackson.core)
     testImplementation(libs.jackson.kotlin)
     api(libs.jackson.databind)

@@ -27,6 +27,7 @@ repositories {
 
 dependencies {
     implementation(project(":kotlin:shared:api:model"))
+    implementation(project(":kotlin:shared:metrics"))
     api(libs.kotlin.stdlib)
     api(libs.lambda.core)
     api(libs.lambda.events)

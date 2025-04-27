@@ -11,7 +11,7 @@ import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.user.util.Auth0Wrapper
 import com.zenobiapay.user.util.Auth0Wrapper.Companion.ZENOBIA_AUDIENCE
 import io.github.oshai.kotlinlogging.KotlinLogging
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
@@ -27,7 +27,7 @@ class CreateM2MCredentialsOperation @Inject constructor(
 
     override fun run(request: NoApiBody, input: APIGatewayProxyRequestEvent, context: Context, userId: String?): CreateM2mCredentials200Response {
         userId!!
-        val (previouslyCreatedCredentials, _) = userDao.listM2MCredentials(userId, null)
+        val (previouslyCreatedCredentials, _) = userDao.listM2MCredentials(userId, null, null)
         if (previouslyCreatedCredentials.size >= MAX_M2M_CREDENTIALS) {
             logger.info { "Exceeded service quota for m2m credentials" }
             throw ServiceQuotaExceededException()

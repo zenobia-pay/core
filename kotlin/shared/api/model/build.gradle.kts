@@ -40,7 +40,6 @@ dependencies {
     // Injection
     api(libs.dagger)
     ksp(libs.dagger.compiler)
-//    api(libs.jakarta.inject)
     api(libs.jakarta.validation)
     api(libs.jakarta.annotation)
 }

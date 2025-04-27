@@ -9,7 +9,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortK
 data class BankAccountItem(
     @get:DynamoDbPartitionKey var pk: String = "",
     @get:DynamoDbSortKey var sk: String = "",
-    var publicToken: String = "",
+    var accessToken: String = "",
     @get:DynamoDbAttribute("data")
     var data: BankData = BankData()
 ) {
@@ -23,6 +23,10 @@ data class BankAccountItem(
         }
 
         fun generateSk(accountId: String) = "ID#$accountId"
+
+        fun generateDeletedPk(userId: String, deviceId: String?): String {
+            return "DELETED#${generatePk(userId, deviceId)}"
+        }
     }
 }
 
@@ -30,6 +34,7 @@ data class BankAccountItem(
 data class BankData(
     var bankAccountId: String = "",
     var bankAccountName: String = "",
+    var lastFourDigits: String = "",
     var bankAccountType: String = "",
     var orumId: String = "",
     var plaidItemId: String = "",

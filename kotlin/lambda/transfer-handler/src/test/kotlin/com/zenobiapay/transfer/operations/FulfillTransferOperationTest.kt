@@ -3,14 +3,17 @@ package com.zenobiapay.transfer.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.zenobia.metric.MetricHelper
 import com.zenobiapay.api.model.exception.InvalidSignatureException
 import com.zenobiapay.api.model.exception.ResourceNotFoundException
 import com.zenobiapay.api.generated.model.CertificateType
 import com.zenobiapay.api.generated.model.FulfillTransferRequest
 import com.zenobiapay.api.generated.model.FulfillTransferRequestSignature
 import com.zenobiapay.api.generated.model.SignatureType
+import com.zenobiapay.api.model.exception.TransferStatusException
 import com.zenobiapay.cryptography.util.isSignatureValid
 import com.zenobiapay.orum.OrumWrapper
+import com.zenobiapay.plaid.PlaidWrapper
 import com.zenobiapay.table.bank.dao.BankDao
 import com.zenobiapay.table.bank.model.BankAccountItem
 import com.zenobiapay.table.bank.model.BankData
@@ -20,7 +23,8 @@ import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
 import com.zenobiapay.table.transfer.model.TransferData
 import com.zenobiapay.table.transfer.model.TransferItem
-import com.zenobiapay.table.transfer.model.TransferStatus
+import com.zenobiapay.table.transfer.model.InboundTransferStatus
+import com.zenobiapay.table.transfer.model.OutboundTransferStatus
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.table.user.model.MerchantData
 import com.zenobiapay.table.user.model.UserItem
@@ -28,17 +32,19 @@ import com.zenobiapay.table.user.model.UserItemData
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 class FulfillTransferOperationTest {
     private val orumWrapper = mockk<OrumWrapper>()
+    private val plaidWrapper = mockk<PlaidWrapper>()
+    private val balanceFactor = 2.0
     private val transferDao = mockk<TransferDao>()
     private val bankDao = mockk<BankDao>()
     private val userDao = mockk<UserDao>()
     private val objectMapper = jacksonObjectMapper()
     private val context = mockk<Context>()
+    private val metricHelper = mockk<MetricHelper>(relaxed = true)
 
     companion object {
         private val TRANSFER_REQUEST_ID = "transferRequestId"
@@ -55,10 +61,10 @@ class FulfillTransferOperationTest {
     @Test
     fun `test validate request signature returns failure`() {
         every {
-            transferDao.getMerchantTransfer(MERCHANT_ID, TRANSFER_REQUEST_ID)
-        } returns createTransferItem(100, TransferStatus.NOT_STARTED)
+            transferDao.getTransfer(TRANSFER_REQUEST_ID)
+        } returns createTransferItem(100, InboundTransferStatus.NOT_STARTED, OutboundTransferStatus.NOT_STARTED)
         every {
-            bankDao.getBankAccount(USER_ID, DEVICE_ID, BANK_ACCOUNT_ID)
+            bankDao.getBankAccount(USER_ID, BANK_ACCOUNT_ID, DEVICE_ID)
         } returns createBankAccountItem(BankPermissions.SEND_ONLY, DeviceCertificate(CertificateType.EC.value, CERT_VALUE))
         every {
             userDao.getUserItem(MERCHANT_ID)
@@ -69,10 +75,13 @@ class FulfillTransferOperationTest {
         } returns false
         val operation = FulfillTransferOperation(
             orumWrapper,
+            plaidWrapper,
             transferDao,
             bankDao,
             userDao,
             objectMapper,
+            balanceFactor,
+            metricHelper,
         )
         assertThrows<InvalidSignatureException> {
             operation.run(createRequest(), createMockGatewayEvent(), context, USER_ID)
@@ -82,16 +91,39 @@ class FulfillTransferOperationTest {
     @Test
     fun `throws error on merchant transfer not existing`() {
         every {
-            transferDao.getMerchantTransfer(MERCHANT_ID, TRANSFER_REQUEST_ID)
+            transferDao.getTransfer(TRANSFER_REQUEST_ID)
         } returns null
         val operation = FulfillTransferOperation(
             orumWrapper,
+            plaidWrapper,
             transferDao,
             bankDao,
             userDao,
             objectMapper,
+            balanceFactor,
+            metricHelper,
         )
         assertThrows<ResourceNotFoundException> {
+            operation.run(createRequest(), createMockGatewayEvent(), context, USER_ID)
+        }
+    }
+
+    @Test
+    fun `throws error on merchant transfer in different status`() {
+        every {
+            transferDao.getTransfer(TRANSFER_REQUEST_ID)
+        } returns createTransferItem(100, InboundTransferStatus.IN_FLIGHT, OutboundTransferStatus.FULFILL_LOCKED)
+        val operation = FulfillTransferOperation(
+            orumWrapper,
+            plaidWrapper,
+            transferDao,
+            bankDao,
+            userDao,
+            objectMapper,
+            balanceFactor,
+            metricHelper,
+        )
+        assertThrows<TransferStatusException> {
             operation.run(createRequest(), createMockGatewayEvent(), context, USER_ID)
         }
     }
@@ -104,7 +136,6 @@ class FulfillTransferOperationTest {
     private fun createRequest(): FulfillTransferRequest {
         return FulfillTransferRequest()
             .transferRequestId(TRANSFER_REQUEST_ID)
-            .merchantId(MERCHANT_ID)
             .bankAccountId(BANK_ACCOUNT_ID)
             .deviceId(DEVICE_ID)
             .signature(FulfillTransferRequestSignature()
@@ -114,13 +145,15 @@ class FulfillTransferOperationTest {
 
     private fun createTransferItem(
         amount: Int,
-        status: TransferStatus
+        inboundStatus: InboundTransferStatus,
+        outboundStatus: OutboundTransferStatus,
     ): TransferItem {
         return TransferItem(
             amount = amount,
-            status = status,
+            inboundStatus = inboundStatus,
+            outboundStatus = outboundStatus,
             data = TransferData(
-                merchant = PaymentParticipantIdentity("id", "name")
+                merchant = PaymentParticipantIdentity(MERCHANT_ID, "name")
             )
         )
     }

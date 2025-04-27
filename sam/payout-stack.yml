@@ -11,6 +11,8 @@ Globals:
       - x86_64
 
 Parameters:
+  TransferTableStreamArn:
+    Type: String
   TransferTableName:
     Type: String
   UserTableName:
@@ -21,38 +23,121 @@ Parameters:
     Type: String
   OrumSecretsArn:
     Type: String
+  WebsocketServiceEndpoint:
+    Type: String
+    Description: Websocket endpoint to send transfer updates to.
 
 Resources:
-  PayoutQueue:
-    Type: AWS::SQS::Queue
+  TransferStreamPipe:
+    Type: AWS::Pipes::Pipe
     Properties:
-      QueueName: PayoutQueue
+      Name: TransferStreamToBusPipe
+      RoleArn: !GetAtt PipeExecutionRole.Arn
+      Source: !Ref TransferTableStreamArn
+      SourceParameters:
+        DynamoDBStreamParameters:
+          StartingPosition: LATEST
+      Target: !GetAtt TransferEventBus.Arn
+      TargetParameters:
+        EventBridgeEventBusParameters:
+          DetailType: "ddb.record"
+          Source: "transfer.dynamodb"
 
-  PayoutDispatcherFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      SkipBuild: true
+  PipeExecutionRole:
+    Type: AWS::IAM::Role
     Properties:
-      FunctionName: PayoutDispatcher
-      CodeUri: ../kotlin/lambda/payout-handler/build/libs/lambda.jar
-      Handler: com.zenobiapay.payout.handlers.PayoutDispatcher::handleRequest
-      Environment:
-        Variables:
-           PAYOUT_QUEUE_URL: !Ref PayoutQueue
-           USER_TABLE_NAME: !Ref UserTableName
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: pipes.amazonaws.com
+            Action: sts:AssumeRole
       Policies:
-        - SQSSendMessagePolicy:
-            QueueName: !GetAtt PayoutQueue.QueueName
-        - DynamoDBReadPolicy:
-            TableName:
-              Ref: UserTableName
-        - KMSDecryptPolicy:
-            KeyId: !Ref UserKeyId
-      Events: 
-        DailyTrigger:
-          Type: Schedule
-          Properties:
-            Schedule: "cron(0 16 * * ? *)"  # Trigger at 4 PM UTC daily (8 AM PST)
+        - PolicyName: AllowPipeToSendToEventBus
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:DescribeStream
+                  - dynamodb:GetRecords
+                  - dynamodb:GetShardIterator
+                  - dynamodb:ListStreams
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource: !GetAtt TransferEventBus.Arn
+        - PolicyName: AllowDecryptTransferKeyId
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${TransferKeyId}
+
+  TransferEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: transfer-events
+
+  ImmediatePayoutRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: TransferTableRule
+      EventBusName: !Ref TransferEventBus
+      EventPattern: 
+        source:
+          - transfer.dynamodb
+        detail-type:
+          - "ddb.record"
+        detail:
+          dynamodb:
+            NewImage:
+              outboundStatus:
+                S:
+                  - IN_FLIGHT_APPROVED
+      Targets:
+        - Arn: !GetAtt PayoutProcessorFunction.Arn
+          Id: TransferLambdaTarget
+
+  ImmediatePayoutLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt PayoutProcessorFunction.Arn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ImmediatePayoutRule.Arn
+
+  DelayedPayoutRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: DelayedPayoutTransferTableRule
+      EventBusName: !Ref TransferEventBus
+      EventPattern:
+        source:
+          - transfer.dynamodb
+        detail-type:
+          - "ddb.record"
+        detail:
+          dynamodb:
+            NewImage:
+              inboundStatus:
+                S:
+                  - SETTLED
+      Targets:
+        - Arn: !GetAtt PayoutProcessorFunction.Arn
+          Id: TransferLambdaTarget
+
+  DelayedPayoutLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt PayoutProcessorFunction.Arn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt DelayedPayoutRule.Arn
 
   PayoutProcessorFunction:
     Type: AWS::Serverless::Function
@@ -67,8 +152,7 @@ Resources:
           TRANSFER_TABLE_NAME: !Ref TransferTableName
           USER_TABLE_NAME: !Ref UserTableName
       Policies:
-        - SQSPollerPolicy:
-            QueueName: !GetAtt PayoutQueue.QueueName
+        - CloudWatchPutMetricPolicy: {}
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref OrumSecretsArn
         - DynamoDBCrudPolicy:
@@ -84,9 +168,155 @@ Resources:
             KeyId: !Ref UserKeyId
         - KMSEncryptPolicy:
             KeyId: !Ref TransferKeyId
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt PayoutProcessorDLQ.QueueName
       Events:
-        SQSTrigger:
+        EventFromRedriveQueue:
           Type: SQS
           Properties:
-            Queue: !GetAtt PayoutQueue.Arn
-            BatchSize: 1
+            Queue: !GetAtt PayoutProcessorHandlerRedriveQueue.Arn
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt PayoutProcessorDLQ.Arn
+
+  PayoutProcessorDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: PayoutProcessorDLQ
+      MessageRetentionPeriod: 1209600  # Max: 14 days (in seconds)
+
+  PayoutProcessorHandlerRedriveQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: PayoutProcessorHandlerRedriveQ
+      MessageRetentionPeriod: 1209600  # Max: 14 days (in seconds)
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt PayoutProcessorDLQ.Arn
+        maxReceiveCount: 3
+
+  WebsocketTransferStatusSigningSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: websocket/update/hmac
+      Description: HMAC secret for signing transfer status updates
+      GenerateSecretString:
+        SecretStringTemplate: "{}"
+        GenerateStringKey: secret
+        PasswordLength: 32
+        ExcludeCharacters: "\"@/\\^`|&[](){}$"
+
+  TransferEventNotificationRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: TransferEventNotificationRule
+      EventBusName: !Ref TransferEventBus
+      EventPattern:
+        source:
+          - transfer.dynamodb
+        detail-type:
+          - "ddb.record"
+      Targets:
+        - Arn: !GetAtt TransferTableNotificationsHandler.Arn
+          Id: TransferLambdaTarget
+
+  TransferNotificationLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt TransferTableNotificationsHandler.Arn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt TransferEventNotificationRule.Arn
+
+  TransferTableNotificationsHandler:
+    Type: "AWS::Serverless::Function"
+    Metadata:
+      SkipBuild: true
+    Properties:
+      FunctionName: TransferTableNotificationsHandler
+      Handler: com.zenobiapay.transfertableevent.handlers.TransferTableEventHandler::handleRequest
+      Runtime: java17
+      CodeUri: ../kotlin/lambda/transfer-event-handler/build/libs/lambda.jar
+      Environment:
+        Variables:
+          WEBHOOK_KMS_ALIAS: !Ref WebhookSignatureKeyAlias
+          WEBSOCKET_SERVICE_ENDPOINT: !Ref WebsocketServiceEndpoint
+      Policies:
+        - CloudWatchPutMetricPolicy: {}
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref WebsocketTransferStatusSigningSecret
+        - DynamoDBStreamReadPolicy:
+            TableName: !Ref TransferTableName
+            StreamName: !Select [3, !Split ["/", !Ref TransferTableStreamArn]]
+        - KMSDecryptPolicy:
+            KeyId: !Ref TransferKeyId
+        - Statement:
+            - Sid: AllowKmsSignedWebhooks
+              Effect: Allow
+              Action:
+                - kms:GetPublicKey
+                - kms:Sign
+              Resource: !GetAtt WebhookSignatureKey.Arn
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt TransferTableNotificationsHandlerDLQ.QueueName
+      Events:
+        EventFromRedriveQueue:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt TransferTableNotificationsHandlerRedriveQ.Arn
+        
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt TransferTableNotificationsHandlerDLQ.Arn
+
+  TransferTableNotificationsHandlerDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: TransferTableNotificationsHandlerDLQ
+      MessageRetentionPeriod: 1209600  # Max: 14 days (in seconds)
+
+  TransferTableNotificationsHandlerRedriveQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: TransferTableNotificationsHandlerRedriveQ
+      MessageRetentionPeriod: 1209600  # Max: 14 days (in seconds)
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt TransferTableNotificationsHandlerDLQ.Arn
+        maxReceiveCount: 3
+
+  WebhookSignatureKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: "KMS Key for signing JWT webhooks"
+      KeyUsage: SIGN_VERIFY
+      KeySpec: RSA_2048
+      Enabled: true
+      EnableKeyRotation: false
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowRootAccountAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
+            Resource: "*"
+          - Sid: AllowLambdaUse
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - kms:GetPublicKey
+              - kms:Sign
+            Resource: "*"
+            Condition:
+              StringEquals:
+                kms:CallerAccount: !Ref AWS::AccountId
+                kms:ViaService: !Sub lambda.${AWS::Region}.amazonaws.com
+              ArnLike: # Hack to tighten up kms to only be used by the transfer event handler. Cannot reference directly as there is a circular dependency
+                aws:PrincipalArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/*-TransferTableEventHandler-*"
+
+  WebhookSignatureKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/webhook-signature-key
+      TargetKeyId: !Ref WebhookSignatureKey

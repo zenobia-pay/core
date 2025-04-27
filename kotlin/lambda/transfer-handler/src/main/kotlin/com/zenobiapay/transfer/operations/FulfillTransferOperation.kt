@@ -3,6 +3,7 @@ package com.zenobiapay.transfer.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobia.metric.MetricHelper
 import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.api.model.exception.InvalidSignatureException
 import com.zenobiapay.orum.OrumWrapper
@@ -17,31 +18,47 @@ import com.zenobiapay.api.model.exception.TransferFailedException
 import com.zenobiapay.api.model.exception.TransferStatusException
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
+import com.zenobiapay.api.model.exception.ConcurrentModificationException
+import com.zenobiapay.api.model.exception.DeclinedException
+import com.zenobiapay.api.model.exception.InsufficientFundsException
 import com.zenobiapay.cryptography.util.isSignatureValid
 import com.zenobiapay.orum.util.WaiterFailedException
 import com.zenobiapay.orum.util.generateCustomerOrumId
+import com.zenobiapay.plaid.PlaidWrapper
+import com.zenobiapay.plaid.model.SignalResult
 import com.zenobiapay.table.bank.model.BankAccountItem
 import com.zenobiapay.table.bank.model.BankPermissions
 import com.zenobiapay.table.transfer.dao.TransferDao
+import com.zenobiapay.table.transfer.model.BankAccount
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
 import com.zenobiapay.table.transfer.model.Signature
-import com.zenobiapay.table.transfer.model.TransferStatus
+import com.zenobiapay.table.transfer.model.OutboundTransferStatus
 import com.zenobiapay.table.user.dao.UserDao
+import com.zenobiapay.transfer.di.AVAILABLE_BALANCE_BUFFER
 import com.zenobiapay.transfer.model.FulfillTransferRequestMixin
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
-import javax.inject.Inject
+import jakarta.inject.Inject
+import jakarta.inject.Named
+import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}
 
 class FulfillTransferOperation @Inject constructor(
     private val orumWrapper: OrumWrapper,
+    private val plaidWrapper: PlaidWrapper,
     private val transferDao: TransferDao,
     private val bankDao: BankDao,
     private val userDao: UserDao,
     private val objectMapper: ObjectMapper,
+    @Named(AVAILABLE_BALANCE_BUFFER) private val availableBalanceBuffer: Double,
+    private val metricHelper: MetricHelper,
 ) : Operation<FulfillTransferRequest, FulfillTransfer200Response>() {
 
     override val inputType = FulfillTransferRequest::class.java
@@ -58,22 +75,30 @@ class FulfillTransferOperation @Inject constructor(
         userId: String?
     ): FulfillTransfer200Response {
         val transferRequestId = request.transferRequestId
-        val merchantId = request.merchantId
         val bankAccountId = request.bankAccountId
-
-        val date = LocalDate.now(ZoneOffset.UTC).also { logger.info { "Using date $it" } }
-        var transferRequestItem = transferDao.getMerchantTransfer(merchantId = merchantId, transferRequestId = transferRequestId)
+        userId!!
+        var transferRequestItem = transferDao.getTransfer(transferRequestId = transferRequestId)
             ?: throw ResourceNotFoundException("TRANSFER")
-        if (transferRequestItem.status != TransferStatus.NOT_STARTED) {
+        logger.info { "Got transfer request item $transferRequestItem" }
+        if (transferRequestItem.outboundStatus != OutboundTransferStatus.NOT_STARTED) {
             throw TransferStatusException("Transfer status is no longer in NOT_STARTED state.")
         }
 
         logger.info { "Fetching bank item from userId $userId, accountId $bankAccountId" }
-        val customerBankAccountItem = bankDao.getBankAccount(userId!!, request.deviceId, bankAccountId) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
+        val customerBankAccountItem = try {
+            bankDao.getBankAccount(userId, bankAccountId, request.deviceId)
+        } catch (e: software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException) {
+            logger.info { "Could not find bank id $bankAccountId" }
+            throw ResourceNotFoundException("BANK_ACCOUNT")
+        }
+
         if (customerBankAccountItem.data.bankPermissions != BankPermissions.SEND_ONLY) {
             throw InvalidRequestException("Bank account does not have permission to send funds.")
         }
-        val merchantItem = userDao.getUserItem(merchantId) ?: throw ResourceNotFoundException("MERCHANT")
+
+        val merchantItem = transferRequestItem.data?.merchant?.id?.let {
+            userDao.getUserItem(transferRequestItem.data!!.merchant!!.id)
+        } ?: throw ResourceNotFoundException("MERCHANT")
 
         validateRequestSignature(request, customerBankAccountItem)
 
@@ -86,7 +111,14 @@ class FulfillTransferOperation @Inject constructor(
         )
         val fulfillRequestId = input.requestContext.requestId
 
-        transferRequestItem = transferDao.updateTransferRequestInFlight(transferRequestItem)
+        val shouldPreApprove = shouldPreApprove(transferAmount, customerBankAccountItem.accessToken, bankAccountId, transferRequestId, userId)
+
+        transferRequestItem = try {
+            transferDao.updateTransferRequestLocked(transferRequestItem)
+        } catch (e: ConditionalCheckFailedException) {
+            throw ConcurrentModificationException()
+        }
+
         logger.info { "Successfully set request to IN_FLIGHT" }
         val fulfillTimestamp = Instant.now()
         transferFunds(
@@ -95,27 +127,34 @@ class FulfillTransferOperation @Inject constructor(
             creditorId
         )
 
-        transferDao.addPayoutItemAmount(debtorId.id, transferAmount, date)
         logger.info { "Added payout item" }
         val statementItems = transferRequestData.statementItems.map { it.toApiStatementItem() }
-        transferDao.updateTransferRequestSuccess(
+        transferDao.updateTransferRequestFulfilled(
+            preApproved = shouldPreApprove,
             transferItem = transferRequestItem,
             fulfillRequestId = fulfillRequestId,
             customerIdentity = creditorId,
             timestamp = fulfillTimestamp,
             webhookUrl = merchantItem.data.merchantData?.webhookUrl,
+            customerBankAccount = BankAccount(
+                name = customerBankAccountItem.data.bankAccountName,
+                id = customerBankAccountItem.data.bankAccountId,
+                lastFourDigits = customerBankAccountItem.data.lastFourDigits,
+            ),
             signature = Signature(
                 signatureType = request.signature.signatureType.value,
                 signature = request.signature.signatureValue
             ),
         )
-        logger.info { "Updated transfer request" }
+
+        logger.info { "Updated transfer request to fulfilled" }
+        metricHelper.putMetric("TransactionAmount", transferAmount.toDouble(), mapOf())
 
         return FulfillTransfer200Response()
             .amount(transferAmount)
             .statementItems(statementItems)
             .merchant(com.zenobiapay.api.generated.model.PaymentParticipantIdentity()
-                .id(merchantId)
+                .id(transferRequestItem.data?.merchant?.id)
                 .name(merchantItem.data.merchantData?.displayName)
             )
     }
@@ -140,6 +179,30 @@ class FulfillTransferOperation @Inject constructor(
         if (!isValid) {
             throw InvalidSignatureException()
         }
+    }
+
+    private fun shouldPreApprove(transferAmount: Int, accessToken: String, bankAccountId: String, transferRequestId: String, sub: String): Boolean {
+        logger.info { "Checking balance" }
+        val signalResult = plaidWrapper.getRiskDecision(accessToken, bankAccountId, transferRequestId, transferAmount, sub)
+        logger.info { "Got signal result $signalResult" }
+        if (signalResult == SignalResult.DENY) throw DeclinedException()
+
+        try {
+            runBlocking {
+                withTimeout(15.seconds) {
+                    val balance = plaidWrapper.getAvailableBalance(accessToken, bankAccountId)
+                    logger.info { "Got balance $balance" }
+                    if (transferAmount * availableBalanceBuffer > balance) {
+                        logger.info { "Balance $balance was not greater than transfer amount $transferAmount with buffer $availableBalanceBuffer"}
+                        throw InsufficientFundsException()
+                    }
+                }
+            }
+        } catch (e: TimeoutCancellationException) {
+            logger.info { "Failed to fetch available funds for $bankAccountId. Returning signal result $signalResult" }
+            metricHelper.putMetric("PlaidBalanceGetTimeout", 1.0, mapOf("path" to "/fulfill-transfer"))
+        }
+        return signalResult == SignalResult.ACCEPT
     }
 
     private fun transferFunds(

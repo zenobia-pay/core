@@ -19,49 +19,45 @@ data class TransferItem(
     @get:DynamoDbSecondarySortKey(indexNames = [GSI_1]) var gsi1Sk: String? = null,
     @get:DynamoDbSecondaryPartitionKey(indexNames = [GSI_2]) var gsi2Pk: String? = null,
     @get:DynamoDbSecondarySortKey(indexNames = [GSI_2]) var gsi2Sk: String? = null,
-    @get:DynamoDbSecondaryPartitionKey(indexNames = [GSI_3]) var gsi3Pk: String? = null,
-    @get:DynamoDbSecondarySortKey(indexNames = [GSI_3]) var gsi3Sk: String? = null,
     var amount: Int? = null,
-    var status: TransferStatus = TransferStatus.NOT_STARTED,
+    var inboundStatus: InboundTransferStatus = InboundTransferStatus.NOT_STARTED,
+    var outboundStatus: OutboundTransferStatus = OutboundTransferStatus.NOT_STARTED,
+    var riskScore: Int? = null,
     var transferFulfillId: String? = null,
     var deleted: Boolean = false,
-    var ttl: Int? = null,
+    var ttl: Long? = null,
     var data: TransferData? = null,
     @get:DynamoDbVersionAttribute var version: Int? = null
 ) {
     val requestId: String
-        get() = sk
+        get() = pk.removePrefix("$PK_PREFIX#id_")
     companion object {
         const val GSI_1 = "GSI1"
         const val GSI_2 = "GSI2"
-        const val GSI_3 = "GSI3"
         const val PK_PREFIX = "TRANSFER"
-        fun generatePk(merchantId: String) = "$PK_PREFIX#m_$merchantId"
-        fun generateSk(requestId: String) = requestId
+        fun generatePk(requestId: String) = "$PK_PREFIX#id_$requestId"
+        fun generateSk() = "DETAILS"
         fun generateGsi1Pk(merchantId: String) = "$PK_PREFIX#m_$merchantId"
         fun generateGsi1Sk(transferRequestId: String, timestamp: Instant) = "CREATED#t_$timestamp#id_$transferRequestId"
 
         // Queries for customer
         fun generateGsi2Pk(customerId: String) = "$PK_PREFIX#c_$customerId"
-        fun generateGsi2Sk(fulfillRequestId: String) = fulfillRequestId
-        fun generateGsi3Pk(customerId: String) = "$PK_PREFIX#c_$customerId"
-        fun generateGsi3Sk(fulfillRequestId: String, timestamp: Instant) = "CREATED#t_$timestamp#id_$fulfillRequestId"
+        fun generateGsi2Sk(fulfillRequestId: String, timestamp: Instant) = "CREATED#t_$timestamp#id_$fulfillRequestId"
 
         fun fromAttributeValueMap(map: Map<String, AttributeValue>): TransferItem {
             return TransferItem(
                 pk = map["pk"]!!.s,
-                sk = map["sk"]!!.s,
                 gsi1Pk = map["gsi1Pk"]?.s,
                 gsi1Sk = map["gsi1Sk"]?.s,
                 gsi2Pk = map["gsi2Pk"]?.s,
                 gsi2Sk = map["gsi2Sk"]?.s,
-                gsi3Pk = map["gsi3Pk"]?.s,
-                gsi3Sk = map["gsi3Sk"]?.s,
                 amount = map["amount"]!!.n.toInt(),
-                status = TransferStatus.valueOf(map["status"]!!.s),
+                inboundStatus = InboundTransferStatus.valueOf(map["inboundStatus"]!!.s),
+                outboundStatus = OutboundTransferStatus.valueOf(map["outboundStatus"]!!.s),
+                riskScore = map["riskScore"]?.n?.toInt(),
                 transferFulfillId = map["transferFulfillId"]?.s,
                 deleted = map["deleted"]!!.bool,
-                ttl = map["ttl"]?.n?.toInt(),
+                ttl = map["ttl"]?.n?.toLong(),
                 data = TransferData.fromAttributeValueMap(map["data"]!!.m),
                 version = map["version"]!!.n.toInt()
             )
@@ -73,6 +69,9 @@ data class TransferItem(
 data class TransferData(
     var customer: PaymentParticipantIdentity? = null,
     var merchant: PaymentParticipantIdentity? = null,
+    var fee: Int? = null,
+    var orumPayoutId: String? = null,
+    var customerBankAccount: BankAccount? = null,
     var statementItems: List<StatementItem> = listOf(),
     var statusMessage: String? = null,
     var creationTime: String = "",
@@ -106,6 +105,13 @@ data class TransferData(
 data class Signature(
     var signatureType: String = "",
     var signature: String = "",
+)
+
+@DynamoDbBean
+data class BankAccount(
+    var name: String = "",
+    var id: String = "",
+    var lastFourDigits: String = "",
 )
 
 @DynamoDbBean

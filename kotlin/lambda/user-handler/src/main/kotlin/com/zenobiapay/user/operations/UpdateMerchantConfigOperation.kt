@@ -13,7 +13,7 @@ import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.webhook.util.isValidWebhook
 import io.github.oshai.kotlinlogging.KotlinLogging
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 private val logger = KotlinLogging.logger {}
 
@@ -31,12 +31,15 @@ class UpdateMerchantConfigOperation @Inject constructor(
         context: Context,
         userId: String?
     ): EmptyApiResponse {
-        val request = objectMapper.readValue(input.body, UpdateMerchantConfigRequest::class.java)
         logger.info { "Got request $request" }
         if (request.bankAccountId != null) {
             // Validate bank id exists
             logger.info { "Fetching bank account ${request.bankAccountId}" }
-            bankDao.getBankAccount(userId!!, null, request.bankAccountId!!) ?: throw ResourceNotFoundException("BANK_ACCOUNT")
+            try {
+                bankDao.getBankAccount(userId!!, request.bankAccountId!!, null)
+            } catch (e: software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException) {
+                throw ResourceNotFoundException("BANK_ACCOUNT")
+            }
         }
         if (request.webhookUrl != null) {
             logger.info { "validating webhook url ${request.webhookUrl}" }

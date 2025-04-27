@@ -16,6 +16,7 @@ data class UserItem(
     @get:DynamoDbAttribute("data")
     var data: UserItemData = UserItemData(),
     var userType: UserType? = null,
+    var ttl: Long? = null, // DO NOT change this value without changing user dao conditional expressions
 ) {
     companion object {
         fun generatePk(sub: String) = "USER#id_$sub"
@@ -35,6 +36,8 @@ data class UserItemData(
     var lastName: String = "",
     var isApproved: Boolean = false,
     var merchantData: MerchantData? = null,
+    var debitAuthAgreements: List<AgreementMetadata> = listOf(),
+    var termsAndPrivacyAgreements: List<AgreementMetadata> = listOf()
 )
 
 enum class UserType {
@@ -83,3 +86,13 @@ data class Location(
         }
     }
 }
+
+@DynamoDbBean
+data class AgreementMetadata(
+    var version: String = "",
+    var agreed: Boolean = false,
+    var ip: String? = null,
+    var agreedTime: String? = null,
+    var userAgent: String? = null,
+    var requestId: String? = null,
+)

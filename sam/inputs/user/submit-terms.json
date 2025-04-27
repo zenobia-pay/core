@@ -1,0 +1,26 @@
+{
+  "resource": "/submit-terms",
+  "path": "/submit-terms",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"debitAuthorization\":true,\"termsAuthorization\":true}",
+  "isBase64Encoded": false,
+  "requestContext": {
+    "accountId": "123456789012",
+    "resourceId": "abc123",
+    "stage": "dev",
+    "requestId": "requestId1",
+    "identity": {
+      "sourceIp": "127.0.0.1",
+      "userAgent": "userAgent"
+    },
+    "authorizer": {
+      "principalId": "user123",
+      "sub": "faa9c493-6ef3-4f3c-9346-409ec371bd3b",
+      "email": "user@example.com",
+      "role": "CUSTOMER"
+    }
+  }
+}

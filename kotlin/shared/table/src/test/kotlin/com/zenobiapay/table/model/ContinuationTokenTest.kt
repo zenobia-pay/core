@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import kotlin.test.assertEquals
 
@@ -13,6 +14,8 @@ class ContinuationTokenTest {
         registerKotlinModule()
     }
 
+    val secret = "sanotehusnatoheus"
+
     @Test
     fun `test encode and decode returns same results`() {
         val map = mapOf(
@@ -20,8 +23,8 @@ class ContinuationTokenTest {
             "sk" to AttributeValue.fromS("sortKey"),
         )
         val token = ContinuationToken(map)
-        val encodedToken = token.encodeToken(mapper)
-        assertEquals(token, ContinuationToken.decodeToken(encodedToken, mapper))
+        val encodedToken = token.encodeToken(mapper, secret)
+        assertEquals(token, ContinuationToken.decodeToken(encodedToken, mapper, secret))
     }
 
     @Test
@@ -31,7 +34,10 @@ class ContinuationTokenTest {
             "sk" to AttributeValue.fromS("sortKey"),
         )
         val token = ContinuationToken(map)
-        val encodedToken = token.encodeToken(mapper)
-        assertEquals("eyJwayI6InByaW1hcnlLZXkiLCJzayI6InNvcnRLZXkifQ==", encodedToken)
+        val encodedToken = token.encodeToken(mapper, secret)
+        assertEquals(
+            "eyJwayI6InByaW1hcnlLZXkiLCJzayI6InNvcnRLZXkifQ==.ZN2Z5jihyXWGJ9jOdt1mekwRFbpacwk5N7jNrp1Uvy4=",
+            encodedToken
+        )
     }
 }

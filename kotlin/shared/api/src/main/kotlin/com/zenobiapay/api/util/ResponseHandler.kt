@@ -4,34 +4,42 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException
+import com.zenobia.metric.MetricHelper
 import com.zenobiapay.api.model.exception.ResourceNotFoundException
 import com.zenobiapay.api.model.exception.ServiceQuotaExceededException
 import com.zenobiapay.api.model.exception.UnauthorizedException
 import com.zenobiapay.api.model.exception.UnknownPathException
 import com.zenobiapay.api.model.exception.ZenobiaExternalException
 import com.zenobiapay.api.generated.model.ErrorResponse
+import com.zenobiapay.api.model.exception.DeclinedException
+import com.zenobiapay.api.model.exception.InsufficientFundsException
 import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.api.operation.Operation
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.validation.Validation
-import jakarta.validation.ValidationException
 import jakarta.validation.Validator
 import org.apache.logging.log4j.ThreadContext
-import javax.inject.Inject
+import jakarta.inject.Inject
+import java.time.Instant
+import kotlin.time.Duration
 
 private val logger = KotlinLogging.logger {}
 
-class ResponseHandler @Inject constructor(val objectMapper: ObjectMapper) {
-    val validator: Validator = Validation.buildDefaultValidatorFactory().validator
+class ResponseHandler @Inject constructor(
+    val objectMapper: ObjectMapper,
+    val metricHandler: MetricHelper
+) {
+    private val validator: Validator by lazy {
+        Validation.buildDefaultValidatorFactory().validator
+    }
 
     fun <I, O> returnApiGwResponse(operation: Operation<I, O>, input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
-        return wrapOperation {
+        return wrapOperation(input.path) {
             val userId = input.requestContext.getUserId()
-            setLoggingContext(input.requestContext.requestId, userId)
-            logger.info { "Got operation ${operation.javaClass}, userId $userId, body ${input.body}"}
+            setLoggingContext(input.requestContext.requestId, userId, input.path)
+            logger.info { "Got operation ${operation.javaClass.simpleName}, userId $userId, body ${input.body}"}
             val role = input.requestContext.getUserRole()
             if (role !in operation.getUserPoolAllowList()) {
                 logger.error { "Role $role not allowed for operation ${operation.javaClass.name} with allowed list ${operation.getUserPoolAllowList()}"}
@@ -56,11 +64,20 @@ class ResponseHandler @Inject constructor(val objectMapper: ObjectMapper) {
         }
     }
 
-    private fun <O> wrapOperation(body: () -> O): APIGatewayProxyResponseEvent {
+    private fun <O> wrapOperation(path: String, body: () -> O): APIGatewayProxyResponseEvent {
+        val startTime = System.currentTimeMillis()
         return try {
-            generateSuccessResponse(body())
+            metricHandler.emitSuccessMetric("Success", mapOf("path" to path)) {
+                generateSuccessResponse(body())
+            }
         } catch (e: Exception) {
-            generateApiGatewayErrorResponse(e)
+            generateApiGatewayErrorResponse(e, path)
+        } finally {
+            val latency = System.currentTimeMillis() - startTime
+            logger.info { "Got latency $latency" }
+            metricHandler.putMetric("LatencyMillis", latency.toDouble(), dimensions = mapOf("path" to path))
+
+            ThreadContext.clearAll()
         }
     }
 
@@ -71,7 +88,7 @@ class ResponseHandler @Inject constructor(val objectMapper: ObjectMapper) {
             .withBody(objectMapper.writeValueAsString(response))
     }
 
-    fun generateApiGatewayErrorResponse(error: Exception): APIGatewayProxyResponseEvent {
+    fun generateApiGatewayErrorResponse(error: Exception, path: String? = null): APIGatewayProxyResponseEvent {
         val (errorCode, status) = when (error) {
             is ResourceNotFoundException, is UnknownPathException -> 404 to error.message
             is UnauthorizedException -> 403 to error.message
@@ -80,22 +97,31 @@ class ResponseHandler @Inject constructor(val objectMapper: ObjectMapper) {
             else -> 500 to "An internal error has occurred"
         }
         logger.error(error) { "Caught exception, returning $errorCode, $status to customer" }
+        val metricsDimensions = path?.let { mapOf("path" to path) } ?: mapOf()
+        if (errorCode < 500 && errorCode >= 400) {
+            metricHandler.putMetric("Error", 1.0, metricsDimensions)
+        } else if (errorCode >= 500) {
+            metricHandler.putMetric("Fault", 1.0, metricsDimensions)
+        }
         return APIGatewayProxyResponseEvent()
             .withStatusCode(errorCode)
             .withHeaders(getCorsHeaders())
             .withBody(
                 objectMapper.writeValueAsString(
-                    ErrorResponse().error(getErrorString(errorCode)).message(status)
+                    ErrorResponse().error(getErrorString(error, errorCode)).message(status)
                 )
             )
     }
 
-    private fun setLoggingContext(requestId: String?, sub: String?) {
+    private fun setLoggingContext(requestId: String?, sub: String?, path: String?) {
         requestId?.let { ThreadContext.put("requestId", it) }
         sub?.let { ThreadContext.put("sub", it) }
+        path?.let { ThreadContext.put("path", it) }
     }
 
-    private fun getErrorString(statusCode: Int): String {
+    private fun getErrorString(error: Exception, statusCode: Int): String {
+        if (error is InsufficientFundsException) return "InsufficientFunds"
+        if (error is DeclinedException) return "Declined"
         return when (statusCode) {
             404 -> "NotFound"
             403 -> "AccessDenied"

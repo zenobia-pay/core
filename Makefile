@@ -1,24 +1,29 @@
-GO_LAMBDA_DIRS := authorizer
+GO_LAMBDA_DIRS := authorizer jwt-issuer
 
 .PHONY: all go kotlin clean build
 
 all: go kotlin
 
 go:
-	@for dir in $(GO_LAMBDA_DIRS); do \
-		echo "Building $$dir..."; \
-		docker run --rm -v "$(PWD)":/app -w /app/golang/$$dir public.ecr.aws/amazonlinux/amazonlinux:2 \
-		bash -c 'yum install -y golang zip && \
-		         GOOS=linux GOARCH=amd64 go build -buildvcs=false -o ./build/bootstrap . && \
-				 cd build && \
-		         zip function.zip bootstrap'; \
-	done
+	docker run --rm -v "$(PWD)":/app -w /app/golang public.ecr.aws/amazonlinux/amazonlinux:2 \
+	bash -c 'yum install -y golang zip && \
+		for dir in $(GO_LAMBDA_DIRS); do \
+			echo "Building $$dir..." && \
+			mkdir -p $$dir/build && \
+			GOOS=linux GOARCH=amd64 go build -buildvcs=false -o $$dir/build/bootstrap ./$$dir && \
+			(cd $$dir/build && zip function.zip bootstrap); \
+		done'
 
 go-dev:
 	echo "Building golang (dev mode). Build in container if you'd like to deploy"
 	@for dir in $(GO_LAMBDA_DIRS); do \
  		echo "Building $$dir..."; \
- 		cd golang/$$dir && GOOS=linux GOARCH=amd64 go build -o ./build/bootstrap . && cd build && zip function.zip bootstrap && cd ../../..; \
+ 		cd golang && \
+		GOOS=linux GOARCH=amd64 go build -o $$dir/build/bootstrap ./$$dir && \
+		chmod +x $$dir/build/bootstrap && \
+		cd $$dir/build && \
+		zip function.zip bootstrap && \
+		cd ../../..; \
  	done
 
 kotlin:
