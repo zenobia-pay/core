@@ -1,10 +1,14 @@
-name: BetaActions
+name: DeployInfra
 
 on:
   push:
-    branches: [ "beta" ]
+    branches: 
+      - "beta"
+      - "prod"
   pull_request:
-    branches: [ "beta" ]
+    branches: 
+      - "beta"
+      - "prod"
 permissions:
   id-token: write   # This is required for requesting the JWT
   contents: write    # This is required for gradle dependency graph and git checkout
@@ -53,16 +57,16 @@ jobs:
     - name: Generate and submit dependency graph
       uses: gradle/actions/dependency-submission@v4
 
-  deploy-beta-tf:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
+  deploy-tf:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment: beta
+    environment: github.ref_name
     steps:
     - uses: actions/checkout@v4
     - name: Configure aws credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
-        role-to-assume: arn:aws:iam::039319543506:role/GithubActionsBeta
+        role-to-assume: arn:aws:iam::039319543506:role/GithubActionsRole
         role-session-name: github-actions-${{ github.workflow }}-${{ github.run_id }}
         aws-region: us-east-1
     - name: Set up Terraform
@@ -71,7 +75,7 @@ jobs:
       run: |
         terraform init \
         -backend-config="bucket=zenobia-terraform-bucket" \
-        -backend-config="key=envs/beta/terraform.tfstate" \
+        -backend-config="key=envs/${GITHUB_REF_NAME}/terraform.tfstate" \
         -backend-config="region=us-east-1"
       working-directory: terraform
     - name: Terraform Plan
@@ -91,10 +95,10 @@ jobs:
         TF_VAR_AUTH0_CLIENT_SECRET: ${{ secrets.TF_VAR_AUTH0_CLIENT_SECRET }}
         TF_VAR_ZENOBIA_ENDPOINT: ${{ vars.TF_VAR_ZENOBIA_ENDPOINT}}
 
-  deploy-beta:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
+  deploy-aws:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment: beta
+    environment: github.ref_name
     env:
       AUTH0_DOMAIN: ${{ vars.AUTH0_DOMAIN }}
       AUTH0_SECRETS_ARN: ${{ vars.AUTH0_SECRETS_ARN }}
