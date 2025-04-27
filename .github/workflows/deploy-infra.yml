@@ -60,7 +60,7 @@ jobs:
   deploy-tf:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment: github.ref_name
+    environment: ${{ github.ref_name }}
     steps:
     - uses: actions/checkout@v4
     - name: Configure aws credentials
@@ -98,7 +98,7 @@ jobs:
   deploy-aws:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment: github.ref_name
+    environment: ${{ github.ref_name }}
     env:
       AUTH0_DOMAIN: ${{ vars.AUTH0_DOMAIN }}
       AUTH0_SECRETS_ARN: ${{ vars.AUTH0_SECRETS_ARN }}
