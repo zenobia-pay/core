@@ -1,4 +1,4 @@
-package com.zenobiapay.webhook.model
+package com.zenobia.webhook.event.model
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 

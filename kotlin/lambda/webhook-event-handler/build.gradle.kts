@@ -30,6 +30,9 @@ dependencies {
     api(project(":kotlin:shared"))
     api(project(":kotlin:shared:api"))
     api(project(":kotlin:shared:api:model"))
+    implementation(project(":kotlin:shared:orum"))
+    implementation(project(":kotlin:shared:table:transfer"))
+    implementation(project(":kotlin:shared:table"))
     api(project(":kotlin:shared:metrics"))
 
     api(libs.kotlin.stdlib)
@@ -44,9 +47,6 @@ dependencies {
     api(libs.dagger)
     ksp(libs.dagger.compiler)
     api(libs.jakarta.inject)
-
-    // AWS
-    api(libs.aws.sqs)
 
     // JSON
     implementation(libs.jackson.core)

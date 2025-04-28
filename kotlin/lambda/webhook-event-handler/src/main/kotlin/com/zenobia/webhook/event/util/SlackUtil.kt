@@ -1,7 +1,7 @@
-package com.zenobiapay.webhook.util
+package com.zenobia.webhook.event.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.webhook.di.ORUM_SLACK_WEBHOOK
+import com.zenobia.webhook.event.di.ORUM_SLACK_WEBHOOK
 import jakarta.inject.Inject
 import jakarta.inject.Named
 import okhttp3.MediaType.Companion.toMediaTypeOrNull

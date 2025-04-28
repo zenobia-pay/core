@@ -263,7 +263,6 @@ Resources:
           Type: SQS
           Properties:
             Queue: !GetAtt TransferTableNotificationsHandlerRedriveQ.Arn
-        
       DeadLetterQueue:
         Type: SQS
         TargetArn: !GetAtt TransferTableNotificationsHandlerDLQ.Arn

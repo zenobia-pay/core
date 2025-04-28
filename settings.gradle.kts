@@ -30,3 +30,5 @@ include("kotlin:shared:events")
 findProject(":kotlin:shared:events")?.name = "events"
 include("kotlin:shared:metrics")
 findProject(":kotlin:shared:metrics")?.name = "metrics"
+include("kotlin:lambda:webhook-event-handler")
+findProject(":kotlin:lambda:webhook-event-handler")?.name = "webhook-event-handler"

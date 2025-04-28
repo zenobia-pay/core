@@ -5,9 +5,10 @@ import dagger.Module
 import dagger.Provides
 import jakarta.inject.Named
 import software.amazon.awssdk.services.cloudwatch.CloudWatchClient
+import software.amazon.awssdk.services.sqs.SqsClient
 
 const val ORUM_PUBLIC_CERTIFICATE = "ORUM_PUBLIC_CERTIFICATE"
-const val ORUM_SLACK_WEBHOOK = "ORUM_SLACK_WEBHOOK"
+const val ORUM_WEBHOOK_QUEUE = "ORUM_WEBHOOK_QUEUE_URL"
 
 @Module
 class EnvironmentModule {
@@ -16,8 +17,8 @@ class EnvironmentModule {
     fun provideOrumPublicCertificate(): String = System.getenv("ORUM_PUBLIC_CERTIFICATE")
 
     @Provides
-    @Named(ORUM_SLACK_WEBHOOK)
-    fun provideOrumSlackWebhook(): String = System.getenv("ORUM_SLACK_WEBHOOK")
+    @Named(ORUM_WEBHOOK_QUEUE)
+    fun provideOrumWebhookQueue(): String = System.getenv("ORUM_WEBHOOK_QUEUE_URL")
 
     @Provides
     @Named(METRIC_NAMESPACE)
@@ -26,6 +27,12 @@ class EnvironmentModule {
     @Provides
     fun provideCloudwatchClient(): CloudWatchClient {
         return CloudWatchClient.builder()
+            .build()
+    }
+
+    @Provides
+    fun provideSqsClient(): SqsClient {
+        return SqsClient.builder()
             .build()
     }
 }

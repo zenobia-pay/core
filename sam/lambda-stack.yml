@@ -1582,8 +1582,7 @@ Resources:
       Environment:
         Variables:
           ORUM_PUBLIC_CERTIFICATE: !Ref OrumPublicCertificate
-          ORUM_SLACK_WEBHOOK: !Ref OrumSlackWebhook
-          TRANSFER_TABLE_NAME: !Ref TransferTableName
+          ORUM_WEBHOOK_QUEUE_URL: !Ref WebhookEventQueue
       Policies:
         - AWSLambdaVPCAccessExecutionRole
         - DynamoDBCrudPolicy:
@@ -1593,6 +1592,8 @@ Resources:
         - KMSDecryptPolicy:
             KeyId: !Ref TransferKeyId
         - CloudWatchPutMetricPolicy: {}
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt WebhookEventQueue.QueueName
       Events:
         OrumWebhook:
           Type: Api
@@ -1602,6 +1603,61 @@ Resources:
             Method: POST
             Auth:
               Authorizer: SignatureAuthorizer
+
+  WebhookEventQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: WebhookEventQueue
+      MessageRetentionPeriod: 1209600  # Max: 14 days (in seconds)
+      VisibilityTimeout: 70
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt WebhookEventQueueDLQ.Arn
+        maxReceiveCount: 5
+
+  WebhookEventQueueDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: WebhookEventQueueDLQ
+      MessageRetentionPeriod: 1209600  # Max: 14 days (in seconds)
+
+  WebhookEventFunctionDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: WebhookEventFunctionDLQ
+      MessageRetentionPeriod: 1209600  # Max: 14 days (in seconds)
+
+  WebhookEventHandlerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      SkipBuild: true
+    Properties:
+      FunctionName: WebhookEventHandlerFunction
+      CodeUri: ../kotlin/lambda/webhook-event-handler/build/libs/lambda.jar
+      Handler: com.zenobia.webhook.event.handlers.OrumWebhookEventHandler::handleRequest
+      Environment:
+        Variables:
+          ORUM_SLACK_WEBHOOK: !Ref OrumSlackWebhook
+          TRANSFER_TABLE_NAME: !Ref TransferTableName
+      Policies:
+        - CloudWatchPutMetricPolicy: {}
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TransferTableName
+        - KMSDecryptPolicy:
+            KeyId: !Ref TransferKeyId
+        - KMSEncryptPolicy:
+            KeyId: !Ref TransferKeyId
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt WebhookEventFunctionDLQ.QueueName
+        - SQSPollerPolicy:
+            QueueName: !GetAtt WebhookEventQueue.QueueName
+      Events:
+        EventFromWebhookEventQueue:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt WebhookEventQueue.Arn
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt WebhookEventFunctionDLQ.Arn
 
 Outputs:
   WebEndpoint:
