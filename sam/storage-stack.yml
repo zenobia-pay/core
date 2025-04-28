@@ -30,6 +30,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: CredentialsTable
+      DeletionProtectionEnabled: true
       KeySchema:
         - AttributeName: pk
           KeyType: HASH
@@ -63,6 +64,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: BankTable
+      DeletionProtectionEnabled: true
       KeySchema:
         - AttributeName: pk
           KeyType: HASH
@@ -100,6 +102,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: TransferTable
+      DeletionProtectionEnabled: true
       KeySchema:
         - AttributeName: pk
           KeyType: HASH
@@ -167,6 +170,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: UserTable
+      DeletionProtectionEnabled: true
       KeySchema:
         - AttributeName: pk
           KeyType: HASH
