@@ -8,11 +8,15 @@ import com.zenobiapay.api.model.exception.UnknownPathException
 import com.zenobiapay.api.util.ResponseHandler
 import com.zenobiapay.webhook.di.DaggerAppComponent
 import com.zenobiapay.webhook.operation.OrumWebhookOperation
+import com.zenobiapay.webhook.operation.PlaidWebhookOperation
 import jakarta.inject.Inject
 
 class WebhookHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     @Inject
     lateinit var orumWebhookOperation: OrumWebhookOperation
+
+    @Inject
+    lateinit var plaidWebhookOperation: PlaidWebhookOperation
 
     @Inject
     lateinit var responseHandler: ResponseHandler
@@ -27,6 +31,7 @@ class WebhookHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayPro
     ): APIGatewayProxyResponseEvent? {
         val operation = when (input?.path) {
             "/orum-webhook" -> orumWebhookOperation
+            "/plaid-webhook" -> plaidWebhookOperation
             else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
         }
         return responseHandler.returnApiGwResponse(operation, input, context!!)

@@ -26,6 +26,8 @@ import com.plaid.client.model.LinkTokenCreateResponse
 import com.plaid.client.model.NumbersACH
 import com.plaid.client.model.Products
 import com.plaid.client.model.SignalEvaluateRequest
+import com.plaid.client.model.WebhookVerificationKeyGetRequest
+import com.plaid.client.model.WebhookVerificationKeyGetResponse
 import com.plaid.client.request.PlaidApi
 import com.zenobiapay.plaid.model.SignalResult
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -39,7 +41,7 @@ open class PlaidException(message: String) : Exception(message)
 class PlaidBankAccountNotFoundException(): PlaidException("Could not find bank account")
 
 class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
-    fun createLinkToken(userId: String, product: List<Products>): LinkTokenCreateResponse {
+    fun createLinkToken(userId: String, webhookUrl: String, product: List<Products>): LinkTokenCreateResponse {
         val user = LinkTokenCreateRequestUser()
             .clientUserId(userId)
 
@@ -54,6 +56,7 @@ class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
             .countryCodes((listOf(CountryCode.US)))
             .language("en")
             .accountFilters(accountFilters)
+            .webhook(webhookUrl)
             .redirectUri("https://zenobiapay.com/plaid")
 
         return getResponseOrThrowException("CreateLinkToken") {
@@ -154,10 +157,18 @@ class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
             .defaultPaymentMethod("SAME_DAY_ACH")
             .rulesetKey("zenobia-risk-rules")
 
-        val response = getResponseOrThrowException("SignalEvaluateRequest") {
+        val response = getResponseOrThrowException("SignalEvaluate") {
             plaidApi.signalEvaluate(request).execute()
         }
         return SignalResult.getResult(response.ruleset?.triggeredRuleDetails?.result)
+    }
+
+    fun getWebhookVerificationKey(keyId: String): WebhookVerificationKeyGetResponse {
+        val request = WebhookVerificationKeyGetRequest()
+            .keyId(keyId)
+        return getResponseOrThrowException("WebhookVerificationKeyGet") {
+            plaidApi.webhookVerificationKeyGet(request).execute()
+        }
     }
 
     private fun <T> getResponseOrThrowException(operationName: String, block: () -> Response<T>): T {

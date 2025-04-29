@@ -29,6 +29,7 @@ repositories {
 dependencies {
     api(project(":kotlin:shared"))
     api(project(":kotlin:shared:api"))
+    api(project(":kotlin:shared:plaid"))
     api(project(":kotlin:shared:api:model"))
     api(project(":kotlin:shared:metrics"))
 
@@ -47,6 +48,12 @@ dependencies {
 
     // AWS
     api(libs.aws.sqs)
+
+    // JWT verification
+    api(libs.auth0.jwt)
+
+    // Plaid
+    api(libs.plaid)
 
     // JSON
     implementation(libs.jackson.core)

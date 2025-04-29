@@ -63,6 +63,7 @@ json = { module = "org.json:json", version="20250107"}
 
 # Auth0
 auth0 = { module = "com.auth0:auth0", version = "2.18.0" }
+auth0-jwt = { module = "com.auth0:java-jwt", version = "4.5.0" }
 
 # Cryptography
 bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk15to18", version.ref = "bouncycastle" }
