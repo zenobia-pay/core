@@ -11,6 +11,7 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
 import jakarta.inject.Named
 
 const val PAGINATION_SECRET = "PAGINATION_SECRET"
+const val API_GATEWAY_ENDPOINT = "API_GATEWAY_ENDPOINT"
 
 @Module
 class BankModule {
@@ -35,6 +36,12 @@ class BankModule {
         }.secretString()
         val hmacSecret = objectMapper.readValue(secretString, HmacSecret::class.java)
         return hmacSecret.secret
+    }
+
+    @Provides
+    @Named(API_GATEWAY_ENDPOINT)
+    fun provideApiGatewayEndpoint(): String {
+        return System.getenv("API_GATEWAY_ENDPOINT")
     }
 
     @Provides

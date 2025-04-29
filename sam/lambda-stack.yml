@@ -61,12 +61,21 @@ Parameters:
   OrumSlackWebhook:
     Type: String
     Description: Slack webhook for orum channel
+  PlaidIpAddresses:
+    Type: String
+    Description: Valid plaid ip addresses to accept requests from. Comma separated.
+  PlaidSlackWebhook:
+    Type: String
+    Description: Slack webhook for plaid channel
   CustomerJwtSigningSecret:
     Type: String
     Description: Signing secret for jwt
   RefreshTokenHashingSecret:
     Type: String
     Description: Hash secret for refresh tokens
+  ZenobiaApiEndpoint:
+    Type: String
+    Description: Zenobia endpoint used to point plaid webhooks
 
 Resources:
   ZenobiaApi:
@@ -88,6 +97,12 @@ Resources:
             Identity:
               Headers:
                 - Signature
+          PlaidSignatureAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn: !GetAtt CustomAuthorizerFunction.Arn
+            Identity:
+              Headers:
+                - plaid-verification
       Cors:
         AllowCredentials: true
         AllowMethods: "'GET,POST,OPTIONS'"
@@ -120,6 +135,16 @@ Resources:
                 authorizerUri:
                   Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthorizerFunction.Arn}/invocations
                 identitySource: method.request.header.Signature
+            PlaidSignatureAuthorizer:
+              type: apiKey
+              name: PlaidSignature
+              in: header
+              x-amazon-apigateway-authtype: custom
+              x-amazon-apigateway-authorizer:
+                type: request
+                authorizerUri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthorizerFunction.Arn}/invocations
+                identitySource: method.request.header.plaid-verification
           responses:
             BadRequest:
               description: Bad request
@@ -269,6 +294,45 @@ Resources:
                           type: string
                         event_data:
                           type: object
+              responses:
+                "200":
+                  description: "Successful response"
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebhookHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /plaid-webhook:
+            post:
+              summary: "Plaid webhook endpoint"
+              security:
+                - PlaidSignatureAuthorizer: []
+              operationId: "PlaidWebhook"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - webhook_type
+                        - webhook_code
+                        - item_id
+                      properties:
+                        webhook_type:
+                          type: string
+                        webhook_code:
+                          type: string
+                        item_id:
+                          type: string
               responses:
                 "200":
                   description: "Successful response"
@@ -1227,6 +1291,7 @@ Resources:
           AUTH_DOMAIN: !Ref Auth0Domain
           AUDIENCE: https://dashboard.zenobiapay.com
           VALID_ORUM_IP_ADDRESSES: !Ref OrumIpAddresses
+          VALID_PLAID_IP_ADDRESSES: !Ref PlaidIpAddresses
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref CustomerJwtSigningSecret
@@ -1317,6 +1382,7 @@ Resources:
           BANK_TABLE_NAME: !Ref BankTableName
           USER_TABLE_NAME: !Ref UserTableName
           CREDENTIALS_TABLE_NAME: !Ref CredentialsTableName
+          API_GATEWAY_ENDPOINT: !Ref ZenobiaApiEndpoint
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref PlaidSecretsArn
@@ -1582,18 +1648,14 @@ Resources:
       Environment:
         Variables:
           ORUM_PUBLIC_CERTIFICATE: !Ref OrumPublicCertificate
-          ORUM_WEBHOOK_QUEUE_URL: !Ref WebhookEventQueue
+          WEBHOOK_QUEUE_URL: !Ref WebhookEventQueue
       Policies:
         - AWSLambdaVPCAccessExecutionRole
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TransferTableName
-        - KMSEncryptPolicy:
-            KeyId: !Ref TransferKeyId
-        - KMSDecryptPolicy:
-            KeyId: !Ref TransferKeyId
         - CloudWatchPutMetricPolicy: {}
         - SQSSendMessagePolicy:
             QueueName: !GetAtt WebhookEventQueue.QueueName
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref PlaidSecretsArn
       Events:
         OrumWebhook:
           Type: Api
@@ -1603,6 +1665,14 @@ Resources:
             Method: POST
             Auth:
               Authorizer: SignatureAuthorizer
+        PlaidWebhook:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /plaid-webhook
+            Method: POST
+            Auth:
+              Authorizer: PlaidSignatureAuthorizer
 
   WebhookEventQueue:
     Type: AWS::SQS::Queue
@@ -1633,10 +1703,11 @@ Resources:
     Properties:
       FunctionName: WebhookEventHandlerFunction
       CodeUri: ../kotlin/lambda/webhook-event-handler/build/libs/lambda.jar
-      Handler: com.zenobia.webhook.event.handlers.OrumWebhookEventHandler::handleRequest
+      Handler: com.zenobia.webhook.event.handlers.WebhookEventHandler::handleRequest
       Environment:
         Variables:
           ORUM_SLACK_WEBHOOK: !Ref OrumSlackWebhook
+          PLAID_SLACK_WEBHOOK: !Ref PlaidSlackWebhook
           TRANSFER_TABLE_NAME: !Ref TransferTableName
       Policies:
         - CloudWatchPutMetricPolicy: {}

@@ -14,6 +14,16 @@ components:
         authorizerUri:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthorizerFunction.Arn}/invocations
         identitySource: method.request.header.Signature
+    PlaidSignatureAuthorizer:
+      type: apiKey
+      name: PlaidSignature
+      in: header
+      x-amazon-apigateway-authtype: custom
+      x-amazon-apigateway-authorizer:
+        type: request
+        authorizerUri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CustomAuthorizerFunction.Arn}/invocations
+        identitySource: method.request.header.plaid-verification
   responses:
     BadRequest:
       description: Bad request
@@ -162,6 +172,58 @@ paths:
                   type: string
                 event_data:
                   type: object
+      responses:
+        "200":
+          description: "Successful response"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebhookHandlerFunction.Arn}:prod/invocations
+        httpMethod: POST
+        type: aws_proxy
+  /plaid-webhook:
+    post:
+      summary: "Plaid webhook endpoint"
+      security:
+        - PlaidSignatureAuthorizer: []
+      operationId: "PlaidWebhook"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - webhook_type
+                - webhook_code
+                - item_id
+                - environment
+              properties:
+                webhook_type:
+                  type: string
+                webhook_code:
+                  type: string
+                item_id:
+                  type: string
+                environment:
+                  type: string
+                error:
+                  type: object
+                  properties:
+                    error_code:
+                      type: string
+                    error_message:
+                      type: string
+                    error_type:
+                      type: string
+                    status:
+                      type: integer
       responses:
         "200":
           description: "Successful response"

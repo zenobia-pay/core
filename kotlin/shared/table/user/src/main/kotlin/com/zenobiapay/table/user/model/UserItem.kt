@@ -36,6 +36,8 @@ data class UserItemData(
     var lastName: String = "",
     var isApproved: Boolean = false,
     var merchantData: MerchantData? = null,
+    var emails: List<String>? = null,
+    var phoneNumbers: List<String>? = null,
     var debitAuthAgreements: List<AgreementMetadata> = listOf(),
     var termsAndPrivacyAgreements: List<AgreementMetadata> = listOf()
 )

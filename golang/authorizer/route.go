@@ -82,3 +82,7 @@ var validCustomerRoutes = []Route{
 var validOrumRoutes = []Route{
 	{"POST", "orum-webhook"},
 }
+
+var validPlaidRoutes = []Route{
+	{"POST", "plaid-webhook"},
+}

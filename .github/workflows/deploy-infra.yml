@@ -108,6 +108,9 @@ jobs:
       ORUM_IP_ADDRESSES: ${{ vars.ORUM_IP_ADDRESSES }}
       ORUM_SLACK_WEBHOOK: ${{ vars.ORUM_SLACK_WEBHOOK }}
       WEBSOCKET_SERVICE_ENDPOINT: ${{ vars.WEBSOCKET_SERVICE_ENDPOINT }}
+      ZENOBIA_API_ENDPOINT: ${{ vars.ZENOBIA_API_ENDPOINT }}
+      PLAID_IP_ADDRESSES: ${{ vars.PLAID_IP_ADDRESSES }}
+      PLAID_SLACK_WEBHOOK: ${{ vars.PLAID_SLACK_WEBHOOK }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v3
@@ -153,4 +156,7 @@ jobs:
           OrumPublicCertificate=$ORUM_PUBLIC_CERTIFICATE \
           OrumIpAddresses=$ORUM_IP_ADDRESSES \
           OrumSlackWebhook=$ORUM_SLACK_WEBHOOK\
-          WebsocketServiceEndpoint=$WEBSOCKET_SERVICE_ENDPOINT
+          WebsocketServiceEndpoint=$WEBSOCKET_SERVICE_ENDPOINT \
+          ZenobiaApiEndpoint=$ZENOBIA_API_ENDPOINT \
+          PlaidIpAddresses=$PLAID_IP_ADDRESSES \
+          PlaidSlackWebhook=$PLAID_SLACK_WEBHOOK

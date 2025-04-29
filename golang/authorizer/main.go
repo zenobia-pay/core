@@ -26,6 +26,8 @@ func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequest
 	}
 	if isValidPath(event.Path, validOrumRoutes) {
 		return handleOrumWebhookEndpoint(ctx, event)
+	} else if isValidPath(event.Path, validPlaidRoutes) {
+		return handlePlaidWebhookEndpoint(ctx, event)
 	} else if !hasAuthorizationHeader && isValidPath(event.Path, validUnauthenticatedRoutes) {
 		return handleUnprotectedEndpoint(ctx, event)
 	} else if isValidPath(event.Path, validCustomerRoutes) || isValidPath(event.Path, validMerchantRoutes) {
@@ -38,7 +40,7 @@ func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequest
 }
 
 func handleOrumWebhookEndpoint(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
-	println("Got webhook. Validating ip address")
+	println("Got orum webhook. Validating ip address")
 	orum_ip_addresses, ok := os.LookupEnv("VALID_ORUM_IP_ADDRESSES")
 	print("valid ip addresses: ")
 	fmt.Println(orum_ip_addresses)
@@ -46,15 +48,29 @@ func handleOrumWebhookEndpoint(ctx context.Context, event events.APIGatewayCusto
 	if !ok {
 		panic("failed to fetch valid orum ip addresses")
 	}
+	return handleIpRestrictedEndpoint(ctx, event.RequestContext.Identity.SourceIP, orum_ip_addresses, event.MethodArn)
+}
 
-	allowedIps := strings.Split(orum_ip_addresses, ",")
-	ip := event.RequestContext.Identity.SourceIP
-	println("Got request ip: " + ip)
+func handlePlaidWebhookEndpoint(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
+	println("Got plaid webhook. Validating ip address")
+	plaid_ip_addresses, ok := os.LookupEnv("VALID_PLAID_IP_ADDRESSES")
+	print("valid ip addresses: ")
+	fmt.Println(plaid_ip_addresses)
+
+	if !ok {
+		panic("failed to fetch valid plaid ip addresses")
+	}
+	return handleIpRestrictedEndpoint(ctx, event.RequestContext.Identity.SourceIP, plaid_ip_addresses, event.MethodArn)
+}
+
+func handleIpRestrictedEndpoint(ctx context.Context, sourceIp, validIpString, methodArn string) (events.APIGatewayCustomAuthorizerResponse, error) {
+	allowedIps := strings.Split(validIpString, ",")
+	println("Got request ip: " + sourceIp)
 	for _, allowedIp := range allowedIps {
-		if ip == allowedIp {
+		if sourceIp == allowedIp {
 			println("Matched ip address, allowing")
 			putSuccessMetric(true)
-			return generatePolicy("user", "Allow", []string{event.MethodArn}, map[string]interface{}{}), nil
+			return generatePolicy("user", "Allow", []string{methodArn}, map[string]interface{}{}), nil
 		}
 	}
 	println("IP address not recognized, denying")

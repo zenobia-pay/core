@@ -76,6 +76,8 @@ class UserDao @Inject constructor(
         orumId: String,
         userType: UserType,
         isApproved: Boolean,
+        phoneNumbers: List<String>,
+        emails: List<String>
     ) {
         val item = UserItem(
             pk = UserItem.generatePk(sub),
@@ -85,6 +87,8 @@ class UserDao @Inject constructor(
                 isApproved = isApproved,
                 firstName = firstName,
                 lastName = lastName,
+                phoneNumbers = phoneNumbers,
+                emails = emails
             ),
             userType = userType,
             ttl = null,

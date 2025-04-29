@@ -31,9 +31,18 @@ Parameters:
   OrumSlackWebhook:
     Type: String
     Description: Slack webhook for orum channel
+  PlaidIpAddresses:
+    Type: String
+    Description: Valid plaid ip addresses to accept requests from. Comma separated.
+  PlaidSlackWebhook:
+    Type: String
+    Description: Slack webhook for plaid channel
   WebsocketServiceEndpoint:
     Type: String
     Description: Websocket endpoint to send transfer updates to.
+  ZenobiaApiEndpoint:
+    Type: String
+    Description: Endpoint to api service. In prod this should be https://api.zenobiapay.com/ needed for plaid webhooks
 
 Resources:
   VpcStack:
@@ -78,8 +87,11 @@ Resources:
         OrumPublicCertificate: !Ref OrumPublicCertificate
         OrumIpAddresses: !Ref OrumIpAddresses
         OrumSlackWebhook: !Ref OrumSlackWebhook
+        PlaidIpAddresses: !Ref PlaidIpAddresses
+        PlaidSlackWebhook: !Ref PlaidSlackWebhook
         CustomerJwtSigningSecret: !GetAtt AuthStack.Outputs.CustomerJwtSigningSecret
         RefreshTokenHashingSecret: !GetAtt AuthStack.Outputs.RefreshTokenHashingSecret
+        ZenobiaApiEndpoint: !Ref ZenobiaApiEndpoint
 
   PayoutStack:
     Type: AWS::CloudFormation::Stack
@@ -93,6 +105,11 @@ Resources:
         UserKeyId: !GetAtt TableStack.Outputs.UserKeyId
         OrumSecretsArn: !Ref OrumSecretsArn
         WebsocketServiceEndpoint: !Ref WebsocketServiceEndpoint
+
+  DashboardStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./sam/dashboard-stack.yml
 
 Outputs:
   WebEndpoint:

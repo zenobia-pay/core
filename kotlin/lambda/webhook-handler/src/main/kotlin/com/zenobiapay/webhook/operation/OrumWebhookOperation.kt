@@ -10,7 +10,7 @@ import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.webhook.di.ORUM_PUBLIC_CERTIFICATE
-import com.zenobiapay.webhook.di.ORUM_WEBHOOK_QUEUE
+import com.zenobiapay.webhook.di.WEBHOOK_QUEUE
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
 import jakarta.inject.Named
@@ -24,7 +24,7 @@ private val logger = KotlinLogging.logger {}
 
 class OrumWebhookOperation @Inject constructor(
     @Named(ORUM_PUBLIC_CERTIFICATE) private val orumPublicCertificate: String,
-    @Named(ORUM_WEBHOOK_QUEUE) private val orumWebhookQueueUrl: String,
+    @Named(WEBHOOK_QUEUE) private val webhookQueueUrl: String,
     private val sqsClient: SqsClient,
     private val objectMapper: ObjectMapper,
     private val metricHelper: MetricHelper,
@@ -44,7 +44,7 @@ class OrumWebhookOperation @Inject constructor(
         }
         logger.info { "Sending message to queue" }
         sqsClient.sendMessage {
-            it.queueUrl(orumWebhookQueueUrl)
+            it.queueUrl(webhookQueueUrl)
                 .messageBody(objectMapper.writeValueAsString(request))
         }
         metricHelper.putMetric("SendOrumQueueSuccess", 1.0, mapOf("path" to input.path))

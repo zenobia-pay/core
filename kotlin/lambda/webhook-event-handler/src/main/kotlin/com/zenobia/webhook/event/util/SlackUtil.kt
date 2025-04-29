@@ -2,6 +2,7 @@ package com.zenobia.webhook.event.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobia.webhook.event.di.ORUM_SLACK_WEBHOOK
+import com.zenobia.webhook.event.di.PLAID_SLACK_WEBHOOK
 import jakarta.inject.Inject
 import jakarta.inject.Named
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -10,12 +11,14 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 
 enum class SlackChannel {
-    ORUM
+    ORUM,
+    PLAID,
 }
 
 class SlackUtil @Inject constructor(
     private val client: OkHttpClient,
     @Named(ORUM_SLACK_WEBHOOK) private val orumSlackWebhook: String,
+    @Named(PLAID_SLACK_WEBHOOK) private val plaidSlackWebhook: String,
     private val objectMapper: ObjectMapper
 ) {
     fun sendMessage(message: String, slackChannel: SlackChannel) {
@@ -36,5 +39,6 @@ class SlackUtil @Inject constructor(
 
     private fun getWebhook(slackChannel: SlackChannel) = when(slackChannel) {
         SlackChannel.ORUM -> orumSlackWebhook
+        SlackChannel.PLAID -> plaidSlackWebhook
     }
 }
