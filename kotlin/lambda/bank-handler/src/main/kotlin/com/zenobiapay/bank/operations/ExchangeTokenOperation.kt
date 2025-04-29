@@ -104,7 +104,9 @@ class ExchangeTokenOperation @Inject constructor(
                 lastName,
                 generateCustomerOrumId(sub),
                 UserType.CUSTOMER,
-                isApproved = true
+                isApproved = true,
+                phoneNumbers = owner.phoneNumbers.map { it.data },
+                emails = owner.emails.map { it.data }
             )
         } catch (e: ConditionalCheckFailedException) {
             throw InvalidRequestException("Invalid sub used") // Keep response the same to prevent attackers knowing valid subs

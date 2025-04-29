@@ -75,6 +75,7 @@ class FulfillTransferOperation @Inject constructor(
         userId: String?
     ): FulfillTransfer200Response {
         val transferRequestId = request.transferRequestId
+        logger.info { "Transfer request id: $transferRequestId"}
         val bankAccountId = request.bankAccountId
         userId!!
         var transferRequestItem = transferDao.getTransfer(transferRequestId = transferRequestId)
@@ -127,7 +128,6 @@ class FulfillTransferOperation @Inject constructor(
             creditorId
         )
 
-        logger.info { "Added payout item" }
         val statementItems = transferRequestData.statementItems.map { it.toApiStatementItem() }
         transferDao.updateTransferRequestFulfilled(
             preApproved = shouldPreApprove,

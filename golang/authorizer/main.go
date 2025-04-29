@@ -58,7 +58,7 @@ func handlePlaidWebhookEndpoint(ctx context.Context, event events.APIGatewayCust
 	fmt.Println(plaid_ip_addresses)
 
 	if !ok {
-		panic("failed to fetch valid orum ip addresses")
+		panic("failed to fetch valid plaid ip addresses")
 	}
 	return handleIpRestrictedEndpoint(ctx, event.RequestContext.Identity.SourceIP, plaid_ip_addresses, event.MethodArn)
 }
