@@ -185,7 +185,8 @@ class FulfillTransferOperation @Inject constructor(
         logger.info { "Checking balance" }
         val signalResult = plaidWrapper.getRiskDecision(accessToken, bankAccountId, transferRequestId, transferAmount, sub)
         logger.info { "Got signal result $signalResult" }
-        if (signalResult == SignalResult.DENY) throw DeclinedException()
+        // TODO: RE_ENABLE PLAID SIGNAL
+//        if (signalResult == SignalResult.DENY) throw DeclinedException()
 
         try {
             runBlocking {
