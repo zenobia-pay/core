@@ -106,6 +106,11 @@ Resources:
         OrumSecretsArn: !Ref OrumSecretsArn
         WebsocketServiceEndpoint: !Ref WebsocketServiceEndpoint
 
+  DashboardStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./sam/dashboard-stack.yml
+
 Outputs:
   WebEndpoint:
     Description: "API Gateway endpoint URL"
