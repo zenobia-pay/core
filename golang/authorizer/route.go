@@ -57,7 +57,6 @@ var validMerchantRoutes = []Route{
 	{"POST", "list-merchant-payouts"},
 	{"GET", "get-merchant-config"},
 	{"POST", "update-merchant-config"},
-	{"POST", "submit-merchant-onboarding"},
 	{"GET", "get-user-profile"},
 	{"GET", "create-m2m-credentials"},
 	{"POST", "list-m2m-credentials"},
@@ -74,7 +73,6 @@ var validCustomerRoutes = []Route{
 	{"POST", "fulfill-transfer"},
 	{"GET", "get-customer-transfer"},
 	{"POST", "list-customer-transfers"},
-	{"POST", "submit-customer-onboarding"},
 	{"GET", "get-user-profile"},
 	{"POST", "submit-terms"},
 }

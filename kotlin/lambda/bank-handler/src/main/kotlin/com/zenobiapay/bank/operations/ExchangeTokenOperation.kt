@@ -166,23 +166,27 @@ class ExchangeTokenOperation @Inject constructor(
         account: AccountBase,
         ach: NumbersACH?
     ) {
-        logger.info { "Processing account $account, ach $ach" }
         if (ach == null) {
             logger.error { "Could not find ach number for account ${account.accountId}" }
             throw InvalidRequestException("Could not find ach number for provided account")
         }
-        if (account.subtype != AccountSubtype.CHECKING && account.subtype != AccountSubtype.SAVINGS) {
-            logger.error { "expected checking or savings, got subtype ${account.subtype} for account ${account.accountId}" }
-            throw InvalidRequestException("Provided account is not checking nor savings")
+        if (account.subtype != AccountSubtype.CHECKING) {
+            logger.error { "expected checking account, got subtype ${account.subtype} for account ${account.accountId}" }
+            throw InvalidRequestException("Provided account is not checking")
         }
+
+        // TODO: remove fake account numbers
+        logger.info { "Using fake account id and routing number!!! Pls switch"}
         val orumId = orumWrapper.createExternalOrganization(
             OrumCreateExternalAccountRequest(
                 accountReferenceId = ach.accountId,
                 customerReferenceId = getOrumCustomerId(sub, userPoolGroup),
                 customerResourceType = getCustomerResourceType(userPoolGroup),
                 accountType = account.subtype!!.value,
-                accountNumber = ach.account,
-                routingNumber = ach.routing,
+//                accountNumber = ach.account,
+//                routingNumber = ach.routing,
+                accountNumber = "1111222233330000",
+                routingNumber = "011401533",
                 accountHolderName = userFullName
             )
         ).externalAccount.id
