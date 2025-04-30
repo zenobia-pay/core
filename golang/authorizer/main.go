@@ -96,7 +96,11 @@ func handleUnprotectedEndpoint(ctx context.Context, event events.APIGatewayCusto
 }
 
 func handleProtectedEndpoint(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
-	token := extractToken(event.Headers["Authorization"])
+	authorizationHeader := event.Headers["Authorization"]
+	if authorizationHeader == "" {
+		authorizationHeader = event.Headers["authorization"]
+	}
+	token := extractToken(authorizationHeader)
 	if isValidPath(event.Path, validCustomerRoutes) {
 		println("Attempting to validate token as customer")
 		context, isValid := handleCustomerJwtTokens(ctx, token)
