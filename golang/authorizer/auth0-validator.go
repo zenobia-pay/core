@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/url"
 	"os"
 	"time"
@@ -83,8 +82,6 @@ func init() {
 
 // GetValidatedUserClaims is a middleware that will check the validity of our JWT.
 func GetValidatedUserClaims(ctx context.Context, token string) (*validator.ValidatedClaims, error) {
-	// TODO: remove
-	fmt.Printf("Got token %s", token)
 	claims, err := basicJwtValidator.ValidateToken(ctx, token)
 	if err != nil {
 		println("Validation threw err", err.Error())

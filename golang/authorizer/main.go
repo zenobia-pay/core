@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -19,13 +18,6 @@ const namespace = "Authorizer"
 
 func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 	fmt.Printf("Got requestId %s, path %s\n", event.RequestContext.RequestID, event.Path)
-	b, err := json.MarshalIndent(event, "", "  ")
-	if err != nil {
-		panic("error is not nil")
-	}
-	// TODO: remove
-	fmt.Print("FULL EVENT")
-	fmt.Println(string(b))
 
 	var hasAuthorizationHeader = false
 	if authorization, ok := event.Headers["Authorization"]; ok {
@@ -115,8 +107,6 @@ func handleProtectedEndpoint(ctx context.Context, event events.APIGatewayCustomA
 	}
 	if isValidPath(event.Path, validMerchantRoutes) {
 		println("Attempting to validate token as merchant/m2m user")
-		// TODO: remove
-		fmt.Printf("Got jwt %s\n", token)
 		context, isValid := handleAuth0Tokens(ctx, token)
 		if isValid {
 			paths, err := generateOperationArns(event.MethodArn, validMerchantRoutes)
@@ -147,8 +137,6 @@ func handleCustomerJwtTokens(ctx context.Context, token string) (map[string]inte
 }
 
 func extractToken(authHeader string) string {
-	// TODO: remove
-	fmt.Printf("Got auth header %s", authHeader)
 	parts := strings.Split(authHeader, " ")
 	if len(parts) == 2 && parts[0] == "Bearer" {
 		return parts[1]
