@@ -17,8 +17,7 @@ import (
 const namespace = "Authorizer"
 
 func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
-	println("Got path " + event.Path)
-	fmt.Printf("Got requestId %s", event.RequestContext.RequestID)
+	fmt.Printf("Got requestId %s, path %s\n", event.RequestContext.RequestID, event.Path)
 
 	var hasAuthorizationHeader = false
 	if authorization, ok := event.Headers["Authorization"]; ok {
@@ -130,7 +129,7 @@ func handleCustomerJwtTokens(ctx context.Context, token string) (map[string]inte
 	claims, err := jwt.ValidateCustomerJwt(ctx, token)
 	isValid := err == nil
 	fmt.Printf("Got isValidCustomerJwtToken: %t", isValid)
-	return getCustomerContext(*claims), isValid
+	return getCustomerContext(claims), isValid
 }
 
 func extractToken(authHeader string) string {
@@ -141,7 +140,10 @@ func extractToken(authHeader string) string {
 	return ""
 }
 
-func getCustomerContext(claims jwt.CustomerClaims) map[string]interface{} {
+func getCustomerContext(claims *jwt.CustomerClaims) map[string]interface{} {
+	if claims == nil {
+		return nil
+	}
 	context := map[string]interface{}{
 		"sub":  claims.Subject,
 		"role": claims.Role,
