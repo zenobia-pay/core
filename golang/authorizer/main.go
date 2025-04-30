@@ -135,6 +135,8 @@ func handleCustomerJwtTokens(ctx context.Context, token string) (map[string]inte
 }
 
 func extractToken(authHeader string) string {
+	// TODO: remove
+	fmt.Printf("Got auth header %s", authHeader)
 	parts := strings.Split(authHeader, " ")
 	if len(parts) == 2 && parts[0] == "Bearer" {
 		return parts[1]
