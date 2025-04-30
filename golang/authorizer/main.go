@@ -23,6 +23,7 @@ func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequest
 	if err != nil {
 		panic("error is not nil")
 	}
+	// TODO: remove
 	fmt.Print("FULL EVENT")
 	fmt.Println(string(b))
 
