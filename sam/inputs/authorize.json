@@ -1,7 +1,7 @@
 {
     "type": "REQUEST",
     "headers": {
-        "Authorization": "Bearer "
+        "Authorization": "Bearer test"
     },
     "methodArn": "arn:aws:execute-api:us-east-1:123456789012:example/prod/POST/list-customer-transfers",
     "path": "/get-user-profile"

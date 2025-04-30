@@ -103,6 +103,8 @@ func handleProtectedEndpoint(ctx context.Context, event events.APIGatewayCustomA
 	}
 	if isValidPath(event.Path, validMerchantRoutes) {
 		println("Attempting to validate token as merchant/m2m user")
+		// TODO: remove
+		fmt.Printf("Got jwt %s\n", token)
 		context, isValid := handleAuth0Tokens(ctx, token)
 		if isValid {
 			paths, err := generateOperationArns(event.MethodArn, validMerchantRoutes)
