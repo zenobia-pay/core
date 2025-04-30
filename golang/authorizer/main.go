@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -18,6 +19,12 @@ const namespace = "Authorizer"
 
 func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 	fmt.Printf("Got requestId %s, path %s\n", event.RequestContext.RequestID, event.Path)
+	b, err := json.MarshalIndent(event, "", "  ")
+	if err != nil {
+		panic("error is not nil")
+	}
+	fmt.Print("FULL EVENT")
+	fmt.Println(string(b))
 
 	var hasAuthorizationHeader = false
 	if authorization, ok := event.Headers["Authorization"]; ok {
