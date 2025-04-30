@@ -1,8 +1,8 @@
 {
     "type": "REQUEST",
     "headers": {
-        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJSb2xlIjoiQ1VTVE9NRVIiLCJpc3MiOiJodHRwczovL2FwaS56ZW5vYmlhcGF5LmNvbSIsInN1YiI6ImZhYTljNDkzLTZlZjMtNGYzYy05MzQ2LTQwOWVjMzcxYmQzYiIsImV4cCI6MTc0NDg0MDc4NiwiaWF0IjoxNzQ0ODM5ODg2fQ.YFgljY4hppIfX6Dj7DSygwNJBLtsbYkm98PRMTHy-Qc"
+        "Authorization": "Bearer "
     },
     "methodArn": "arn:aws:execute-api:us-east-1:123456789012:example/prod/POST/list-customer-transfers",
-    "path": "/list-customer-transfers"
+    "path": "/get-user-profile"
 }

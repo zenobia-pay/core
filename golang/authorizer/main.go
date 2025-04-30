@@ -41,7 +41,7 @@ func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequest
 func handleOrumWebhookEndpoint(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 	println("Got orum webhook. Validating ip address")
 	orum_ip_addresses, ok := os.LookupEnv("VALID_ORUM_IP_ADDRESSES")
-	print("valid ip addresses: ")
+	print("valid orum ip addresses: ")
 	fmt.Println(orum_ip_addresses)
 
 	if !ok {
@@ -53,7 +53,7 @@ func handleOrumWebhookEndpoint(ctx context.Context, event events.APIGatewayCusto
 func handlePlaidWebhookEndpoint(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 	println("Got plaid webhook. Validating ip address")
 	plaid_ip_addresses, ok := os.LookupEnv("VALID_PLAID_IP_ADDRESSES")
-	print("valid ip addresses: ")
+	print("valid orum ip addresses: ")
 	fmt.Println(plaid_ip_addresses)
 
 	if !ok {
@@ -121,14 +121,14 @@ func handleProtectedEndpoint(ctx context.Context, event events.APIGatewayCustomA
 func handleAuth0Tokens(ctx context.Context, token string) (map[string]interface{}, bool) {
 	claims, err := GetValidatedUserClaims(ctx, token)
 	isValid := err == nil
-	println(fmt.Sprintf("Got isValidApiToken: %t", isValid))
+	println(fmt.Sprintf("Got isValidApiToken: %t\n", isValid))
 	return getUserContext(claims), isValid
 }
 
 func handleCustomerJwtTokens(ctx context.Context, token string) (map[string]interface{}, bool) {
 	claims, err := jwt.ValidateCustomerJwt(ctx, token)
 	isValid := err == nil
-	fmt.Printf("Got isValidCustomerJwtToken: %t", isValid)
+	fmt.Printf("Got isValidCustomerJwtToken: %t\n", isValid)
 	return getCustomerContext(claims), isValid
 }
 
