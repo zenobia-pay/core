@@ -47,18 +47,18 @@ func ValidateCustomerJwt(ctx context.Context, tokenString string) (*CustomerClai
 		return []byte(hmacSecret), nil
 	})
 	if err != nil {
-		log.Fatal("Token invalid:", err)
+		log.Println("Token invalid:", err)
 		return nil, err
 	}
 	if claims, ok := token.Claims.(*CustomerClaims); ok && token.Valid {
 		fmt.Println("Token is valid. Claims:", claims)
 		if claims.Issuer != issuer {
 			fmt.Printf("Unknown issuer %s", claims.Issuer)
-			return nil, errors.New("Unknown issuer")
+			return nil, errors.New("unknown issuer")
 		}
 		return claims, nil
 	} else {
-		log.Fatal("Invalid token")
-		return nil, fmt.Errorf("Invalid token")
+		log.Println("Invalid token")
+		return nil, fmt.Errorf("invalid token")
 	}
 }
