@@ -6,9 +6,6 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import dagger.Module
 import dagger.Provides
 import okhttp3.OkHttpClient
-import jakarta.inject.Named
-
-const val SAM_LOCAL = "SAM_LOCAL"
 
 @Module
 class SharedModule {
@@ -17,8 +14,4 @@ class SharedModule {
 
     @Provides
     fun provideObjectMapper(): ObjectMapper = jacksonObjectMapper().registerKotlinModule()
-
-    @Provides
-    @Named(SAM_LOCAL)
-    fun provideSamLocal(): String? = System.getenv("AWS_SAM_LOCAL")
 }

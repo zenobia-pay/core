@@ -117,10 +117,10 @@ class FulfillTransferOperation @Inject constructor(
         transferRequestItem = try {
             transferDao.updateTransferRequestLocked(transferRequestItem)
         } catch (e: ConditionalCheckFailedException) {
-            throw ConcurrentModificationException()
+            throw TransferStatusException("Transfer status is no longer in NOT_STARTED state.")
         }
 
-        logger.info { "Successfully set request to IN_FLIGHT" }
+        logger.info { "Successfully set request to FULFILL_LOCKED" }
         val fulfillTimestamp = Instant.now()
         transferFunds(
             transferRequestId,
