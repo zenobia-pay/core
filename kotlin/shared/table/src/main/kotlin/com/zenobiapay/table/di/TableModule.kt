@@ -1,13 +1,13 @@
 package com.zenobiapay.table.di
 
-import com.zenobiapay.di.SAM_LOCAL
 import dagger.Module
 import dagger.Provides
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
-import java.net.URI
 import jakarta.inject.Named
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
+import software.amazon.awssdk.core.retry.RetryPolicy
 
 const val BANK_TABLE_NAME = "BANK_TABLE_NAME"
 const val TRANSFER_TABLE_NAME = "TRANSFER_TABLE_NAME"
@@ -33,8 +33,16 @@ class TableModule {
     fun provideCredentialsTableName(): String = System.getenv("CREDENTIALS_TABLE_NAME")!!
 
     @Provides
-    fun provideDynamoDbClient(@Named(SAM_LOCAL) samLocal: String?): DynamoDbClient {
+    fun provideDynamoDbClient(): DynamoDbClient {
         return DynamoDbClient.builder()
+            .overrideConfiguration(
+                ClientOverrideConfiguration.builder()
+                    .retryPolicy(RetryPolicy.defaultRetryPolicy()
+                        .toBuilder()
+                        .numRetries(5)
+                        .build()
+                    ).build()
+            )
             .region(Region.US_EAST_1)
             .build()
     }
