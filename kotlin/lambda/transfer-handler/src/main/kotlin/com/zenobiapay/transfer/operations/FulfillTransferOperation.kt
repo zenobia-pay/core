@@ -182,15 +182,15 @@ class FulfillTransferOperation @Inject constructor(
     }
 
     private fun shouldPreApprove(transferAmount: Int, accessToken: String, bankAccountId: String, transferRequestId: String, sub: String): Boolean {
-        logger.info { "Checking balance" }
-        val signalResult = plaidWrapper.getRiskDecision(accessToken, bankAccountId, transferRequestId, transferAmount, sub)
-        logger.info { "Got signal result $signalResult" }
         // TODO: RE_ENABLE PLAID SIGNAL
+//        val signalResult = plaidWrapper.getRiskDecision(accessToken, bankAccountId, transferRequestId, transferAmount, sub)
+//        logger.info { "Got signal result $signalResult" }
 //        if (signalResult == SignalResult.DENY) throw DeclinedException()
 
         try {
             runBlocking {
                 withTimeout(15.seconds) {
+                    logger.info { "Checking balance" }
                     val balance = plaidWrapper.getAvailableBalance(accessToken, bankAccountId)
                     logger.info { "Got balance $balance" }
                     if (transferAmount * availableBalanceBuffer > balance) {
