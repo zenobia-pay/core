@@ -200,10 +200,12 @@ class FulfillTransferOperation @Inject constructor(
                 }
             }
         } catch (e: TimeoutCancellationException) {
-            logger.info { "Failed to fetch available funds for $bankAccountId. Returning signal result $signalResult" }
+//            logger.info { "Failed to fetch available funds for $bankAccountId. Returning signal result $signalResult" }
             metricHelper.putMetric("PlaidBalanceGetTimeout", 1.0, mapOf("path" to "/fulfill-transfer"))
         }
-        return signalResult == SignalResult.ACCEPT
+        // TODO: re-enable
+//        return signalResult == SignalResult.ACCEPT
+        return false
     }
 
     private fun transferFunds(
