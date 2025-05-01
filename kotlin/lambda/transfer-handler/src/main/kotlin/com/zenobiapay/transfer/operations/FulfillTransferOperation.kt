@@ -82,6 +82,7 @@ class FulfillTransferOperation @Inject constructor(
             ?: throw ResourceNotFoundException("TRANSFER")
         logger.info { "Got transfer request item $transferRequestItem" }
         if (transferRequestItem.outboundStatus != OutboundTransferStatus.NOT_STARTED) {
+            logger.info { "Got state ${transferRequestItem.outboundStatus}, invalid state!"}
             throw TransferStatusException("Transfer status is no longer in NOT_STARTED state.")
         }
 
@@ -117,6 +118,9 @@ class FulfillTransferOperation @Inject constructor(
         transferRequestItem = try {
             transferDao.updateTransferRequestLocked(transferRequestItem)
         } catch (e: ConditionalCheckFailedException) {
+            logger.error(e) {
+                "Got conditional check error when locking transfer request. Failing fast."
+            }
             throw TransferStatusException("Transfer status is no longer in NOT_STARTED state.")
         }
 

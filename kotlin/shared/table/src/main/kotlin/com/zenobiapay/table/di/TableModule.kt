@@ -1,12 +1,10 @@
 package com.zenobiapay.table.di
 
-import com.zenobiapay.di.SAM_LOCAL
 import dagger.Module
 import dagger.Provides
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
-import java.net.URI
 import jakarta.inject.Named
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
 import software.amazon.awssdk.core.retry.RetryPolicy
