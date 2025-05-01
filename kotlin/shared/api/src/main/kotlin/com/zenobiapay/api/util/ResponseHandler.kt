@@ -16,6 +16,7 @@ import com.zenobiapay.api.generated.model.ErrorResponse
 import com.zenobiapay.api.model.exception.DeclinedException
 import com.zenobiapay.api.model.exception.InsufficientFundsException
 import com.zenobiapay.api.model.exception.InvalidRequestException
+import com.zenobiapay.api.model.exception.TransferStatusException
 import com.zenobiapay.api.operation.Operation
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.validation.Validation
@@ -122,6 +123,7 @@ class ResponseHandler @Inject constructor(
     private fun getErrorString(error: Exception, statusCode: Int): String {
         if (error is InsufficientFundsException) return "InsufficientFunds"
         if (error is DeclinedException) return "Declined"
+        if (error is TransferStatusException) return "InvalidTransferStatus"
         return when (statusCode) {
             404 -> "NotFound"
             403 -> "AccessDenied"
