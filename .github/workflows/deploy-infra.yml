@@ -148,7 +148,7 @@ jobs:
       run: |
         sam deploy --no-confirm-changeset \
           --parameter-overrides \
-          Stage=beta \
+          Stage=${{ github.ref_name }} \
           PlaidSecretsArn=$PLAID_SECRETS_ARN \
           OrumSecretsArn=$ORUM_SECRETS_ARN \
           Auth0SecretsArn=$AUTH0_SECRETS_ARN \
