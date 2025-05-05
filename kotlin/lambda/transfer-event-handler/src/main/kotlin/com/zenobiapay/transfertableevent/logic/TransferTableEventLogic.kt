@@ -55,7 +55,8 @@ class TransferTableEventLogic @Inject constructor(
         websocketUtil.sendWebsocketUpdate(
             newItem.requestId,
             newItem.data?.merchant!!.id,
-            status
+            status,
+            newItem.data?.customer!!.name,
         )
     }
 

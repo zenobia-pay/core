@@ -68,6 +68,7 @@ Resources:
     Properties:
       TemplateURL: ./sam/lambda-stack.yml
       Parameters:
+        Stage: !Ref Stage
         SecurityGroupId: !GetAtt VpcStack.Outputs.SecurityGroupId
         SubnetId1: !GetAtt VpcStack.Outputs.PrivateSubnetId1
         SubnetId2: !GetAtt VpcStack.Outputs.PrivateSubnetId2
