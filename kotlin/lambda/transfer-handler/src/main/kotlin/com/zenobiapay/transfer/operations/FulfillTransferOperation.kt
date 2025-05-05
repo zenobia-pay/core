@@ -102,6 +102,8 @@ class FulfillTransferOperation @Inject constructor(
             userDao.getUserItem(transferRequestItem.data!!.merchant!!.id)
         } ?: throw ResourceNotFoundException("MERCHANT")
 
+        val customerItem = userDao.getUserItem(userId) ?: throw ResourceNotFoundException("CUSTOMER")
+
         validateRequestSignature(request, customerBankAccountItem)
 
         val transferAmount = transferRequestItem.amount!!
@@ -109,7 +111,8 @@ class FulfillTransferOperation @Inject constructor(
         val debtorId = transferRequestData.merchant!!
         val creditorId = PaymentParticipantIdentity(
             id = userId,
-            bankAccountId = bankAccountId
+            bankAccountId = bankAccountId,
+            name = "${customerItem.data.firstName} ${customerItem.data.lastName}"
         )
         val fulfillRequestId = input.requestContext.requestId
 

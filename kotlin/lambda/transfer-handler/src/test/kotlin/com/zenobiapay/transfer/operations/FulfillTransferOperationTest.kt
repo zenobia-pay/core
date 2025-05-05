@@ -69,6 +69,9 @@ class FulfillTransferOperationTest {
         every {
             userDao.getUserItem(MERCHANT_ID)
         } returns createUserItem()
+        every {
+            userDao.getUserItem(USER_ID)
+        } returns createUserItem()
         mockkStatic("com.zenobiapay.cryptography.util.CryptographyUtilKt")
         every {
             isSignatureValid(any(), CERT_VALUE, SIGNATURE, SIGNATURE_TYPE)

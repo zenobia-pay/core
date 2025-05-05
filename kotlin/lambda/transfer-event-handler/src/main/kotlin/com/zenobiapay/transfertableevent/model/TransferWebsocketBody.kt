@@ -11,7 +11,8 @@ import java.util.Base64
 data class TransferWebsocketBody(
     val transferRequestId: String,
     val merchantId: String,
-    val status: TransferStatus
+    val status: TransferStatus,
+    val customerName: String?,
 ) {
     fun generateSignedPayload(objectMapper: ObjectMapper, hmacSecret: String): String {
         val payload = Base64.getUrlEncoder().withoutPadding().encodeToString(objectMapper.writeValueAsBytes(this))

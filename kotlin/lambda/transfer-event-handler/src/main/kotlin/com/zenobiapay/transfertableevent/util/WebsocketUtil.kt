@@ -25,9 +25,14 @@ class WebsocketUtil @Inject constructor(
     @Named(TRANSFER_STATUS_NOTIFICATION_SECRET)
     private val hmacSecret: String
 ) {
-    fun sendWebsocketUpdate(transferRequestId: String, merchantId: String, status: TransferStatus) {
+    fun sendWebsocketUpdate(transferRequestId: String, merchantId: String, status: TransferStatus, customerName: String?) {
         logger.info { "Sending websocket update for request $transferRequestId, merchant $merchantId, status $status to $websocketUrl"}
-        val websocketBody = TransferWebsocketBody(transferRequestId, merchantId, status)
+        val websocketBody = TransferWebsocketBody(
+            transferRequestId,
+            merchantId,
+            status,
+            customerName,
+        )
         val encodedBody = EncodedWebsocketPostBody(websocketBody.generateSignedPayload(objectMapper, hmacSecret))
         val encodedBodyString = objectMapper.writeValueAsString(encodedBody)
         logger.info { "encoded body $encodedBody"}

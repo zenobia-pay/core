@@ -26,7 +26,7 @@ class TransferTableEventLogicTest {
         )
 
         verify {
-            websocketUtil.sendWebsocketUpdate(any(), any(), TransferStatus.COMPLETED)
+            websocketUtil.sendWebsocketUpdate(any(), any(), TransferStatus.COMPLETED, any())
         }
     }
 
@@ -41,7 +41,7 @@ class TransferTableEventLogicTest {
         )
 
         verify {
-            websocketUtil.sendWebsocketUpdate(any(), any(), TransferStatus.IN_FLIGHT)
+            websocketUtil.sendWebsocketUpdate(any(), any(), TransferStatus.IN_FLIGHT, any())
         }
     }
 
@@ -56,7 +56,7 @@ class TransferTableEventLogicTest {
         )
 
         verify {
-            websocketUtil.sendWebsocketUpdate(any(), any(), any())
+            websocketUtil.sendWebsocketUpdate(any(), any(), any(), any())
         }
     }
 
@@ -71,7 +71,7 @@ class TransferTableEventLogicTest {
         )
 
         verify(exactly = 0) {
-            websocketUtil.sendWebsocketUpdate(any(), any(), any())
+            websocketUtil.sendWebsocketUpdate(any(), any(), any(), any())
         }
     }
 
@@ -86,7 +86,7 @@ class TransferTableEventLogicTest {
         )
 
         verify(exactly = 0) {
-            websocketUtil.sendWebsocketUpdate(any(), any(), TransferStatus.FAILED)
+            websocketUtil.sendWebsocketUpdate(any(), any(), TransferStatus.FAILED, any())
         }
     }
 
