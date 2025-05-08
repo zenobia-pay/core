@@ -1318,7 +1318,7 @@ Resources:
       Handler: com.zenobiapay.bank.handlers.BankHandler::handleRequest
       MemorySize: 2048
       ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: !If [IsProd, 50, 3]
+        ProvisionedConcurrentExecutions: !If [IsProd, 3, 1]
       Environment:
         Variables:
           BANK_TABLE_NAME: !Ref BankTableName
@@ -1392,7 +1392,7 @@ Resources:
       Handler: com.zenobiapay.transfer.handlers.TransferHandler::handleRequest
       MemorySize: 2048
       ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: !If [IsProd, 50, 3]
+        ProvisionedConcurrentExecutions: !If [IsProd, 3, 1]
       Environment:
         Variables:
           TRANSFER_TABLE_NAME: !Ref TransferTableName
@@ -1478,7 +1478,7 @@ Resources:
       Handler: com.zenobiapay.user.handlers.UserHandler::handleRequest
       MemorySize: 2048
       ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: !If [IsProd, 50, 3]
+        ProvisionedConcurrentExecutions: !If [IsProd, 3, 1]
       Environment:
         Variables:
           USER_TABLE_NAME: !Ref UserTableName
