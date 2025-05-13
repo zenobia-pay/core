@@ -207,7 +207,6 @@ Resources:
                   minLength: 1
                 amount:
                   type: integer
-                  minimum: 0
             Location:
               type: object
               properties:
