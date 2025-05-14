@@ -1,23 +1,29 @@
 package com.zenobiapay.transfertableevent.logic
 
+import com.zenobia.metric.MetricHelper
 import com.zenobiapay.api.generated.model.TransferStatus
 import com.zenobiapay.table.transfer.model.InboundTransferStatus
 import com.zenobiapay.table.transfer.model.OutboundTransferStatus
 import com.zenobiapay.table.transfer.model.TransferItem
 import com.zenobiapay.transfertableevent.util.WebhookUtil
 import com.zenobiapay.transfertableevent.util.WebsocketUtil
+import com.zenobiapay.webhook.util.isValidWebhook
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verify
+import okhttp3.Response
 import org.junit.jupiter.api.Test
 
 class TransferTableEventLogicTest {
     val webhookUtil = mockk<WebhookUtil>(relaxed = true)
     val websocketUtil = mockk<WebsocketUtil>(relaxed = true)
+    val metricsHelper = mockk<MetricHelper>(relaxed = true)
 
     @Test
     fun `test send event when payment completes`() {
-        val logic = TransferTableEventLogic(webhookUtil, websocketUtil)
+        mockWebhookSuccess()
+        val logic = TransferTableEventLogic(webhookUtil, websocketUtil, metricsHelper)
         val oldImage = createTransferItem(InboundTransferStatus.IN_FLIGHT, OutboundTransferStatus.IN_FLIGHT_APPROVED)
         val newImage = createTransferItem(InboundTransferStatus.IN_FLIGHT, OutboundTransferStatus.COMPLETED)
         logic.handleRecord(
@@ -32,7 +38,8 @@ class TransferTableEventLogicTest {
 
     @Test
     fun `test send event when payment is in flight`() {
-        val logic = TransferTableEventLogic(webhookUtil, websocketUtil)
+        mockWebhookSuccess()
+        val logic = TransferTableEventLogic(webhookUtil, websocketUtil, metricsHelper)
         val oldImage = createTransferItem(InboundTransferStatus.IN_FLIGHT, OutboundTransferStatus.FULFILL_LOCKED)
         val newImage = createTransferItem(InboundTransferStatus.IN_FLIGHT, OutboundTransferStatus.IN_FLIGHT_WAITING)
         logic.handleRecord(
@@ -47,7 +54,8 @@ class TransferTableEventLogicTest {
 
     @Test
     fun `test send event when payment fails and was waiting`() {
-        val logic = TransferTableEventLogic(webhookUtil, websocketUtil)
+        mockWebhookSuccess()
+        val logic = TransferTableEventLogic(webhookUtil, websocketUtil, metricsHelper)
         val oldImage = createTransferItem(InboundTransferStatus.IN_FLIGHT, OutboundTransferStatus.IN_FLIGHT_WAITING)
         val newImage = createTransferItem(InboundTransferStatus.FAILED, OutboundTransferStatus.IN_FLIGHT_WAITING)
         logic.handleRecord(
@@ -62,7 +70,8 @@ class TransferTableEventLogicTest {
 
     @Test
     fun `test doesnt send event when payment already complete but inbound failed`() {
-        val logic = TransferTableEventLogic(webhookUtil, websocketUtil)
+        mockWebhookSuccess()
+        val logic = TransferTableEventLogic(webhookUtil, websocketUtil, metricsHelper)
         val oldImage = createTransferItem(InboundTransferStatus.IN_FLIGHT, OutboundTransferStatus.COMPLETED)
         val newImage = createTransferItem(InboundTransferStatus.FAILED, OutboundTransferStatus.COMPLETED)
         logic.handleRecord(
@@ -77,7 +86,8 @@ class TransferTableEventLogicTest {
 
     @Test
     fun `test doesnt send event when no status changed`() {
-        val logic = TransferTableEventLogic(webhookUtil, websocketUtil)
+        mockWebhookSuccess()
+        val logic = TransferTableEventLogic(webhookUtil, websocketUtil, metricsHelper)
         val oldImage = createTransferItem(InboundTransferStatus.FAILED, OutboundTransferStatus.IN_FLIGHT_WAITING)
         val newImage = createTransferItem(InboundTransferStatus.FAILED, OutboundTransferStatus.IN_FLIGHT_WAITING)
         logic.handleRecord(
@@ -88,6 +98,20 @@ class TransferTableEventLogicTest {
         verify(exactly = 0) {
             websocketUtil.sendWebsocketUpdate(any(), any(), TransferStatus.FAILED, any())
         }
+    }
+
+    private fun mockWebhookSuccess() {
+        val successResponse = mockk<Response>(relaxed = true)
+        mockkStatic("com.zenobiapay.webhook.util.WebhookValidatorKt")
+        every {
+            isValidWebhook(any())
+        } returns true
+        every {
+            successResponse.isSuccessful
+        } returns true
+        every {
+            webhookUtil.sendTransferStatus(any(), any(), any(), any(), any(), any())
+        } returns successResponse
     }
 
     private fun createTransferItem(

@@ -1,5 +1,6 @@
 package com.zenobiapay.transfertableevent.logic
 
+import com.zenobia.metric.MetricHelper
 import com.zenobiapay.api.generated.model.TransferStatus
 import com.zenobiapay.table.transfer.model.InboundTransferStatus
 import com.zenobiapay.table.transfer.model.TransferItem
@@ -15,6 +16,7 @@ private val logger = KotlinLogging.logger {}
 class TransferTableEventLogic @Inject constructor(
     private val webhookUtil: WebhookUtil,
     private val websocketUtil: WebsocketUtil,
+    private val metricsHelper: MetricHelper,
 ) {
     fun handleRecord(oldImage: TransferItem?, newImage: TransferItem?) {
         val hasOldImage = oldImage != null
@@ -39,25 +41,38 @@ class TransferTableEventLogic @Inject constructor(
             return
         }
         logger.info { "Sending status $status for requestId $requestId" }
+        var isWebhookStatusSuccessful = true
         if (webhookUrl != null) {
             if (isValidWebhook(webhookUrl)) {
-                webhookUtil.sendTransferStatus(
+                val response = webhookUtil.sendTransferStatus(
                     webhookUrl,
                     newItem.data?.merchant?.id!!,
                     newItem.requestId,
                     status,
                     newItem.amount!!
                 )
+                if (response == null || !response.isSuccessful) {
+                    logger.warn { "Invalid webhook attempted to publish. Skipping" }
+                    isWebhookStatusSuccessful = false
+                }
             } else {
                 logger.warn { "Invalid webhook attempted to publish. Skipping" }
+                metricsHelper.putMetric("InvalidWebhook", 1.0)
+                isWebhookStatusSuccessful = false
             }
         }
+        // Note: webhook needs to send before websocket to ensure merchant backend is notified first.
         websocketUtil.sendWebsocketUpdate(
             newItem.requestId,
             newItem.data?.merchant!!.id,
             status,
             newItem.data?.customer!!.name,
         )
+
+        if (!isWebhookStatusSuccessful) {
+            metricsHelper.putMetric("WebhookSendFailure", 1.0)
+            throw Exception("Failed to send webhook status.")
+        }
     }
 
     /**

@@ -11,6 +11,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okio.IOException
 import java.time.Instant
 import jakarta.inject.Inject
+import okhttp3.Response
 
 private val logger = KotlinLogging.logger {}
 
@@ -30,7 +31,7 @@ class WebhookUtil @Inject constructor(
         status: TransferStatus,
         amount: Int,
         timestamp: Instant = Instant.now()
-    ) {
+    ): Response? {
         val expiryTime = timestamp.plusSeconds(EXPIRY_OFFSET_SECONDS)
         val webhookBody = TransferWebhookBody(
             transferRequestId = transferRequestId,
@@ -48,9 +49,10 @@ class WebhookUtil @Inject constructor(
             .build()
 
         try {
-            okHttpClient.newCall(request).execute()
+            return okHttpClient.newCall(request).execute()
         } catch (e: IOException) {
             logger.error(e) { "Got exception when sending webhook $webhookBody. Swallowing." }
+            return null
         }
     }
 }
