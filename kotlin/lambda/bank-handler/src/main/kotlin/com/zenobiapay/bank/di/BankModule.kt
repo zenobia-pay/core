@@ -12,6 +12,7 @@ import jakarta.inject.Named
 
 const val PAGINATION_SECRET = "PAGINATION_SECRET"
 const val API_GATEWAY_ENDPOINT = "API_GATEWAY_ENDPOINT"
+const val BANK_ACCOUNT_HASHING_SECRET = "BANK_ACCOUNT_HASHING_SECRET"
 
 @Module
 class BankModule {
@@ -33,6 +34,16 @@ class BankModule {
     fun provideRefreshTokenHashingSecret(objectMapper: ObjectMapper, secretsManagerClient: SecretsManagerClient): String {
         val secretString = secretsManagerClient.getSecretValue {
             it.secretId("credentials/refreshtoken/hmac")
+        }.secretString()
+        val hmacSecret = objectMapper.readValue(secretString, HmacSecret::class.java)
+        return hmacSecret.secret
+    }
+
+    @Provides
+    @Named(BANK_ACCOUNT_HASHING_SECRET)
+    fun provideBankAccountHashingSecret(objectMapper: ObjectMapper, secretsManagerClient: SecretsManagerClient): String {
+        val secretString = secretsManagerClient.getSecretValue {
+            it.secretId("credentials/bankaccount/hmac")
         }.secretString()
         val hmacSecret = objectMapper.readValue(secretString, HmacSecret::class.java)
         return hmacSecret.secret

@@ -8,11 +8,11 @@ import (
 )
 
 func isValidRefreshToken(ctx context.Context, sub, refreshToken string) bool {
-	if expectedRefreshToken, err := ddb.GetHashedRefreshTokenFromCredentialsTable(ctx, sub); err == nil {
-		actualRefreshToken := hmac.EncodeHmac(refreshToken, secrets.GetRefreshTokenHashingSecret(ctx))
-		// fmt.Printf("Got encoded refresh token %s\n", a)
-		return actualRefreshToken == expectedRefreshToken
+	hashedRefreshToken := hmac.EncodeHmac(refreshToken, secrets.GetRefreshTokenHashingSecret(ctx))
+	isValid, err := ddb.GetHashedRefreshTokenFromCredentialsTable(ctx, sub, hashedRefreshToken)
+	if err != nil {
+		println("Error validating refresh token:", err.Error())
+		return false
 	}
-	println("Failed to get table item for sub")
-	return false
+	return isValid
 }

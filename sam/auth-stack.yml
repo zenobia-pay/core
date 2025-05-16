@@ -27,6 +27,18 @@ Resources:
         PasswordLength: 64
         ExcludeCharacters: "\"@/\\^`|&[](){}$=+"
 
+  BankAccountHashingSecret:
+    Type: AWS::SecretsManager::Secret
+    DeletionPolicy: Retain
+    Properties:
+      Name: credentials/bankaccount/hmac
+      Description: HMAC secret for hashing bank account
+      GenerateSecretString:
+        SecretStringTemplate: "{}"
+        GenerateStringKey: secret
+        PasswordLength: 64
+        ExcludeCharacters: "\"@/\\^`|&[](){}$=+"
+
 Outputs:
   CustomerJwtSigningSecret:
     Value: !Ref CustomerJwtSigningSecret
@@ -34,3 +46,6 @@ Outputs:
   RefreshTokenHashingSecret:
     Value: !Ref RefreshTokenHashingSecret
     Description: Signing secret for refresh tokens
+  BankAccountHashingSecret:
+    Value: !Ref BankAccountHashingSecret
+    Description: Signing secret for bank account

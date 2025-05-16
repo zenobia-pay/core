@@ -92,6 +92,7 @@ Resources:
         PlaidSlackWebhook: !Ref PlaidSlackWebhook
         CustomerJwtSigningSecret: !GetAtt AuthStack.Outputs.CustomerJwtSigningSecret
         RefreshTokenHashingSecret: !GetAtt AuthStack.Outputs.RefreshTokenHashingSecret
+        BankAccountHashingSecret: !GetAtt AuthStack.Outputs.BankAccountHashingSecret
         ZenobiaApiEndpoint: !Ref ZenobiaApiEndpoint
 
   PayoutStack:

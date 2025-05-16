@@ -75,6 +75,9 @@ Parameters:
   RefreshTokenHashingSecret:
     Type: String
     Description: Hash secret for refresh tokens
+  BankAccountHashingSecret:
+    Type: String
+    Description: Hash secret for bank accounts
   ZenobiaApiEndpoint:
     Type: String
     Description: Zenobia endpoint used to point plaid webhooks
@@ -1354,6 +1357,8 @@ Resources:
             SecretArn: !Ref CustomerJwtSigningSecret
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref RefreshTokenHashingSecret
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref BankAccountHashingSecret
         - CloudWatchPutMetricPolicy: {}
       Events:
         GetCreateLinkToken:

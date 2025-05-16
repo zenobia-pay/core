@@ -229,7 +229,7 @@ Outputs:
     Value: !Ref UserKmsKey
     Description: Bank table that stores plaid credentials
   CredentialsTableName:
-    Value: !Ref CredentialsTable
+    Value: !Ref CredentialsTableV2
     Description: Table that stores refresh tokens
   BankTableName:
     Value: !Ref BankTable

@@ -1,5 +1,6 @@
 package com.zenobiapay.table.credentials.dao
 
+import com.zenobiapay.table.credentials.model.BankHashMappingTableItem
 import com.zenobiapay.table.credentials.model.CredentialsTableItem
 import com.zenobiapay.table.di.CREDENTIALS_TABLE_NAME
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
@@ -17,14 +18,15 @@ class CredentialsDao @Inject constructor(
     @Named(CREDENTIALS_TABLE_NAME) private val credentialsTableName: String,
     @Named(REFRESH_TOKEN_HASHING_SECRET) private val refreshTokenHashingSecret: String
 ) {
-    val credentialsTable: DynamoDbTable<CredentialsTableItem> = enhancedClient.table(credentialsTableName, TableSchema.fromBean(CredentialsTableItem::class.java))
+    private val credentialsTable: DynamoDbTable<CredentialsTableItem> = enhancedClient.table(credentialsTableName, TableSchema.fromBean(CredentialsTableItem::class.java))
+    private val bankHashMappingTable: DynamoDbTable<BankHashMappingTableItem> = enhancedClient.table(credentialsTableName, TableSchema.fromBean(BankHashMappingTableItem::class.java))
 
     fun createRefreshToken(sub: String): String {
         val refreshToken = generateRefreshToken()
         credentialsTable.putItem(
             CredentialsTableItem(
                 pk = sub,
-                hashedRefreshToken = CredentialsTableItem.hashRefreshToken(refreshToken, refreshTokenHashingSecret)
+                sk = CredentialsTableItem.hashRefreshToken(refreshToken, refreshTokenHashingSecret)
             )
         )
         return refreshToken
@@ -35,6 +37,27 @@ class CredentialsDao @Inject constructor(
         val bytes = ByteArray(BYTE_LENGTH)
         random.nextBytes(bytes)
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
+    }
+
+    fun putBankHash(sub: String, bankHash: String) {
+        bankHashMappingTable.updateItem(
+            BankHashMappingTableItem(
+                pk = BankHashMappingTableItem.generatePk(bankHash),
+                sk = BankHashMappingTableItem.generateSk(),
+                sub = sub
+            )
+        )
+    }
+
+    fun getSubByBankHash(bankHash: String): String? {
+        val pk = BankHashMappingTableItem.generatePk(bankHash)
+        val sk = BankHashMappingTableItem.generateSk()
+        return bankHashMappingTable.getItem(
+            BankHashMappingTableItem(
+                pk = pk,
+                sk = sk
+            )
+        )?.sub
     }
 
 }
