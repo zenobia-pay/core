@@ -74,7 +74,11 @@ class ExchangeTokenOperation @Inject constructor(
             if (sub == request.sub) { // New customer, need to create orum person
                 registerCustomer(owner, sub)
             }
-            credentialsDao.createRefreshToken(sub)
+            credentialsDao.createRefreshToken(
+                sub = sub,
+                exchangeRequestId = input.requestContext.requestId,
+                userAgent = input.headers.getOrDefault("User-Agent", "")
+            )
         } else null
 
         accountsToAch.forEach { (account, ach) -> processAccount(

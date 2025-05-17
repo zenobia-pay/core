@@ -4,11 +4,15 @@ import com.zenobiapay.table.util.signHmacSha256
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
+import java.time.Instant
 
 @DynamoDbBean
 data class CredentialsTableItem(
     @get:DynamoDbPartitionKey var pk: String = "",
-    @get:DynamoDbSortKey var sk: String = ""
+    @get:DynamoDbSortKey var sk: String = "",
+    var exchangeRequestId: String = "",
+    var userAgent: String = "",
+    var creationDate: Instant = Instant.now()
 ) {
     companion object {
         fun hashRefreshToken(refreshToken: String, hmacSecret: String) = signHmacSha256(refreshToken, hmacSecret)

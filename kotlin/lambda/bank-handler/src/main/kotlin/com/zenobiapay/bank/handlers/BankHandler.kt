@@ -10,6 +10,7 @@ import com.zenobiapay.bank.operations.CreateLinkTokenOperation
 import com.zenobiapay.api.model.exception.UnknownPathException
 import com.zenobiapay.api.util.ResponseHandler
 import com.zenobiapay.bank.operations.DeleteBankAccountOperation
+import com.zenobiapay.bank.operations.DeleteRefreshTokenOperation
 import com.zenobiapay.bank.operations.ExchangeTokenOperation
 import com.zenobiapay.bank.operations.ListBankAccountsOperation
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -34,6 +35,9 @@ class BankHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
     lateinit var deleteBankAccountOperation: DeleteBankAccountOperation
 
     @Inject
+    lateinit var deleteRefreshTokenOperation: DeleteRefreshTokenOperation
+
+    @Inject
     lateinit var objectMapper: ObjectMapper
 
     init {
@@ -47,6 +51,7 @@ class BankHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
             "/exchange-token" -> exchangeTokenOperation
             "/list-bank-accounts" -> listBankAccountsOperation
             "/delete-bank-account" -> deleteBankAccountOperation
+            "/delete-refresh-token" -> deleteRefreshTokenOperation
             else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
         }
         return responseHandler.returnApiGwResponse(operation, input, context!!)
