@@ -103,3 +103,21 @@ output "client_id" {
 output "api_identifier" {
   value = auth0_resource_server.zenobia_api.identifier
 }
+
+resource "auth0_connection" "google_oauth2" {
+  count    = var.ENVIRONMENT == "prod" ? 1 : 0
+  name     = "google-oauth2"
+  strategy = "google-oauth2"
+  options {
+    client_id     = var.GOOGLE_CLIENT_ID
+    client_secret = var.GOOGLE_CLIENT_SECRET
+    allowed_audiences = ["https://dashboard.zenobiapay.com"]
+    scopes = ["email", "profile"]
+  }
+}
+
+resource "auth0_connection_clients" "google_oauth2_clients" {
+  count           = var.ENVIRONMENT == "prod" ? 1 : 0
+  enabled_clients = [auth0_client.zenobia_app.id]
+  connection_id   = auth0_connection.google_oauth2[0].id
+}
