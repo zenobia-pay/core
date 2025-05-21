@@ -75,6 +75,9 @@ Parameters:
   RefreshTokenHashingSecret:
     Type: String
     Description: Hash secret for refresh tokens
+  BankAccountHashingSecret:
+    Type: String
+    Description: Hash secret for bank accounts
   ZenobiaApiEndpoint:
     Type: String
     Description: Zenobia endpoint used to point plaid webhooks
@@ -207,7 +210,6 @@ Resources:
                   minLength: 1
                 amount:
                   type: integer
-                  minimum: 0
             Location:
               type: object
               properties:
@@ -576,6 +578,37 @@ Resources:
                           type: string
                           maxLength: 255
                           minLength: 1
+              responses:
+                "200":
+                  description: "Successful response"
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /delete-refresh-token:
+            post:
+              summary: "Deletes refresh token"
+              operationId: "DeleteRefreshToken"
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - refreshToken
+                      properties:
+                        refreshToken:
+                          type: string
+                          maxLength: 255
               responses:
                 "200":
                   description: "Successful response"
@@ -1355,6 +1388,8 @@ Resources:
             SecretArn: !Ref CustomerJwtSigningSecret
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref RefreshTokenHashingSecret
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref BankAccountHashingSecret
         - CloudWatchPutMetricPolicy: {}
       Events:
         GetCreateLinkToken:
@@ -1380,6 +1415,12 @@ Resources:
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /delete-bank-account
+            Method: POST
+        DeleteRefreshToken:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /delete-refresh-token
             Method: POST
 
   TransferHandlerFunction:

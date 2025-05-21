@@ -14,28 +14,21 @@ import (
 var ddbClient *dynamodb.Client
 var credentialsTableName string
 
-func GetHashedRefreshTokenFromCredentialsTable(ctx context.Context, sub string) (string, error) {
+func GetHashedRefreshTokenFromCredentialsTable(ctx context.Context, sub, refreshToken string) (bool, error) {
 	out, err := ddbClient.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(credentialsTableName),
 		Key: map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: sub},
+			"sk": &types.AttributeValueMemberS{Value: refreshToken},
 		},
 	})
 
 	if err != nil {
-		panic(fmt.Errorf("unexpected ddb error: %w", err))
+		return false, fmt.Errorf("unexpected ddb error: %w", err)
 	}
 
-	if len(out.Item) == 0 {
-		fmt.Printf("Could not get ddb item %s\n", err)
-		return "", err
-	}
-
-	refreshToken, ok := out.Item["hashedRefreshToken"].(*types.AttributeValueMemberS)
-	if !ok {
-		panic("unexpected type for credentials item hashedRefreshToken")
-	}
-	return refreshToken.Value, nil
+	// If the item exists with the given pk and sk, the token is valid
+	return out.Item != nil, nil
 }
 
 func InitDDB(ctx context.Context) {

@@ -15,6 +15,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactDeleteItemEnhancedRequest
 import jakarta.inject.Inject
 import jakarta.inject.Named
+import java.time.Instant
 
 private val logger = KotlinLogging.logger {}
 
@@ -59,7 +60,8 @@ class BankDao @Inject constructor(
                     orumId = orumId,
                     plaidItemId = plaidItemId,
                     bankPermissions = bankPermissions,
-                    deviceCertificate = deviceCertificate
+                    deviceCertificate = deviceCertificate,
+                    creationTime = Instant.now().toString()
                 )
             )
         )

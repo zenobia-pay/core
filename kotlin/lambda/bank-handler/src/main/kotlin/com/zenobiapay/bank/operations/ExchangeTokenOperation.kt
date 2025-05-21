@@ -18,6 +18,7 @@ import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.model.exception.DetailsNeededException
 import com.zenobiapay.api.util.getUserRole
+import com.zenobiapay.bank.di.BANK_ACCOUNT_HASHING_SECRET
 import com.zenobiapay.cryptography.util.isCertificateValid
 import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.orum.model.Contact
@@ -31,9 +32,11 @@ import com.zenobiapay.table.bank.model.DeviceCertificate
 import com.zenobiapay.table.credentials.dao.CredentialsDao
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.table.user.model.UserType
+import com.zenobiapay.table.util.signHmacSha256
 import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException
 import jakarta.inject.Inject
+import jakarta.inject.Named
 
 private val logger = KotlinLogging.logger {}
 
@@ -43,6 +46,7 @@ class ExchangeTokenOperation @Inject constructor(
     private val bankDao: BankDao,
     private val userDao: UserDao,
     private val credentialsDao: CredentialsDao,
+    @Named(BANK_ACCOUNT_HASHING_SECRET) private val bankAccountHashingSecret: String,
 ) : Operation<ExchangeTokenRequest, ExchangeToken200Response>() {
 
     override val inputType = ExchangeTokenRequest::class.java
@@ -59,18 +63,24 @@ class ExchangeTokenOperation @Inject constructor(
         }
 
         val exchangeResponse = plaidWrapper.exchangeLinkToken(request.linkToken)
-        val sub = (userId ?: request.sub).also {
-            logger.info { "Using sub $it" }
-        }
+        val accountsToAch = plaidWrapper.getZippedAccountsAndAch(exchangeResponse.accessToken)
+        val firstAccountAch = accountsToAch.first().second!!
+
+        val sub = getSub(userId, request.sub, accountsToAch.first().first.persistentAccountId ?: firstAccountAch.account, firstAccountAch.routing)
 
         val identityResponse = plaidWrapper.getIdentity(exchangeResponse.accessToken)
         val owner = getOwner(identityResponse)
         var refreshToken = if (input.requestContext.getUserRole() == UserPoolGroup.UNKNOWN) {
-            registerCustomer(owner, sub)
-            credentialsDao.createRefreshToken(sub!!)
+            if (sub == request.sub) { // New customer, need to create orum person
+                registerCustomer(owner, sub)
+            }
+            credentialsDao.createRefreshToken(
+                sub = sub,
+                exchangeRequestId = input.requestContext.requestId,
+                userAgent = input.headers.getOrDefault("User-Agent", "")
+            )
         } else null
 
-        val accountsToAch = plaidWrapper.getZippedAccountsAndAch(exchangeResponse.accessToken)
         accountsToAch.forEach { (account, ach) -> processAccount(
                 request = request,
                 exchangeResponse = exchangeResponse,
@@ -88,6 +98,7 @@ class ExchangeTokenOperation @Inject constructor(
     }
 
     private fun registerCustomer(owner: Owner, sub: String?) {
+        logger.info { "Registering customer $sub" }
         if (sub == null) throw InvalidRequestException("Invalid sub used")
         val temporaryUserItem = userDao.getUserItem(sub)
         if (temporaryUserItem == null || temporaryUserItem.ttl == null || temporaryUserItem.data.isApproved) {
@@ -157,6 +168,22 @@ class ExchangeTokenOperation @Inject constructor(
         return splitName[0].trim() to splitName[1].trim()
     }
 
+    private fun getSub(authedUserId: String?, requestSub: String?, account: String, routing: String): String {
+        if (authedUserId != null) return authedUserId.also { logger.info { "User is already authed, using sub $it" } }
+
+        // Hash the bank info to create a unique identifier
+        val bankHash = signHmacSha256("${routing}_$account", bankAccountHashingSecret)
+
+        // Try to find existing UUID using the bank hash
+        val existingSub = credentialsDao.getSubByBankHash(bankHash)
+        if (existingSub != null) return existingSub.also { logger.info { "Bank account already linked, using preexisting sub $it"} }
+        val finalSub = requestSub ?: throw InvalidRequestException("No sub specified for unauthenticated request")
+
+        // Create or update credentials
+        credentialsDao.putBankHash(finalSub, bankHash)
+        return finalSub
+    }
+
     private fun processAccount(
         request: ExchangeTokenRequest,
         exchangeResponse: ItemPublicTokenExchangeResponse,
@@ -175,18 +202,14 @@ class ExchangeTokenOperation @Inject constructor(
             throw InvalidRequestException("Provided account is not checking")
         }
 
-        // TODO: remove fake account numbers
-        logger.info { "Using fake account id and routing number!!! Pls switch"}
         val orumId = orumWrapper.createExternalOrganization(
             OrumCreateExternalAccountRequest(
                 accountReferenceId = ach.accountId,
                 customerReferenceId = getOrumCustomerId(sub, userPoolGroup),
                 customerResourceType = getCustomerResourceType(userPoolGroup),
                 accountType = account.subtype!!.value,
-//                accountNumber = ach.account,
-//                routingNumber = ach.routing,
-                accountNumber = "1111222233330000",
-                routingNumber = "011401533",
+                accountNumber = ach.account,
+                routingNumber = ach.routing,
                 accountHolderName = userFullName
             )
         ).externalAccount.id

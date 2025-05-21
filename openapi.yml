@@ -81,7 +81,6 @@ components:
           minLength: 1
         amount:
           type: integer
-          minimum: 1
     Location:
       type: object
       properties:
@@ -442,6 +441,36 @@ paths:
                   type: string
                   maxLength: 255
                   minLength: 1
+      responses:
+        "200":
+          description: "Successful response"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BankHandlerFunction.Arn}:prod/invocations
+        httpMethod: POST
+        type: aws_proxy
+  /delete-refresh-token:
+    post:
+      summary: "Deletes refresh token"
+      operationId: "DeleteRefreshToken"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  maxLength: 255
       responses:
         "200":
           description: "Successful response"
