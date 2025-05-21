@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test
 class OrumWrapperTest {
     private val httpClient = mockk<OkHttpClient>(relaxed = true)
     private val objectMapper = jacksonObjectMapper()
-    private val orumCredentials = OrumCredentials("clientId", "clientSecret")
+    private val orumCredentials = OrumCredentials("clientId", "clientSecret", "https://api.com")
     private val orumWrapper = OrumWrapper(httpClient, objectMapper, orumCredentials)
 
     @Test
