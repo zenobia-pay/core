@@ -40,6 +40,7 @@ data class BankData(
     var plaidItemId: String = "",
     var deviceCertificate: DeviceCertificate? = null,
     var bankPermissions: BankPermissions? = null,
+    var creationTime: String = ""
 )
 
 enum class BankPermissions {
