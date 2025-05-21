@@ -40,6 +40,7 @@ class OrumWrapper(
     private val objectMapper: ObjectMapper,
     private val orumCredentials: OrumCredentials
 ) {
+    val endpoint = orumCredentials.endpoint
 
     companion object {
         val JSON_MEDIA_TYPE = "application/json".toMediaTypeOrNull()
@@ -52,7 +53,7 @@ class OrumWrapper(
 
         val request = Request.Builder()
             .addOrumHeaders()
-            .url("https://api-sandbox.orum.io/oauth/token")
+            .url("$endpoint/oauth/token")
             .post(body)
             .addHeader("accept", "application/json")
             .addHeader("content-type", "application/json")
@@ -70,7 +71,7 @@ class OrumWrapper(
 
         val request = Request.Builder()
             .addOrumHeaders(accessToken.accessToken)
-            .url("https://api-sandbox.orum.io/deliver/external/accounts")
+            .url("$endpoint/deliver/external/accounts")
             .post(body)
             .build()
 
@@ -83,7 +84,7 @@ class OrumWrapper(
         val accessToken = getAccessToken(orumCredentials)
         val request = Request.Builder()
             .addOrumHeaders(accessToken.accessToken)
-            .url("https://api-sandbox.orum.io/deliver/external/accounts/$id")
+            .url("$endpoint/deliver/external/accounts/$id")
             .delete()
             .build()
 
@@ -105,7 +106,7 @@ class OrumWrapper(
         logger.info { "Creating transfer with request $createTransferRequest" }
         val request = Request.Builder()
             .addOrumHeaders(accessToken.accessToken)
-            .url("https://api-sandbox.orum.io/deliver/transfers")
+            .url("$endpoint/deliver/transfers")
             .post(body)
             .build()
 
@@ -141,7 +142,7 @@ class OrumWrapper(
         val accessToken = getAccessToken(orumCredentials)
         val request = Request.Builder()
             .addOrumHeaders(accessToken.accessToken)
-            .url("https://api-sandbox.orum.io/deliver/transfers/$transferId")
+            .url("$endpoint/deliver/transfers/$transferId")
             .build()
 
         return getResponseOrThrowException(OrumGetTransferResponse::class.java) {
@@ -155,7 +156,7 @@ class OrumWrapper(
         val body = objectMapper.writeValueAsString(createBusinessRequest).toRequestBody(JSON_MEDIA_TYPE)
         val request = Request.Builder()
             .addOrumHeaders(accessToken.accessToken)
-            .url("https://api-sandbox.orum.io/deliver/businesses")
+            .url("$endpoint/deliver/businesses")
             .post(body)
             .build()
 
@@ -170,7 +171,7 @@ class OrumWrapper(
         val body = objectMapper.writeValueAsString(createPersonRequest).toRequestBody(JSON_MEDIA_TYPE)
         val request = Request.Builder()
             .addOrumHeaders(accessToken.accessToken)
-            .url("https://api-sandbox.orum.io/deliver/persons")
+            .url("$endpoint/deliver/persons")
             .post(body)
             .build()
 
@@ -184,7 +185,7 @@ class OrumWrapper(
         val body = objectMapper.writeValueAsString(createPersonRequest).toRequestBody(JSON_MEDIA_TYPE)
         val request = Request.Builder()
             .addOrumHeaders(accessToken.accessToken)
-            .url("https://api-sandbox.orum.io/deliver/persons")
+            .url("$endpoint/deliver/persons")
             .put(body)
             .build()
 

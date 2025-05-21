@@ -6,5 +6,7 @@ data class OrumCredentials(
     @JsonProperty("client_id")
     val clientId: String,
     @JsonProperty("client_secret")
-    val clientSecret: String
+    val clientSecret: String,
+    @JsonProperty("endpoint")
+    val endpoint: String,
 )
