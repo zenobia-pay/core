@@ -132,7 +132,8 @@ class FulfillTransferOperation @Inject constructor(
         transferFunds(
             transferRequestId,
             transferAmount,
-            creditorId
+            creditorId,
+            debtorId,
         )
 
         val statementItems = transferRequestData.statementItems.map { it.toApiStatementItem() }
@@ -189,17 +190,15 @@ class FulfillTransferOperation @Inject constructor(
     }
 
     private fun shouldPreApprove(transferAmount: Int, accessToken: String, bankAccountId: String, transferRequestId: String, sub: String): Boolean {
-        // TODO: RE_ENABLE PLAID SIGNAL
-//        val signalResult = plaidWrapper.getRiskDecision(accessToken, bankAccountId, transferRequestId, transferAmount, sub)
-//        logger.info { "Got signal result $signalResult" }
-//        if (signalResult == SignalResult.DENY) throw DeclinedException()
+        val signalResult = plaidWrapper.getRiskDecision(accessToken, bankAccountId, transferRequestId, transferAmount, sub)
+        logger.info { "Got signal result $signalResult" }
+        if (signalResult == SignalResult.DENY) throw DeclinedException()
 
         try {
             runBlocking {
                 withTimeout(15.seconds) {
                     logger.info { "Checking balance" }
                     val balance = plaidWrapper.getAvailableBalance(accessToken, bankAccountId)
-                    logger.info { "Got balance $balance" }
                     if (transferAmount * availableBalanceBuffer > balance) {
                         logger.info { "Balance $balance was not greater than transfer amount $transferAmount with buffer $availableBalanceBuffer"}
                         throw InsufficientFundsException()
@@ -207,18 +206,17 @@ class FulfillTransferOperation @Inject constructor(
                 }
             }
         } catch (e: TimeoutCancellationException) {
-//            logger.info { "Failed to fetch available funds for $bankAccountId. Returning signal result $signalResult" }
+            logger.info { "Failed to fetch available funds for $bankAccountId. Returning signal result $signalResult" }
             metricHelper.putMetric("PlaidBalanceGetTimeout", 1.0, mapOf("path" to "/fulfill-transfer"))
         }
-        // TODO: re-enable
-//        return signalResult == SignalResult.ACCEPT
-        return false
+        return signalResult == SignalResult.ACCEPT
     }
 
     private fun transferFunds(
         transferRequestId: String,
         transferAmount: Int,
-        creditorId: PaymentParticipantIdentity
+        creditorId: PaymentParticipantIdentity,
+        debtorId: PaymentParticipantIdentity,
     ): OrumCreateTransferResponse? {
         if (transferAmount == 0) {
             logger.info { "Transfer amount is 0. Skipping deduction." }
@@ -232,7 +230,7 @@ class FulfillTransferOperation @Inject constructor(
                     source = TransferParticipant(
                         customerReferenceId = generateCustomerOrumId(creditorId.id),
                         accountReferenceId = creditorId.bankAccountId,
-                        statementDisplayName = creditorId.name
+                        statementDisplayName = debtorId.name!!.take(16) // Can have max 16 characters for display name
                     ),
                     destination = null
                 )
