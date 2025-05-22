@@ -30,7 +30,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: CredentialsTable
-      DeletionProtectionEnabled: true
+      DeletionProtectionEnabled: false
       KeySchema:
         - AttributeName: pk
           KeyType: HASH
