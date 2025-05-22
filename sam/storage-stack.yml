@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Stack to store DDB tables
+Description: Stack to store DDB tables and RDS instances
 
 Parameters:
   Stage:
@@ -9,6 +9,24 @@ Parameters:
   UniqueIdentifier:
     Type: String
     Description: Unique identifier to avoid resource naming conflicts. Should only be needed for dev sandbox accounts
+  VpcId:
+    Type: String
+    Description: ID of the VPC where the RDS instance will be deployed
+  PrivateSubnet1:
+    Type: String
+    Description: ID of the first private subnet for the RDS instance
+  PrivateSubnet2:
+    Type: String
+    Description: ID of the second private subnet for the RDS instance
+  SecurityGroupId:
+    Type: String
+    Description: ID of the security group for the RDS instance
+
+Conditions:
+  IsProd:
+    Fn::Equals:
+      - !Ref Stage
+      - "prod"
 
 Resources:
   CredentialsTableKmsKey:
@@ -215,6 +233,121 @@ Resources:
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
 
+  # KMS Key for RDS PostgreSQL instance
+  MetadataDBKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Key to encrypt Metadata RDS PostgreSQL instance
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowRootAccount
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: "kms:*"
+            Resource: "*"
+          - Sid: AllowRDSService
+            Effect: Allow
+            Principal:
+              Service: rds.amazonaws.com
+            Action:
+              - "kms:Encrypt"
+              - "kms:Decrypt"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey*"
+              - "kms:CreateGrant"
+              - "kms:ListGrants"
+              - "kms:DescribeKey"
+            Resource: "*"
+
+  MetadataDBSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: 
+        Fn::Sub: "Credentials for Metadata RDS PostgreSQL instance - ${Stage}"
+      Name:
+        Fn::Join:
+          - "-"
+          - - "metadatadb"
+            - "credentials"
+            - !Ref Stage
+      GenerateSecretString:
+        SecretStringTemplate: '{"username":"admin"}'  
+        GenerateStringKey: "password"
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\\'
+      KmsKeyId: !Ref MetadataDBKmsKey
+      Tags:
+        - Key: Name
+          Value: 
+            Fn::Sub: "MetadataDB-Secret-${Stage}"
+
+  MetadataDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: !Sub "Subnet group for Metadata RDS - ${Stage}"
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+
+  # RDS instance for item/transfer metadata provided by merchants
+  MetadataDBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      EngineVersion: 17.5
+      DBInstanceIdentifier:
+        Fn::Join:
+          - ""
+          - - "metadatadb"
+            - !Ref Stage
+      DBName: metadatadb
+      MasterUsername: dbadmin
+      MasterUserPassword: 
+        Fn::Join:
+          - ''
+          - - '{{resolve:secretsmanager:'
+            - !Ref MetadataDBSecret
+            - ':SecretString:password}}'
+      DBInstanceClass:
+        Fn::If:
+          - IsProd
+          - db.t3.medium  # More resources for production (2 vCPU, 4GB RAM)
+          - db.t3.micro   # Smaller for non-prod (2 vCPU, 1GB RAM)
+      AllocatedStorage:
+        Fn::If:
+          - IsProd
+          - 50  # More storage for production
+          - 20  # Less storage for non-prod
+      MaxAllocatedStorage:
+        Fn::If:
+          - IsProd
+          - 200  # Higher max storage for production
+          - 100  # Lower max storage for non-prod
+      StorageType: gp2
+      MultiAZ:
+        Fn::If:
+          - IsProd
+          - true   # Enable Multi-AZ for production (higher availability)
+          - false  # Disable for non-prod to save costs
+      PubliclyAccessible: false
+      DBSubnetGroupName: !Ref MetadataDBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref SecurityGroupId
+      BackupRetentionPeriod: 7
+      DeleteAutomatedBackups: true
+      DeletionProtection:
+        Fn::If:
+          - IsProd
+          - true
+          - false
+      StorageEncrypted: true
+      KmsKeyId: !Ref MetadataDBKmsKey
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+
 Outputs:
   CredentialsTableKeyId:
     Value: !Ref CredentialsTableKmsKey
@@ -242,4 +375,16 @@ Outputs:
     Description: User table that stores additional user metadata
   TransferTableStreamArn:
     Value: !GetAtt TransferTable.StreamArn
+  MetadataDBKeyId:
+    Value: !Ref MetadataDBKmsKey
+    Description: KMS key for the Metadata RDS PostgreSQL instance
+  MetadataDBEndpoint:
+    Value: !GetAtt MetadataDBInstance.Endpoint.Address
+    Description: Endpoint of the Metadata RDS instance
+  MetadataDBPort:
+    Value: !GetAtt MetadataDBInstance.Endpoint.Port
+    Description: Port of the Metadata RDS instance
+  MetadataDBName:
+    Value: metadatadb
+    Description: Database name of the Metadata RDS instance
 
