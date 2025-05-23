@@ -297,7 +297,7 @@ Resources:
     Type: AWS::RDS::DBInstance
     Properties:
       Engine: postgres
-      EngineVersion: 17.5
+      EngineVersion: 15.13
       DBInstanceIdentifier:
         Fn::Join:
           - ""
@@ -347,6 +347,40 @@ Resources:
       KmsKeyId: !Ref MetadataDBKmsKey
     DeletionPolicy: Snapshot
     UpdateReplacePolicy: Snapshot
+
+  SSMInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  SSMInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref SSMInstanceRole
+
+  SSMBastionHost:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.micro
+      ImageId: ami-0c94855ba95c71c99  # Amazon Linux 2 (update to latest for your region)
+      IamInstanceProfile: !Ref SSMInstanceProfile
+      SubnetId: !Ref PrivateSubnet1
+      SecurityGroupIds:
+        - !Ref SecurityGroupId
+      Tags:
+        - Key: Name
+          Value: !Sub "SSM-Bastion-${Stage}"
 
 Outputs:
   CredentialsTableKeyId:
