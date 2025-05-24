@@ -20,8 +20,29 @@ resource "auth0_client" "zenobia_app" {
   name            = "Zenobia Pay"
   app_type        = "regular_web"
   logo_uri = "https://zenobiapay.com/android-chrome-192x192.png"
-  callbacks       = ["https://dashboard.zenobiapay.com/callback", "http://localhost:3000/admin",  "http://localhost:3000", "http://localhost:3000/login", "https://dashboard.zenobiapay.com/login", "zenobia://login-callback"]
-  allowed_logout_urls = ["https://dashboard.zenobiapay.com", "http://localhost:3000"]
+  callbacks       = var.ENVIRONMENT == "prod" ? [
+    "https://dashboard.zenobiapay.com/callback",
+    "https://dashboard.zenobiapay.com/login",
+    "zenobia://login-callback"
+  ] : var.ENVIRONMENT == "dev" ? [
+    "https://beta-dashboard.zenobiapay.com/callback",
+    "https://beta-dashboard.zenobiapay.com/login",
+    "zenobia://login-callback",
+    "http://localhost:3000",
+    "http://localhost:3000/login"
+  ] : [
+    "https://beta-dashboard.zenobiapay.com/callback",
+    "https://beta-dashboard.zenobiapay.com/login",
+    "zenobia://login-callback"
+  ]
+  allowed_logout_urls = var.ENVIRONMENT == "prod" ? [
+    "https://dashboard.zenobiapay.com"
+  ] : var.ENVIRONMENT == "dev" ? [
+    "https://beta-dashboard.zenobiapay.com",
+    "http://localhost:3000"
+  ] : [
+    "https://beta-dashboard.zenobiapay.com"
+  ]
 }
 
 resource "auth0_client_grant" "zenobia_app_client_grant" {
