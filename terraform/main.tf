@@ -24,24 +24,18 @@ resource "auth0_client" "zenobia_app" {
     "https://dashboard.zenobiapay.com/callback",
     "https://dashboard.zenobiapay.com/login",
     "zenobia://login-callback"
-  ] : var.ENVIRONMENT == "dev" ? [
+  ] : [
     "https://beta-dashboard.zenobiapay.com/callback",
     "https://beta-dashboard.zenobiapay.com/login",
     "zenobia://login-callback",
     "http://localhost:3000",
     "http://localhost:3000/login"
-  ] : [
-    "https://beta-dashboard.zenobiapay.com/callback",
-    "https://beta-dashboard.zenobiapay.com/login",
-    "zenobia://login-callback"
   ]
   allowed_logout_urls = var.ENVIRONMENT == "prod" ? [
     "https://dashboard.zenobiapay.com"
-  ] : var.ENVIRONMENT == "dev" ? [
+  ] : [
     "https://beta-dashboard.zenobiapay.com",
     "http://localhost:3000"
-  ] : [
-    "https://beta-dashboard.zenobiapay.com"
   ]
 }
 
