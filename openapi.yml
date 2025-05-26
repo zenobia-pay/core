@@ -884,14 +884,6 @@ paths:
             schema:
               type: object
               properties:
-                bankAccountId:
-                  type: string
-                  minLength: 1
-                  maxLength: 256
-                merchantDisplayName:
-                  type: string
-                  minLength: 1
-                  maxLength: 256
                 merchantDescription:
                   type: string
                   minLength: 1
