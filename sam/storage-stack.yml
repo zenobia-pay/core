@@ -300,7 +300,7 @@ Resources:
       EngineVersion: 15.13
       DBInstanceIdentifier:
         Fn::Join:
-          - ""
+          - "-"
           - - "metadatadb"
             - !Ref Stage
       DBName: metadatadb
@@ -381,6 +381,66 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "SSM-Bastion-${Stage}"
+          
+  # RDS Proxy for managing connections to the PostgreSQL instance
+  MetadataDBProxyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: rds.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+      Policies:
+        - PolicyName: SecretsManagerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                Resource: !Ref MetadataDBSecret
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                Resource: !GetAtt MetadataDBKmsKey.Arn
+
+  MetadataDBProxy:
+    Type: AWS::RDS::DBProxy
+    Properties:
+      DBProxyName: !Sub "metadata-db-proxy-${Stage}"
+      EngineFamily: POSTGRESQL
+      RoleArn: !GetAtt MetadataDBProxyRole.Arn
+      Auth:
+        - AuthScheme: SECRETS
+          SecretArn: !Ref MetadataDBSecret
+          IAMAuth: DISABLED
+      VpcSubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      VpcSecurityGroupIds:
+        - !Ref SecurityGroupId
+      RequireTLS: true
+      IdleClientTimeout: 1800  # 30 minutes in seconds
+      DebugLogging: false
+
+  MetadataDBProxyTargetGroup:
+    Type: AWS::RDS::DBProxyTargetGroup
+    Properties:
+      DBProxyName: !Ref MetadataDBProxy
+      TargetGroupName: default
+      DBInstanceIdentifiers:
+        - !Ref MetadataDBInstance
+      ConnectionPoolConfigurationInfo:
+        MaxConnectionsPercent: 100
+        MaxIdleConnectionsPercent: 50
+        ConnectionBorrowTimeout: 120  # 2 minutes in seconds
+        SessionPinningFilters: ["EXCLUDE_VARIABLE_SETS"]
 
 Outputs:
   CredentialsTableKeyId:
@@ -409,9 +469,12 @@ Outputs:
     Description: User table that stores additional user metadata
   TransferTableStreamArn:
     Value: !GetAtt TransferTable.StreamArn
-  MetadataDBKeyId:
-    Value: !Ref MetadataDBKmsKey
-    Description: KMS key for the Metadata RDS PostgreSQL instance
+  MetadataDBSecret:
+    Value: !Ref MetadataDBSecret
+    Description: ARN of the secret containing RDS credentials
+  MetadataDBProxyEndpoint:
+    Value: !GetAtt MetadataDBProxy.Endpoint
+    Description: Endpoint of the RDS Proxy for the Metadata database
   MetadataDBEndpoint:
     Value: !GetAtt MetadataDBInstance.Endpoint.Address
     Description: Endpoint of the Metadata RDS instance

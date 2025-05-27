@@ -81,6 +81,24 @@ Parameters:
   ZenobiaApiEndpoint:
     Type: String
     Description: Zenobia endpoint used to point plaid webhooks
+  MetadataDBEndpoint:
+    Type: String
+    Description: Endpoint of the Metadata RDS instance
+  MetadataDBPort:
+    Type: String
+    Description: Port of the Metadata RDS instance
+  MetadataDBName:
+    Type: String
+    Description: Database name of the Metadata RDS instance
+  MetadataDBSecret:
+    Type: String
+    Description: ARN of the secret containing RDS credentials
+  MetadataDBProxyEndpoint:
+    Type: String
+    Description: Endpoint of the RDS Proxy for the Metadata database
+  TransferMetadataQueueUrl:
+    Type: String
+    Description: URL of the Transfer Metadata Queue
 
 Conditions:
   IsProd: !Equals [!Ref Stage, "prod"]
@@ -1432,6 +1450,10 @@ Resources:
           BANK_TABLE_NAME: !Ref BankTableName
           USER_TABLE_NAME: !Ref UserTableName
           AVAILABLE_BALANCE_BUFFER: "1.1"
+          METADATA_DB_PROXY_ENDPOINT: !Ref MetadataDBProxyEndpoint
+          METADATA_DB_NAME: !Ref MetadataDBName
+          METADATA_DB_SECRET_ARN: !Ref MetadataDBSecret
+          TRANSFER_METADATA_QUEUE_URL: !Ref TransferMetadataQueueUrl
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref OrumSecretsArn
@@ -1441,6 +1463,14 @@ Resources:
             SecretArn: !Ref PaginationSigningSecret
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref WebsocketTransferSubscribeSigningSecret
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref MetadataDBSecret
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sqs:SendMessage
+                - sqs:SendMessageBatch
+              Resource: !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:TransferMetadataQueue-${Stage}"
         - AWSLambdaVPCAccessExecutionRole
         - CloudWatchPutMetricPolicy: {}
         - DynamoDBCrudPolicy:

@@ -14,11 +14,13 @@ include(
     "kotlin:shared:table",
     "kotlin:shared:webhook",
     "kotlin:shared:cryptography",
+    "kotlin:shared:table:rds",
     "kotlin:shared:table:bank",
     "kotlin:shared:table:transfer",
     "kotlin:shared:table:user",
     "kotlin:lambda:bank-handler",
     "kotlin:lambda:transfer-handler",
+    "kotlin:lambda:transfer-metadata-handler",
     "kotlin:lambda:user-handler",
     "kotlin:lambda:webhook-handler",
     "kotlin:lambda:payout-handler",
@@ -32,3 +34,5 @@ include("kotlin:shared:metrics")
 findProject(":kotlin:shared:metrics")?.name = "metrics"
 include("kotlin:lambda:webhook-event-handler")
 findProject(":kotlin:lambda:webhook-event-handler")?.name = "webhook-event-handler"
+include("kotlin:shared:table:rds")
+findProject(":kotlin:shared:table:rds")?.name = "rds"
