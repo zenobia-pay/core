@@ -20,7 +20,9 @@ data class TransferEventBodyInner(
 )
 
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class CustomerAccount(
     val account_reference_id: String?,
     val customer_reference_id: String?,
+    val statement_display_name: String?,
 )
