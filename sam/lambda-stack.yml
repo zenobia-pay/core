@@ -96,7 +96,7 @@ Parameters:
   MetadataDBProxyEndpoint:
     Type: String
     Description: Endpoint of the RDS Proxy for the Metadata database
-  TransferMetadataQueueUrl:
+  ItemMetadataQueueUrl:
     Type: String
     Description: URL of the Transfer Metadata Queue
 
@@ -664,6 +664,14 @@ Resources:
                           type: array
                           items:
                             $ref: "#/components/schemas/StatementItem"
+                        transferMetadata:
+                          type: object
+                          additionalProperties: true
+                        itemMetadata:
+                          type: array
+                          items:
+                            type: object
+                            additionalProperties: true
               responses:
                 "200":
                   description: "Successful response"
@@ -1453,7 +1461,7 @@ Resources:
           METADATA_DB_PROXY_ENDPOINT: !Ref MetadataDBProxyEndpoint
           METADATA_DB_NAME: !Ref MetadataDBName
           METADATA_DB_SECRET_ARN: !Ref MetadataDBSecret
-          TRANSFER_METADATA_QUEUE_URL: !Ref TransferMetadataQueueUrl
+          ITEM_METADATA_QUEUE_URL: !Ref ItemMetadataQueueUrl
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref OrumSecretsArn

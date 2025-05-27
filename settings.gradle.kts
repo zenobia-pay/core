@@ -20,7 +20,7 @@ include(
     "kotlin:shared:table:user",
     "kotlin:lambda:bank-handler",
     "kotlin:lambda:transfer-handler",
-    "kotlin:lambda:transfer-metadata-handler",
+    "kotlin:lambda:item-metadata-handler",
     "kotlin:lambda:user-handler",
     "kotlin:lambda:webhook-handler",
     "kotlin:lambda:payout-handler",

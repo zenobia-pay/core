@@ -1,14 +1,11 @@
 package com.zenobiapay.rds.di
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.rds.model.MetadataTableSecret
 import dagger.Module
 import dagger.Provides
 import jakarta.inject.Named
-import jakarta.inject.Singleton
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
-import javax.sql.DataSource
 
 @Module
 class RdsModule {
@@ -33,35 +30,30 @@ class RdsModule {
     }
 
     @Provides
-    @Singleton
     @Named(PG_HOST)
     fun providePgHost(): String {
         return System.getenv(ENV_METADATA_DB_PROXY_ENDPOINT)!!
     }
 
     @Provides
-    @Singleton
     @Named(PG_PORT)
     fun providePgPort(): String {
         return DEFAULT_PG_PORT
     }
 
     @Provides
-    @Singleton
     @Named(PG_DATABASE)
     fun providePgDatabase(): String {
         return System.getenv(ENV_METADATA_DB_NAME) ?: ""
     }
 
     @Provides
-    @Singleton
     @Named(PG_USER)
     fun providePgUser(): String {
         return DEFAULT_PG_USER
     }
 
     @Provides
-    @Singleton
     @Named(PG_PASSWORD)
     fun providePgPassword(objectMapper: ObjectMapper, secretsManager: SecretsManagerClient): String {
         val secretArn = System.getenv(ENV_METADATA_DB_SECRET_ARN)!!
@@ -73,7 +65,6 @@ class RdsModule {
     }
 
     @Provides
-    @Singleton
     @Named(PG_JDBC_URL)
     fun provideJdbcUrl(
         @Named(PG_HOST) host: String,

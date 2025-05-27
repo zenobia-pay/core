@@ -9,10 +9,12 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.services.cloudwatch.CloudWatchClient
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
 import jakarta.inject.Named
+import software.amazon.awssdk.services.sqs.SqsClient
 
 const val PAGINATION_SECRET = "PAGINATION_SECRET"
 const val TRANSFER_NOTIFICATION_SECRET = "TRANSFER_NOTIFICATION_SECRET"
 const val AVAILABLE_BALANCE_BUFFER = "AVAILABLE_BALANCE_BUFFER"
+const val TRANSFER_METADATA_QUEUE_URL = "TRANSFER_METADATA_QUEUE_URL"
 
 private val logger = KotlinLogging.logger {}
 
@@ -52,6 +54,15 @@ class TransferModule {
     @Provides
     @Named(METRIC_NAMESPACE)
     fun provideMetricNamespace() = "TransferHandler"
+
+    @Provides
+    @Named(TRANSFER_METADATA_QUEUE_URL)
+    fun provideTransferMetadataQueueUrl(): String = System.getenv("ITEM_METADATA_QUEUE_URL")
+
+    @Provides
+    fun provideSqsClient(): SqsClient {
+        return SqsClient.create()
+    }
 
     @Provides
     fun provideCloudwatchClient(): CloudWatchClient {

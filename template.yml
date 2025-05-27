@@ -81,7 +81,7 @@ Resources:
         MetadataDBName: !GetAtt TableStack.Outputs.MetadataDBName
         MetadataDBSecret: !GetAtt TableStack.Outputs.MetadataDBSecret
         MetadataDBProxyEndpoint: !GetAtt TableStack.Outputs.MetadataDBProxyEndpoint
-        TransferMetadataQueueUrl: !GetAtt ItemMetadataStack.Outputs.TransferMetadataQueueUrl
+        ItemMetadataQueueUrl: !GetAtt ItemMetadataStack.Outputs.ItemMetadataQueueUrl
         CredentialsTableName: !GetAtt TableStack.Outputs.CredentialsTableName
         BankTableName: !GetAtt TableStack.Outputs.BankTableName
         UserTableName: !GetAtt TableStack.Outputs.UserTableName

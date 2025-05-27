@@ -507,6 +507,14 @@ paths:
                   type: array
                   items:
                     $ref: "#/components/schemas/StatementItem"
+                transferMetadata:
+                  type: object
+                  additionalProperties: true
+                itemMetadata:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: true
       responses:
         "200":
           description: "Successful response"

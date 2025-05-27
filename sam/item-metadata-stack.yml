@@ -49,39 +49,39 @@ Conditions:
 
 Resources:
   # SQS Queue for transfer metadata
-  TransferMetadataQueue:
+  ItemMetadataQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub "TransferMetadataQueue-${Stage}"
+      QueueName: !Sub "ItemMetadataQueue-${Stage}"
       MessageRetentionPeriod: 1209600  # 14 days in seconds
       VisibilityTimeout: 120  # 2 minutes in seconds
       RedrivePolicy:
-        deadLetterTargetArn: !GetAtt TransferMetadataQueueDLQ.Arn
+        deadLetterTargetArn: !GetAtt ItemMetadataQueueDLQ.Arn
         maxReceiveCount: 5
 
   # Dead Letter Queue for failed messages
-  TransferMetadataQueueDLQ:
+  ItemMetadataQueueDLQ:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub "TransferMetadataQueueDLQ-${Stage}"
+      QueueName: !Sub "ItemMetadataQueueDLQ-${Stage}"
       MessageRetentionPeriod: 1209600  # 14 days in seconds
 
   # Lambda function DLQ for function failures
-  TransferMetadataRecorderDLQ:
+  ItemMetadataRecorderDLQ:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub "TransferMetadataRecorderDLQ-${Stage}"
+      QueueName: !Sub "ItemMetadataRecorderDLQ-${Stage}"
       MessageRetentionPeriod: 1209600  # 14 days in seconds
 
   # Lambda function to process transfer metadata and store in RDS
-  TransferMetadataHandlerFunction:
+  ItemMetadataHandlerFunction:
     Type: AWS::Serverless::Function
     Metadata:
       SkipBuild: true
     Properties:
-      FunctionName: !Sub "TransferMetadataHandler-${Stage}"
-      CodeUri: ../kotlin/lambda/transfer-metadata-handler/build/libs/lambda.jar
-      Handler: com.zenobiapay.transfermetadata.handlers.TransferMetadataHandler::handleRequest
+      FunctionName: !Sub "ItemMetadataHandler-${Stage}"
+      CodeUri: ../kotlin/lambda/item-metadata-handler/build/libs/lambda.jar
+      Handler: com.zenobiapay.itemmetadata.handlers.ItemMetadataHandler::handleRequest
       MemorySize: 1024
       Environment:
         Variables:
@@ -92,31 +92,31 @@ Resources:
         - AWSLambdaVPCAccessExecutionRole
         - CloudWatchPutMetricPolicy: {}
         - SQSPollerPolicy:
-            QueueName: !GetAtt TransferMetadataQueue.QueueName
+            QueueName: !GetAtt ItemMetadataQueue.QueueName
         - SQSSendMessagePolicy:
-            QueueName: !GetAtt TransferMetadataRecorderDLQ.QueueName
+            QueueName: !GetAtt ItemMetadataRecorderDLQ.QueueName
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref MetadataDBSecret
       Events:
         SQSEvent:
           Type: SQS
           Properties:
-            Queue: !GetAtt TransferMetadataQueue.Arn
+            Queue: !GetAtt ItemMetadataQueue.Arn
             BatchSize: 10
             MaximumBatchingWindowInSeconds: 30
       DeadLetterQueue:
         Type: SQS
-        TargetArn: !GetAtt TransferMetadataRecorderDLQ.Arn
+        TargetArn: !GetAtt ItemMetadataRecorderDLQ.Arn
 
 Outputs:
-  TransferMetadataQueueUrl:
+  ItemMetadataQueueUrl:
     Description: "URL of the Transfer Metadata Queue"
-    Value: !Ref TransferMetadataQueue
+    Value: !Ref ItemMetadataQueue
   
-  TransferMetadataQueueArn:
+  ItemMetadataQueueArn:
     Description: "ARN of the Transfer Metadata Queue"
-    Value: !GetAtt TransferMetadataQueue.Arn
+    Value: !GetAtt ItemMetadataQueue.Arn
 
-  TransferMetadataHandlerFunctionArn:
+  ItemMetadataHandlerFunctionArn:
     Description: "ARN of the Transfer Metadata Handler Lambda function"
-    Value: !GetAtt TransferMetadataHandlerFunction.Arn
+    Value: !GetAtt ItemMetadataHandlerFunction.Arn

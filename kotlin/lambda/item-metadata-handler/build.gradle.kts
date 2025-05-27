@@ -31,6 +31,7 @@ dependencies {
     api(project(":kotlin:shared:metrics"))
     implementation(project(":kotlin:shared:api:model"))
     implementation(project(":kotlin:shared:table"))
+    implementation(project(":kotlin:shared:events"))
     implementation(project(":kotlin:shared:table:rds"))
 
     api(libs.kotlin.stdlib)

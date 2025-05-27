@@ -31,6 +31,7 @@ dependencies {
     implementation(project(":kotlin:shared:api"))
     implementation(project(":kotlin:shared:api:model"))
     implementation(project(":kotlin:shared:orum"))
+    implementation(project(":kotlin:shared:events"))
     api(project(":kotlin:shared:plaid"))
     api(project(":kotlin:shared:metrics"))
     implementation(project(":kotlin:shared:cryptography"))
@@ -65,6 +66,7 @@ dependencies {
     api(libs.aws.dynamodb.enhanced)
     api(libs.aws.secretsmanager)
     api(libs.aws.cloudwatch)
+    api(libs.aws.sqs)
 
     // Plaid
     implementation(libs.plaid)

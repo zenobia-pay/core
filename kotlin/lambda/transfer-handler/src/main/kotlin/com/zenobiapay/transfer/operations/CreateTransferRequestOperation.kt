@@ -10,9 +10,11 @@ import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.util.getSubForM2M
 import com.zenobiapay.api.util.getUserRole
+import com.zenobiapay.events.model.ItemMetadataRecord
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.StatementItem
 import com.zenobiapay.table.user.dao.UserDao
+import com.zenobiapay.transfer.di.TRANSFER_METADATA_QUEUE_URL
 import com.zenobiapay.transfer.di.TRANSFER_NOTIFICATION_SECRET
 import com.zenobiapay.transfer.model.TransferRequestWebsocketSignature
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -20,6 +22,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import jakarta.inject.Inject
 import jakarta.inject.Named
+import software.amazon.awssdk.services.sqs.SqsClient
 
 private val logger = KotlinLogging.logger {}
 
@@ -27,7 +30,10 @@ class CreateTransferRequestOperation @Inject constructor(
     private val objectMapper: ObjectMapper,
     private val transferDao: TransferDao,
     private val userDao: UserDao,
-    @Named(TRANSFER_NOTIFICATION_SECRET) val transferNotificationSecret: String
+    @Named(TRANSFER_NOTIFICATION_SECRET) val transferNotificationSecret: String,
+    private val sqsClient: SqsClient,
+    @Named(TRANSFER_METADATA_QUEUE_URL)
+    private val transferMetadataQueueUrl: String,
 ): Operation<CreateTransferRequestRequest, CreateTransferRequest200Response>() {
 
     override val inputType = CreateTransferRequestRequest::class.java
@@ -54,6 +60,21 @@ class CreateTransferRequestOperation @Inject constructor(
             } ?: listOf(),
             expiry,
         )
+
+        logger.info { "Sending sqs item to process transfer metadata" }
+        sqsClient.sendMessage {
+            it.queueUrl(transferMetadataQueueUrl)
+            it.messageBody(
+                objectMapper.writeValueAsString(
+                    ItemMetadataRecord(
+                        merchantId = userId,
+                        transferMetadata = request.transferMetadata,
+                        transferRequestId = requestId,
+                        itemMetadata = request.itemMetadata,
+                    )
+                )
+            )
+        }
 
         return CreateTransferRequest200Response()
             .transferRequestId(requestId)
