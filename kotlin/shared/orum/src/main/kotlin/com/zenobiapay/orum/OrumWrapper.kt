@@ -49,8 +49,6 @@ class OrumWrapper(
     fun getAccessToken(orumCredentials: OrumCredentials): OrumTokenResponse {
         val body = objectMapper.writeValueAsString(orumCredentials).toRequestBody(JSON_MEDIA_TYPE)
 
-        logger.info { "Requesting credentials using body $body" }
-
         val request = Request.Builder()
             .addOrumHeaders()
             .url("$endpoint/oauth/token")
@@ -67,7 +65,6 @@ class OrumWrapper(
     fun createExternalOrganization(createExternalAccountRequest: OrumCreateExternalAccountRequest): OrumCreateExternalAccountResponse {
         val accessToken = getAccessToken(orumCredentials)
         val body = objectMapper.writeValueAsString(createExternalAccountRequest).toRequestBody(JSON_MEDIA_TYPE)
-        logger.info { "Creating external organization with request $createExternalAccountRequest" }
 
         val request = Request.Builder()
             .addOrumHeaders(accessToken.accessToken)

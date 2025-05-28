@@ -57,6 +57,10 @@ Resources:
       Parameters:
         Stage: !Ref Stage
         UniqueIdentifier: !Ref UniqueIdentifier
+        VpcId: !GetAtt VpcStack.Outputs.VpcId
+        PrivateSubnet1: !GetAtt VpcStack.Outputs.PrivateSubnetId1
+        PrivateSubnet2: !GetAtt VpcStack.Outputs.PrivateSubnetId2
+        SecurityGroupId: !GetAtt VpcStack.Outputs.SecurityGroupId
   
   AuthStack:
     Type: AWS::CloudFormation::Stack
@@ -117,3 +121,16 @@ Outputs:
   WebEndpoint:
     Description: "API Gateway endpoint URL"
     Value: !GetAtt LambdaStack.Outputs.WebEndpoint
+  
+  # Database outputs
+  MetadataDBEndpoint:
+    Description: "PostgreSQL RDS endpoint"
+    Value: !GetAtt TableStack.Outputs.MetadataDBEndpoint
+  
+  MetadataDBPort:
+    Description: "PostgreSQL RDS port"
+    Value: !GetAtt TableStack.Outputs.MetadataDBPort
+  
+  MetadataDBName:
+    Description: "PostgreSQL RDS database name"
+    Value: !GetAtt TableStack.Outputs.MetadataDBName
