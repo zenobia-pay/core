@@ -147,9 +147,10 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
                 transferReferenceId = "$PAYOUT_PREFIX#${transferItem.requestId}",
                 amount = merchantPayout,
                 destination = TransferParticipant(
-                    customerReferenceId = generateMerchantOrumId(merchantId),
+                    customerReferenceId = merchantData.data.orumReferenceId!!,
                     accountReferenceId = bankAccountId,
-                    statementDisplayName = merchantData.data.merchantData?.displayName?.filter { it.isLetterOrDigit() }?.take(10) ?: "ZenobiaPay"
+                    // TODO: make more descriptive display name
+                    statementDisplayName = "ZenobiaPay"
                 )
             )
         )
