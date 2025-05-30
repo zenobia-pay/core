@@ -163,8 +163,6 @@ class UserDao @Inject constructor(
 
     fun updateMerchant(
         merchantId: String,
-        bankAccountId: String?,
-        merchantDisplayName: String?,
         merchantDescription: String?,
         merchantLocation: ApiLocation?,
         webhookUrl: String?
@@ -179,10 +177,10 @@ class UserDao @Inject constructor(
         val updatedMerchantItem = currentMerchantItem.copy(
             data = currentMerchantItem.data.copy(
                 merchantData = MerchantData(
-                    displayName = merchantDisplayName ?: merchantData?.displayName,
+                    displayName = merchantData?.displayName,
                     description = merchantDescription ?: merchantData?.description,
                     location = location ?: merchantData?.location,
-                    bankAccountId = bankAccountId ?: merchantData?.bankAccountId,
+                    bankAccountId = merchantData?.bankAccountId,
                     webhookUrl = webhookUrl ?: merchantData?.webhookUrl
                 ),
             )

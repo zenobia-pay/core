@@ -75,6 +75,10 @@ components:
     StatementItem:
       type: object
       properties:
+        key:
+          type: string
+          maxLength: 255
+          minLength: 1
         name:
           type: string
           maxLength: 255
@@ -507,6 +511,12 @@ paths:
                   type: array
                   items:
                     $ref: "#/components/schemas/StatementItem"
+                transferMetadata:
+                  type: object
+                  additionalProperties: true
+                itemMetadata:
+                  type: object
+                  additionalProperties: true
       responses:
         "200":
           description: "Successful response"
@@ -884,14 +894,6 @@ paths:
             schema:
               type: object
               properties:
-                bankAccountId:
-                  type: string
-                  minLength: 1
-                  maxLength: 256
-                merchantDisplayName:
-                  type: string
-                  minLength: 1
-                  maxLength: 256
                 merchantDescription:
                   type: string
                   minLength: 1

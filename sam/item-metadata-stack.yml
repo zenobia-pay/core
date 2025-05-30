@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: Stack for handling transfer metadata with RDS
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 512
+    Runtime: java17
+    Architectures:
+      - x86_64
+    AutoPublishAlias: prod
+    AutoPublishAliasAllProperties: true
+    VpcConfig:
+      SecurityGroupIds:
+        - !Ref SecurityGroupId
+      SubnetIds:
+        - !Ref SubnetId1
+        - !Ref SubnetId2
+
+Parameters:
+  Stage: 
+    Type: String
+    Description: Stage this code is being deployed to (dev, beta, gamma, prod)
+  SecurityGroupId:
+    Type: String
+    Description: ID of the security group for the Lambda function
+  SubnetId1:
+    Type: String
+    Description: ID of the first subnet for the Lambda function
+  SubnetId2:
+    Type: String
+    Description: ID of the second subnet for the Lambda function
+  MetadataDBProxyEndpoint:
+    Type: String
+    Description: Endpoint of the RDS Proxy for the Metadata database
+  MetadataDBName:
+    Type: String
+    Description: Database name of the Metadata RDS instance
+  MetadataDBSecret:
+    Type: String
+    Description: ARN of the secret containing RDS credentials
+  MetadataDBKmsKeyArn:
+    Type: String
+    Description: ARN of the KMS key used to encrypt the Metadata RDS instance
+  TransferTableName:
+    Type: String
+    Description: Name of the transfer table
+
+Conditions:
+  IsProd: !Equals [!Ref Stage, "prod"]
+
+Resources:
+  # SQS Queue for transfer metadata
+  ItemMetadataQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "ItemMetadataQueue-${Stage}"
+      MessageRetentionPeriod: 1209600  # 14 days in seconds
+      VisibilityTimeout: 120  # 2 minutes in seconds
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt ItemMetadataQueueDLQ.Arn
+        maxReceiveCount: 5
+
+  # Dead Letter Queue for failed messages
+  ItemMetadataQueueDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "ItemMetadataQueueDLQ-${Stage}"
+      MessageRetentionPeriod: 1209600  # 14 days in seconds
+
+  # Lambda function DLQ for function failures
+  ItemMetadataRecorderDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "ItemMetadataRecorderDLQ-${Stage}"
+      MessageRetentionPeriod: 1209600  # 14 days in seconds
+
+  # Lambda function to process transfer metadata and store in RDS
+  ItemMetadataHandlerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      SkipBuild: true
+    Properties:
+      FunctionName: !Sub "ItemMetadataHandler-${Stage}"
+      CodeUri: ../kotlin/lambda/item-metadata-handler/build/libs/lambda.jar
+      Handler: com.zenobiapay.itemmetadata.handlers.ItemMetadataHandler::handleRequest
+      MemorySize: 1024
+      Environment:
+        Variables:
+          METADATA_DB_PROXY_ENDPOINT: !Ref MetadataDBProxyEndpoint
+          METADATA_DB_NAME: !Ref MetadataDBName
+          METADATA_DB_SECRET_ARN: !Ref MetadataDBSecret
+      Policies:
+        - AWSLambdaVPCAccessExecutionRole
+        - CloudWatchPutMetricPolicy: {}
+        - SQSPollerPolicy:
+            QueueName: !GetAtt ItemMetadataQueue.QueueName
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt ItemMetadataRecorderDLQ.QueueName
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref MetadataDBSecret
+        - Statement:
+            - Effect: Allow
+              Action:
+                - kms:Decrypt
+              Resource: !Ref MetadataDBKmsKeyArn 
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt ItemMetadataQueue.Arn
+            BatchSize: 10
+            MaximumBatchingWindowInSeconds: 30
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt ItemMetadataRecorderDLQ.Arn
+
+Outputs:
+  ItemMetadataQueueUrl:
+    Description: "URL of the Transfer Metadata Queue"
+    Value: !Ref ItemMetadataQueue
+  
+  ItemMetadataQueueArn:
+    Description: "ARN of the Transfer Metadata Queue"
+    Value: !GetAtt ItemMetadataQueue.Arn
+
+  ItemMetadataHandlerFunctionArn:
+    Description: "ARN of the Transfer Metadata Handler Lambda function"
+    Value: !GetAtt ItemMetadataHandlerFunction.Arn

@@ -81,6 +81,24 @@ Parameters:
   ZenobiaApiEndpoint:
     Type: String
     Description: Zenobia endpoint used to point plaid webhooks
+  MetadataDBEndpoint:
+    Type: String
+    Description: Endpoint of the Metadata RDS instance
+  MetadataDBPort:
+    Type: String
+    Description: Port of the Metadata RDS instance
+  MetadataDBName:
+    Type: String
+    Description: Database name of the Metadata RDS instance
+  MetadataDBSecret:
+    Type: String
+    Description: ARN of the secret containing RDS credentials
+  MetadataDBProxyEndpoint:
+    Type: String
+    Description: Endpoint of the RDS Proxy for the Metadata database
+  ItemMetadataQueueUrl:
+    Type: String
+    Description: URL of the Transfer Metadata Queue
 
 Conditions:
   IsProd: !Equals [!Ref Stage, "prod"]
@@ -204,6 +222,10 @@ Resources:
             StatementItem:
               type: object
               properties:
+                key:
+                  type: string
+                  maxLength: 255
+                  minLength: 1
                 name:
                   type: string
                   maxLength: 255
@@ -646,6 +668,12 @@ Resources:
                           type: array
                           items:
                             $ref: "#/components/schemas/StatementItem"
+                        transferMetadata:
+                          type: object
+                          additionalProperties: true
+                        itemMetadata:
+                          type: object
+                          additionalProperties: true
               responses:
                 "200":
                   description: "Successful response"
@@ -1036,14 +1064,6 @@ Resources:
                     schema:
                       type: object
                       properties:
-                        bankAccountId:
-                          type: string
-                          minLength: 1
-                          maxLength: 256
-                        merchantDisplayName:
-                          type: string
-                          minLength: 1
-                          maxLength: 256
                         merchantDescription:
                           type: string
                           minLength: 1
@@ -1440,6 +1460,10 @@ Resources:
           BANK_TABLE_NAME: !Ref BankTableName
           USER_TABLE_NAME: !Ref UserTableName
           AVAILABLE_BALANCE_BUFFER: "1.1"
+          METADATA_DB_PROXY_ENDPOINT: !Ref MetadataDBProxyEndpoint
+          METADATA_DB_NAME: !Ref MetadataDBName
+          METADATA_DB_SECRET_ARN: !Ref MetadataDBSecret
+          ITEM_METADATA_QUEUE_URL: !Ref ItemMetadataQueueUrl
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref OrumSecretsArn
@@ -1449,6 +1473,14 @@ Resources:
             SecretArn: !Ref PaginationSigningSecret
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref WebsocketTransferSubscribeSigningSecret
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref MetadataDBSecret
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sqs:SendMessage
+                - sqs:SendMessageBatch
+              Resource: !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:ItemMetadataQueue-${Stage}"
         - AWSLambdaVPCAccessExecutionRole
         - CloudWatchPutMetricPolicy: {}
         - DynamoDBCrudPolicy:

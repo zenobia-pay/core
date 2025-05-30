@@ -32,15 +32,6 @@ class UpdateMerchantConfigOperation @Inject constructor(
         userId: String?
     ): EmptyApiResponse {
         logger.info { "Got request $request" }
-        if (request.bankAccountId != null) {
-            // Validate bank id exists
-            logger.info { "Fetching bank account ${request.bankAccountId}" }
-            try {
-                bankDao.getBankAccount(userId!!, request.bankAccountId!!, null)
-            } catch (e: software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException) {
-                throw ResourceNotFoundException("BANK_ACCOUNT")
-            }
-        }
         if (request.webhookUrl != null) {
             logger.info { "validating webhook url ${request.webhookUrl}" }
             if (!isValidWebhook(request.webhookUrl)) {
@@ -50,8 +41,6 @@ class UpdateMerchantConfigOperation @Inject constructor(
         }
         userDao.updateMerchant(
             userId!!,
-            request.bankAccountId,
-            request.merchantDisplayName,
             request.merchantDescription,
             request.merchantLocation,
             request.webhookUrl?.toString(),

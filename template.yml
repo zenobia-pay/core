@@ -76,6 +76,12 @@ Resources:
         SecurityGroupId: !GetAtt VpcStack.Outputs.SecurityGroupId
         SubnetId1: !GetAtt VpcStack.Outputs.PrivateSubnetId1
         SubnetId2: !GetAtt VpcStack.Outputs.PrivateSubnetId2
+        MetadataDBEndpoint: !GetAtt TableStack.Outputs.MetadataDBEndpoint
+        MetadataDBPort: !GetAtt TableStack.Outputs.MetadataDBPort
+        MetadataDBName: !GetAtt TableStack.Outputs.MetadataDBName
+        MetadataDBSecret: !GetAtt TableStack.Outputs.MetadataDBSecret
+        MetadataDBProxyEndpoint: !GetAtt TableStack.Outputs.MetadataDBProxyEndpoint
+        ItemMetadataQueueUrl: !GetAtt ItemMetadataStack.Outputs.ItemMetadataQueueUrl
         CredentialsTableName: !GetAtt TableStack.Outputs.CredentialsTableName
         BankTableName: !GetAtt TableStack.Outputs.BankTableName
         UserTableName: !GetAtt TableStack.Outputs.UserTableName
@@ -116,6 +122,21 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: ./sam/dashboard-stack.yml
+
+  ItemMetadataStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./sam/item-metadata-stack.yml
+      Parameters:
+        Stage: !Ref Stage
+        SecurityGroupId: !GetAtt VpcStack.Outputs.SecurityGroupId
+        SubnetId1: !GetAtt VpcStack.Outputs.PrivateSubnetId1
+        SubnetId2: !GetAtt VpcStack.Outputs.PrivateSubnetId2
+        MetadataDBProxyEndpoint: !GetAtt TableStack.Outputs.MetadataDBProxyEndpoint
+        MetadataDBName: !GetAtt TableStack.Outputs.MetadataDBName
+        MetadataDBSecret: !GetAtt TableStack.Outputs.MetadataDBSecret
+        MetadataDBKmsKeyArn: !GetAtt TableStack.Outputs.MetadataDBKmsKeyArn
+        TransferTableName: !GetAtt TableStack.Outputs.TransferTableName
 
 Outputs:
   WebEndpoint:

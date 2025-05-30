@@ -28,20 +28,13 @@ repositories {
 
 dependencies {
     api(project(":kotlin:shared"))
-    implementation(project(":kotlin:shared:api"))
-    implementation(project(":kotlin:shared:api:model"))
-    implementation(project(":kotlin:shared:orum"))
-    implementation(project(":kotlin:shared:events"))
-    api(project(":kotlin:shared:plaid"))
     api(project(":kotlin:shared:metrics"))
-    implementation(project(":kotlin:shared:cryptography"))
+    implementation(project(":kotlin:shared:api:model"))
     implementation(project(":kotlin:shared:table"))
-    implementation(project(":kotlin:shared:table:bank"))
-    implementation(project(":kotlin:shared:table:transfer"))
-    implementation(project(":kotlin:shared:table:user"))
+    implementation(project(":kotlin:shared:events"))
+    implementation(project(":kotlin:shared:table:rds"))
 
     api(libs.kotlin.stdlib)
-    api(libs.kotlin.coroutines)
     api(libs.lambda.core)
     api(libs.lambda.events)
 
@@ -62,14 +55,8 @@ dependencies {
     implementation(libs.slf4j)
 
     // AWS
-    api(libs.aws.dynamodb)
-    api(libs.aws.dynamodb.enhanced)
     api(libs.aws.secretsmanager)
     api(libs.aws.cloudwatch)
-    api(libs.aws.sqs)
-
-    // Plaid
-    implementation(libs.plaid)
 
     // Testing
     testImplementation(libs.kotlin.test)

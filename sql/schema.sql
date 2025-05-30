@@ -2,9 +2,11 @@
 CREATE TABLE items (
     id UUID PRIMARY KEY,
     merchant_id TEXT NOT NULL,
-    product_id UUID NOT NULL,
-    brand_id UUID NOT NULL,
-    metadata JSONB
+    name TEXT NOT NULL,
+    product_id UUID,
+    brand_id UUID,
+    metadata JSONB,
+    tags TEXT[]
 );
 
 CREATE TABLE transfers (
