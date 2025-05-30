@@ -1,4 +1,4 @@
-package com.zenobiapay.transfermetadata.handlers
+package com.zenobiapay.itemmetadata.handlers
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
@@ -6,8 +6,8 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.events.model.ItemMetadataRecord
 import com.zenobiapay.rds.util.RdsWrapper
-import com.zenobiapay.transfermetadata.di.DaggerAppComponent
-import com.zenobiapay.transfermetadata.transform.ShopifySchemaTransformer
+import com.zenobiapay.itemmetadata.di.DaggerAppComponent
+import com.zenobiapay.itemmetadata.transform.ShopifySchemaTransformer
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
 
@@ -19,7 +19,7 @@ class ItemMetadataHandler : RequestHandler<SQSEvent, Unit> {
 
     @Inject
     lateinit var rdsWrapper: RdsWrapper
-
+    
     init {
         DaggerAppComponent.create().inject(this)
     }
@@ -33,9 +33,9 @@ class ItemMetadataHandler : RequestHandler<SQSEvent, Unit> {
             logger.info { "Processing item metadata for transfer request ID: ${itemMetadataRecord.transferRequestId}" }
             logger.info { "Item metadata: ${itemMetadataRecord.transferMetadata}" }
 
-            val transformedItems = itemMetadataRecord.itemMetadata.map { itemMetadata ->
-                ShopifySchemaTransformer().transform(itemMetadataRecord.merchantId, itemMetadata)
-            }.flatten()
+            val transformedItems = itemMetadataRecord.itemMetadata?.map { (itemId, metadata) ->
+                ShopifySchemaTransformer().transform(itemId, itemMetadataRecord.merchantId, metadata)
+            }?.flatten()
 
             rdsWrapper.storeTransferAndItemsMetadata(
                 itemMetadataRecord.transferRequestId,

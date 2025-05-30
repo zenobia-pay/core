@@ -222,6 +222,10 @@ Resources:
             StatementItem:
               type: object
               properties:
+                key:
+                  type: string
+                  maxLength: 255
+                  minLength: 1
                 name:
                   type: string
                   maxLength: 255
@@ -668,10 +672,8 @@ Resources:
                           type: object
                           additionalProperties: true
                         itemMetadata:
-                          type: array
-                          items:
-                            type: object
-                            additionalProperties: true
+                          type: object
+                          additionalProperties: true
               responses:
                 "200":
                   description: "Successful response"
@@ -1478,7 +1480,7 @@ Resources:
               Action:
                 - sqs:SendMessage
                 - sqs:SendMessageBatch
-              Resource: !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:TransferMetadataQueue-${Stage}"
+              Resource: !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:ItemMetadataQueue-${Stage}"
         - AWSLambdaVPCAccessExecutionRole
         - CloudWatchPutMetricPolicy: {}
         - DynamoDBCrudPolicy:

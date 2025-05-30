@@ -40,6 +40,9 @@ Parameters:
   MetadataDBSecret:
     Type: String
     Description: ARN of the secret containing RDS credentials
+  MetadataDBKmsKeyArn:
+    Type: String
+    Description: ARN of the KMS key used to encrypt the Metadata RDS instance
   TransferTableName:
     Type: String
     Description: Name of the transfer table
@@ -97,6 +100,11 @@ Resources:
             QueueName: !GetAtt ItemMetadataRecorderDLQ.QueueName
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref MetadataDBSecret
+        - Statement:
+            - Effect: Allow
+              Action:
+                - kms:Decrypt
+              Resource: !Ref MetadataDBKmsKeyArn 
       Events:
         SQSEvent:
           Type: SQS

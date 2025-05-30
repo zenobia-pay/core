@@ -75,6 +75,10 @@ components:
     StatementItem:
       type: object
       properties:
+        key:
+          type: string
+          maxLength: 255
+          minLength: 1
         name:
           type: string
           maxLength: 255
@@ -511,10 +515,8 @@ paths:
                   type: object
                   additionalProperties: true
                 itemMetadata:
-                  type: array
-                  items:
-                    type: object
-                    additionalProperties: true
+                  type: object
+                  additionalProperties: true
       responses:
         "200":
           description: "Successful response"

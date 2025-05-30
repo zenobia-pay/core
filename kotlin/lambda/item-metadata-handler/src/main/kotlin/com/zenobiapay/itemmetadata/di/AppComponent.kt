@@ -1,8 +1,8 @@
-package com.zenobiapay.transfermetadata.di
+package com.zenobiapay.itemmetadata.di
 
 import com.zenobiapay.di.SharedModule
 import com.zenobiapay.rds.di.RdsModule
-import com.zenobiapay.transfermetadata.handlers.ItemMetadataHandler
+import com.zenobiapay.itemmetadata.handlers.ItemMetadataHandler
 import dagger.Component
 import javax.inject.Singleton
 

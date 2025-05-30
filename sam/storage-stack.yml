@@ -274,7 +274,7 @@ Resources:
             - "credentials"
             - !Ref Stage
       GenerateSecretString:
-        SecretStringTemplate: '{"username":"admin"}'  
+        SecretStringTemplate: '{"username":"dbadmin"}'
         GenerateStringKey: "password"
         PasswordLength: 16
         ExcludeCharacters: '"@/\\'
@@ -298,14 +298,10 @@ Resources:
     Properties:
       Engine: postgres
       EngineVersion: 15.13
-      DBInstanceIdentifier:
-        Fn::Join:
-          - "-"
-          - - "metadatadb"
-            - !Ref Stage
+      DBInstanceIdentifier: "metadatadb"
       DBName: metadatadb
       MasterUsername: dbadmin
-      MasterUserPassword: 
+      MasterUserPassword:
         Fn::Join:
           - ''
           - - '{{resolve:secretsmanager:'
@@ -484,4 +480,9 @@ Outputs:
   MetadataDBName:
     Value: metadatadb
     Description: Database name of the Metadata RDS instance
+  MetadataDBKmsKeyArn:
+    Value: !GetAtt MetadataDBKmsKey.Arn
+    Description: ARN of the KMS key used to encrypt the Metadata RDS instance
+    Export:
+      Name: MetadataDBKmsKeyArn
 

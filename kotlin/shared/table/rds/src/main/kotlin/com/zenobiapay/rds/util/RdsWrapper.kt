@@ -162,27 +162,29 @@ class RdsWrapper @Inject constructor(
     fun storeTransferAndItemsMetadata(
         transferId: String,
         merchantId: String,
-        transferMetadata: Map<String, Any>,
-        itemsMetadata: List<ItemMetadataSchema>
-    ): UUID {
-        logger.info { "Storing transfer and ${itemsMetadata.size} items metadata for transfer ID: $transferId" }
+        transferMetadata: Map<String, Any>?,
+        itemsMetadata: List<ItemMetadataSchema>?
+    ) {
+        logger.info { "Storing transfer and ${itemsMetadata?.size} items metadata for transfer ID: $transferId" }
         
         return executeTransaction { connection ->
             val itemIds = mutableListOf<UUID>()
             
             // Process each item metadata
-            itemsMetadata.forEach { itemMetadata ->
+            itemsMetadata?.forEach { itemMetadata ->
                 val metadataJson = objectMapper.writeValueAsString(itemMetadata.metadata)
                 // Insert item using executeInsertAndGetKeys
-                val sql = "INSERT INTO items (id, merchant_id, product_id, brand_id, metadata) VALUES (?, ?, ?, ?, ?::jsonb) ON CONFLICT (id) DO UPDATE SET merchant_id = ?, product_id = ?, brand_id = ?, metadata = ?::jsonb RETURNING id"
+                val sql = "INSERT INTO items (id, name, merchant_id, product_id, brand_id, metadata) VALUES (?, ?, ?, ?, ?, ?::jsonb) ON CONFLICT (id) DO UPDATE SET merchant_id = ?, name = ?, product_id = ?, brand_id = ?, metadata = ?::jsonb RETURNING id"
                 
                 val params = listOf<Any?>(
                     itemMetadata.itemId,
+                    itemMetadata.name,
                     merchantId, 
                     itemMetadata.productId,
                     itemMetadata.brandId,
                     metadataJson,
                     merchantId,
+                    itemMetadata.name,
                     itemMetadata.productId,
                     itemMetadata.brandId,
                     metadataJson
@@ -202,22 +204,24 @@ class RdsWrapper @Inject constructor(
             // Insert transfer with item IDs using executeInsertAndGetKeys
             val transferMetadataJson = objectMapper.writeValueAsString(transferMetadata)
             val transferSql = "INSERT INTO transfers (id, item_ids, metadata) VALUES (?, ?, ?::jsonb) ON CONFLICT (id) DO UPDATE SET item_ids = ?, metadata = ?::jsonb RETURNING id"
-            
-            // We need to create the array in the connection context
-            connection.prepareStatement(transferSql, PreparedStatement.RETURN_GENERATED_KEYS).use { statement ->
-                statement.setObject(1, transferId)
-                statement.setArray(2, connection.createArrayOf("uuid", itemIds.toTypedArray()))
-                statement.setString(3, transferMetadataJson)
-                statement.setArray(4, connection.createArrayOf("uuid", itemIds.toTypedArray()))
-                statement.setString(5, transferMetadataJson)
 
-                statement.executeUpdate()
-                
-                statement.generatedKeys.use { keys ->
-                    if (keys.next()) {
-                        return@executeTransaction keys.getObject("id", UUID::class.java)
-                    } else {
-                        throw SQLException("Failed to insert or update transfer metadata for transfer ID: $transferId")
+            if (transferMetadata != null) {
+                // We need to create the array in the connection context
+                connection.prepareStatement(transferSql, PreparedStatement.RETURN_GENERATED_KEYS).use { statement ->
+                    statement.setObject(1, transferId)
+                    statement.setArray(2, connection.createArrayOf("uuid", itemIds.toTypedArray()))
+                    statement.setString(3, transferMetadataJson)
+                    statement.setArray(4, connection.createArrayOf("uuid", itemIds.toTypedArray()))
+                    statement.setString(5, transferMetadataJson)
+
+                    statement.executeUpdate()
+
+                    statement.generatedKeys.use { keys ->
+                        if (keys.next()) {
+                            return@executeTransaction
+                        } else {
+                            throw SQLException("Failed to insert or update transfer metadata for transfer ID: $transferId")
+                        }
                     }
                 }
             }

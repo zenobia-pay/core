@@ -23,6 +23,7 @@ import java.time.temporal.ChronoUnit
 import jakarta.inject.Inject
 import jakarta.inject.Named
 import software.amazon.awssdk.services.sqs.SqsClient
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -50,30 +51,33 @@ class CreateTransferRequestOperation @Inject constructor(
         val requestId = input.requestContext.requestId
         val merchantName = userDao.getUserItem(userId!!)?.data?.merchantData?.displayName
             ?: throw InvalidRequestException("Merchant display name not configured.")
+        val statementItemsToMetadata = getStatementItemToMetadata(request.statementItems, request.itemMetadata)
         transferDao.putTransferRequest(
             userId,
             requestId,
             request.amount,
             merchantName,
-            request.statementItems?.map {
-                StatementItem.fromApiRequestStatementItem(it)
-            } ?: listOf(),
+            statementItemsToMetadata.map { it.first },
             expiry,
         )
 
         logger.info { "Sending sqs item to process transfer metadata" }
-        sqsClient.sendMessage {
-            it.queueUrl(transferMetadataQueueUrl)
-            it.messageBody(
-                objectMapper.writeValueAsString(
-                    ItemMetadataRecord(
-                        merchantId = userId,
-                        transferMetadata = request.transferMetadata,
-                        transferRequestId = requestId,
-                        itemMetadata = request.itemMetadata,
+        val itemMetadata: Map<String, Map<String, Any>> = statementItemsToMetadata
+            .filter { it.first.id != null && it.second != null }.associate { it.first.id!! to it.second!! }
+        if (request.transferMetadata != null || request.itemMetadata?.isNotEmpty() == true) {
+            sqsClient.sendMessage {
+                it.queueUrl(transferMetadataQueueUrl)
+                it.messageBody(
+                    objectMapper.writeValueAsString(
+                        ItemMetadataRecord(
+                            merchantId = userId,
+                            transferMetadata = request.transferMetadata,
+                            transferRequestId = requestId,
+                            itemMetadata = itemMetadata
+                        )
                     )
                 )
-            )
+            }
         }
 
         return CreateTransferRequest200Response()
@@ -84,6 +88,18 @@ class CreateTransferRequestOperation @Inject constructor(
                 TransferRequestWebsocketSignature(requestId, userId, expiry)
                     .toSignedHmacString(objectMapper, transferNotificationSecret)
             )
+    }
+
+    private fun getStatementItemToMetadata(
+        statementItems: List<com.zenobiapay.api.generated.model.StatementItem>,
+        itemMetadata: Map<String, Any>
+    ): List<Pair<StatementItem, Map<String, Any>?>> {
+        return statementItems.map {
+            StatementItem.fromApiRequestStatementItem(it) to it.key?.let { itemMetadata[it] }
+        }.map {
+            val uuid = UUID.randomUUID()
+            it.first.copy(id = uuid.toString()) to (it.second as? Map<String, Any>)
+        }
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {

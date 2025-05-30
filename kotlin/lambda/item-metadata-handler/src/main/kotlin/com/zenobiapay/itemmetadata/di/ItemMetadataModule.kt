@@ -1,4 +1,4 @@
-package com.zenobiapay.transfermetadata.di
+package com.zenobiapay.itemmetadata.di
 
 import dagger.Module
 import dagger.Provides

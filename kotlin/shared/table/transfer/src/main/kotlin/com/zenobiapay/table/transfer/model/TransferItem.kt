@@ -138,7 +138,8 @@ data class PaymentParticipantIdentity(
 @DynamoDbBean
 data class StatementItem(
     var name: String = "",
-    var amount: Int = 0
+    var amount: Int = 0,
+    var id: String? = null,
 ) {
     companion object {
         fun fromAttributeValueMap(map: Map<String, AttributeValue>): StatementItem {
@@ -150,6 +151,7 @@ data class StatementItem(
 
         fun fromApiRequestStatementItem(item: com.zenobiapay.api.generated.model.StatementItem) =
             StatementItem(
+                id = item.key,
                 name = item.name ?: throw InvalidRequestException("name not specified in statementItems"),
                 amount = item.amount ?: throw InvalidRequestException("item amount not specified in statementItems")
             )
