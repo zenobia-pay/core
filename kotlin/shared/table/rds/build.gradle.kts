@@ -27,6 +27,7 @@ repositories {
 
 dependencies {
     implementation(project(":kotlin:shared"))
+    implementation(project(":kotlin:shared:api:model"))
     api(libs.kotlin.stdlib)
 
     // Json processing

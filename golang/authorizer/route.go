@@ -76,6 +76,7 @@ var validCustomerRoutes = []Route{
 	{"GET", "get-user-profile"},
 	{"POST", "submit-terms"},
 	{"POST", "delete-refresh-token"},
+	{"POST", "get-item"},
 }
 
 var validOrumRoutes = []Route{

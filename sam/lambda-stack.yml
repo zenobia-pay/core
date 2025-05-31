@@ -96,6 +96,9 @@ Parameters:
   MetadataDBProxyEndpoint:
     Type: String
     Description: Endpoint of the RDS Proxy for the Metadata database
+  MetadataDBKmsKeyArn:
+    Type: String
+    Description: ARN of the KMS key used to encrypt the Metadata RDS instance
   ItemMetadataQueueUrl:
     Type: String
     Description: URL of the Transfer Metadata Queue
@@ -1269,6 +1272,52 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
+          /get-item:
+            post:
+              summary: "Get item metadata"
+              operationId: "GetItem"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - itemId
+                      properties:
+                        itemId:
+                          type: string
+                          minLength: 1
+                          maxLength: 256
+              responses:
+                "200":
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          itemId:
+                            type: string
+                          name:
+                            type: string
+                          tags:
+                            type: array
+                            items:
+                              type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ItemHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
   CustomAuthorizerFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -1460,9 +1509,6 @@ Resources:
           BANK_TABLE_NAME: !Ref BankTableName
           USER_TABLE_NAME: !Ref UserTableName
           AVAILABLE_BALANCE_BUFFER: "1.1"
-          METADATA_DB_PROXY_ENDPOINT: !Ref MetadataDBProxyEndpoint
-          METADATA_DB_NAME: !Ref MetadataDBName
-          METADATA_DB_SECRET_ARN: !Ref MetadataDBSecret
           ITEM_METADATA_QUEUE_URL: !Ref ItemMetadataQueueUrl
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
@@ -1473,8 +1519,6 @@ Resources:
             SecretArn: !Ref PaginationSigningSecret
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref WebsocketTransferSubscribeSigningSecret
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Ref MetadataDBSecret
         - Statement:
             - Effect: Allow
               Action:
@@ -1621,6 +1665,40 @@ Resources:
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /delete-m2m-credentials
+            Method: POST
+
+  ItemHandlerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      SkipBuild: true
+    Properties:
+      FunctionName: ItemHandler
+      CodeUri: ../kotlin/lambda/item-handler/build/libs/lambda.jar
+      Handler: com.zenobiapay.item.handlers.ItemHandler::handleRequest
+      MemorySize: 1024
+      ProvisionedConcurrencyConfig:
+        ProvisionedConcurrentExecutions: !If [IsProd, 3, 1]
+      Environment:
+        Variables:
+          METADATA_DB_PROXY_ENDPOINT: !Ref MetadataDBProxyEndpoint
+          METADATA_DB_NAME: !Ref MetadataDBName
+          METADATA_DB_SECRET_ARN: !Ref MetadataDBSecret
+      Policies:
+        - AWSLambdaVPCAccessExecutionRole
+        - CloudWatchPutMetricPolicy: {}
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref MetadataDBSecret
+        - Statement:
+            - Effect: Allow
+              Action:
+                - kms:Decrypt
+              Resource: !Ref MetadataDBKmsKeyArn
+      Events:
+        GetItem:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /get-item
             Method: POST
 
   PaginationSigningSecret:

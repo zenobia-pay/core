@@ -38,6 +38,7 @@ class RdsWrapper @Inject constructor(
      */
     fun getConnection(): Connection {
         return try {
+            logger.info { "Attempting to connect to $jdbcUrl, username=$username" }
             DriverManager.getConnection(jdbcUrl, username, password)
         } catch (e: SQLException) {
             throw SQLException("Failed to connect to database: ${e.message}", e)
@@ -152,6 +153,33 @@ class RdsWrapper @Inject constructor(
         }
     }
 
+    fun getItem(itemId: UUID): ItemMetadataSchema? {
+        val query = "SELECT * FROM items WHERE id = ?"
+        val items = executeQuery(query, listOf(itemId)) { resultSet ->
+            val id = resultSet.getObject("id", UUID::class.java)
+            val name = resultSet.getString("name")
+            val merchantId = resultSet.getString("merchant_id")
+            val productId = resultSet.getString("product_id")
+            val brandId = resultSet.getString("brand_id")
+            val metadataJson = resultSet.getString("metadata")
+            
+            val metadata = objectMapper.readValue(metadataJson, Map::class.java) as Map<String, Any>
+            val tags = (metadata["tags"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+            
+            ItemMetadataSchema(
+                itemId = id,
+                merchantId = merchantId,
+                name = name,
+                productId = productId,
+                brandId = brandId,
+                metadata = metadata,
+                tags = tags
+            )
+        }
+        
+        return items.firstOrNull()
+    }
+
     /**
      * Stores transfer and item metadata in a single transaction
      * @param transferId The UUID of the transfer
@@ -166,6 +194,7 @@ class RdsWrapper @Inject constructor(
         itemsMetadata: List<ItemMetadataSchema>?
     ) {
         logger.info { "Storing transfer and ${itemsMetadata?.size} items metadata for transfer ID: $transferId" }
+        val creationTime = Timestamp(System.currentTimeMillis())
         
         return executeTransaction { connection ->
             val itemIds = mutableListOf<UUID>()
@@ -174,7 +203,8 @@ class RdsWrapper @Inject constructor(
             itemsMetadata?.forEach { itemMetadata ->
                 val metadataJson = objectMapper.writeValueAsString(itemMetadata.metadata)
                 // Insert item using executeInsertAndGetKeys
-                val sql = "INSERT INTO items (id, name, merchant_id, product_id, brand_id, metadata) VALUES (?, ?, ?, ?, ?, ?::jsonb) ON CONFLICT (id) DO UPDATE SET merchant_id = ?, name = ?, product_id = ?, brand_id = ?, metadata = ?::jsonb RETURNING id"
+                val sql = "INSERT INTO items (id, name, merchant_id, product_id, brand_id, metadata, creation_time) VALUES (?, ?, ?, ?, ?, ?::jsonb, ?)" +
+                        " ON CONFLICT (id) DO UPDATE SET merchant_id = ?, name = ?, product_id = ?, brand_id = ?, metadata = ?::jsonb, creation_time = ? RETURNING id"
                 
                 val params = listOf<Any?>(
                     itemMetadata.itemId,
@@ -183,11 +213,13 @@ class RdsWrapper @Inject constructor(
                     itemMetadata.productId,
                     itemMetadata.brandId,
                     metadataJson,
+                    creationTime,
                     merchantId,
                     itemMetadata.name,
                     itemMetadata.productId,
                     itemMetadata.brandId,
-                    metadataJson
+                    metadataJson,
+                    creationTime,
                 )
                 
                 val insertedItemId = executeInsertAndGetKeys(sql, params) { rs ->

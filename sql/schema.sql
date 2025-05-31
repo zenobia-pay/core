@@ -1,6 +1,7 @@
 
 CREATE TABLE items (
     id UUID PRIMARY KEY,
+    owner_id TEXT,
     merchant_id TEXT NOT NULL,
     name TEXT NOT NULL,
     product_id UUID,

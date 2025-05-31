@@ -44,7 +44,7 @@ class RdsModule {
     @Provides
     @Named(PG_DATABASE)
     fun providePgDatabase(): String {
-        return System.getenv(ENV_METADATA_DB_NAME) ?: ""
+        return System.getenv(ENV_METADATA_DB_NAME)!!
     }
 
     @Provides
