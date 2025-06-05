@@ -240,7 +240,7 @@ class RdsWrapper @Inject constructor(
             if (transferMetadata != null) {
                 // We need to create the array in the connection context
                 connection.prepareStatement(transferSql, PreparedStatement.RETURN_GENERATED_KEYS).use { statement ->
-                    statement.setObject(1, transferId)
+                    statement.setObject(1, UUID.fromString(transferId))
                     statement.setArray(2, connection.createArrayOf("uuid", itemIds.toTypedArray()))
                     statement.setString(3, transferMetadataJson)
                     statement.setArray(4, connection.createArrayOf("uuid", itemIds.toTypedArray()))
@@ -256,6 +256,65 @@ class RdsWrapper @Inject constructor(
                         }
                     }
                 }
+            }
+        }
+    }
+    
+    /**
+     * Updates ownership information for all items in a transfer
+     * @param transferId The UUID of the transfer
+     * @param ownerId The ID of the new owner
+     * @param ownershipTime The timestamp when ownership was transferred
+     * @return Number of items updated
+     */
+    fun updateTransferOwnership(
+        transferId: String,
+        ownerId: String,
+        ownershipTime: Timestamp
+    ): Int {
+        logger.info { "Updating ownership for transfer ID: $transferId to owner: $ownerId at time: $ownershipTime" }
+        
+        return executeTransaction { connection ->
+            // First, get the item IDs associated with this transfer
+            val getItemIdsSql = "SELECT item_ids FROM transfers WHERE id = ?"
+            val itemIds = mutableListOf<UUID>()
+            
+            connection.prepareStatement(getItemIdsSql).use { statement ->
+                statement.setObject(1, transferId)
+                statement.executeQuery().use { resultSet ->
+                    if (resultSet.next()) {
+                        val itemIdsArray = resultSet.getArray("item_ids")
+                        if (itemIdsArray != null) {
+                            val itemIdsObjects = itemIdsArray.array as Array<*>
+                            itemIdsObjects.forEach { itemIdObj ->
+                                if (itemIdObj is UUID) {
+                                    itemIds.add(itemIdObj)
+                                }
+                            }
+                        }
+                    } else {
+                        logger.warn { "No transfer found with ID: $transferId" }
+                        return@executeTransaction 0
+                    }
+                }
+            }
+            
+            if (itemIds.isEmpty()) {
+                logger.warn { "No items found for transfer ID: $transferId" }
+                return@executeTransaction 0
+            }
+            
+            // Update ownership for all items
+            val updateSql = "UPDATE items SET owner_id = ?, ownership_time = ? WHERE id = ANY(?)"
+            
+            connection.prepareStatement(updateSql).use { statement ->
+                statement.setString(1, ownerId)
+                statement.setTimestamp(2, ownershipTime)
+                statement.setArray(3, connection.createArrayOf("uuid", itemIds.toTypedArray()))
+                
+                val updatedRows = statement.executeUpdate()
+                logger.info { "Updated ownership for $updatedRows items in transfer ID: $transferId" }
+                return@executeTransaction updatedRows
             }
         }
     }

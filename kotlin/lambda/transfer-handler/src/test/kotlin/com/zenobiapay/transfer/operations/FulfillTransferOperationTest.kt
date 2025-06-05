@@ -34,6 +34,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import software.amazon.awssdk.services.sqs.SqsClient
 
 class FulfillTransferOperationTest {
     private val orumWrapper = mockk<OrumWrapper>()
@@ -45,6 +46,7 @@ class FulfillTransferOperationTest {
     private val objectMapper = jacksonObjectMapper()
     private val context = mockk<Context>()
     private val metricHelper = mockk<MetricHelper>(relaxed = true)
+    private val sqsClient = mockk<SqsClient>(relaxed = true)
 
     companion object {
         private val TRANSFER_REQUEST_ID = "transferRequestId"
@@ -56,6 +58,7 @@ class FulfillTransferOperationTest {
         private val USER_ID = "userId"
         private val CERT_VALUE = "certValue"
         private val REQUEST_ID = "requestId"
+        private val QUEUE_URL = "queueUrl"
     }
 
     @Test
@@ -85,6 +88,8 @@ class FulfillTransferOperationTest {
             objectMapper,
             balanceFactor,
             metricHelper,
+            sqsClient,
+            QUEUE_URL,
         )
         assertThrows<InvalidSignatureException> {
             operation.run(createRequest(), createMockGatewayEvent(), context, USER_ID)
@@ -105,6 +110,8 @@ class FulfillTransferOperationTest {
             objectMapper,
             balanceFactor,
             metricHelper,
+            sqsClient,
+            QUEUE_URL,
         )
         assertThrows<ResourceNotFoundException> {
             operation.run(createRequest(), createMockGatewayEvent(), context, USER_ID)
@@ -125,6 +132,8 @@ class FulfillTransferOperationTest {
             objectMapper,
             balanceFactor,
             metricHelper,
+            sqsClient,
+            QUEUE_URL,
         )
         assertThrows<TransferStatusException> {
             operation.run(createRequest(), createMockGatewayEvent(), context, USER_ID)

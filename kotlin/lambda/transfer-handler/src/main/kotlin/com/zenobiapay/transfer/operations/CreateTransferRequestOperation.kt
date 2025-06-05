@@ -10,7 +10,7 @@ import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.util.getSubForM2M
 import com.zenobiapay.api.util.getUserRole
-import com.zenobiapay.events.model.ItemMetadataRecord
+import com.zenobiapay.events.model.PutItemMetadataQueueRecord
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.StatementItem
 import com.zenobiapay.table.user.dao.UserDao
@@ -69,11 +69,12 @@ class CreateTransferRequestOperation @Inject constructor(
                 it.queueUrl(transferMetadataQueueUrl)
                 it.messageBody(
                     objectMapper.writeValueAsString(
-                        ItemMetadataRecord(
+                        PutItemMetadataQueueRecord(
                             merchantId = userId,
                             transferMetadata = request.transferMetadata,
                             transferRequestId = requestId,
-                            itemMetadata = itemMetadata
+                            itemMetadata = itemMetadata,
+                            creationTime = Instant.now(),
                         )
                     )
                 )

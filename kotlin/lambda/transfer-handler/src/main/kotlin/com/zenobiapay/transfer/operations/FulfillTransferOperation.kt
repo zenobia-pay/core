@@ -22,6 +22,8 @@ import com.zenobiapay.api.model.exception.ConcurrentModificationException
 import com.zenobiapay.api.model.exception.DeclinedException
 import com.zenobiapay.api.model.exception.InsufficientFundsException
 import com.zenobiapay.cryptography.util.isSignatureValid
+import com.zenobiapay.events.model.PutItemMetadataQueueRecord
+import com.zenobiapay.events.model.UpdateItemMetadataQueueRecord
 import com.zenobiapay.orum.util.WaiterFailedException
 import com.zenobiapay.orum.util.generateCustomerOrumId
 import com.zenobiapay.plaid.PlaidWrapper
@@ -35,6 +37,7 @@ import com.zenobiapay.table.transfer.model.Signature
 import com.zenobiapay.table.transfer.model.OutboundTransferStatus
 import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.transfer.di.AVAILABLE_BALANCE_BUFFER
+import com.zenobiapay.transfer.di.TRANSFER_METADATA_QUEUE_URL
 import com.zenobiapay.transfer.model.FulfillTransferRequestMixin
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.TimeoutCancellationException
@@ -46,6 +49,7 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import jakarta.inject.Inject
 import jakarta.inject.Named
+import software.amazon.awssdk.services.sqs.SqsClient
 import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}
@@ -59,6 +63,9 @@ class FulfillTransferOperation @Inject constructor(
     private val objectMapper: ObjectMapper,
     @Named(AVAILABLE_BALANCE_BUFFER) private val availableBalanceBuffer: Double,
     private val metricHelper: MetricHelper,
+    private val sqsClient: SqsClient,
+    @Named(TRANSFER_METADATA_QUEUE_URL)
+    private val transferMetadataQueueUrl: String,
 ) : Operation<FulfillTransferRequest, FulfillTransfer200Response>() {
 
     override val inputType = FulfillTransferRequest::class.java
@@ -156,6 +163,19 @@ class FulfillTransferOperation @Inject constructor(
 
         logger.info { "Updated transfer request to fulfilled" }
         metricHelper.putMetric("TransactionAmount", transferAmount.toDouble(), mapOf())
+
+        sqsClient.sendMessage {
+            it.queueUrl(transferMetadataQueueUrl)
+            it.messageBody(
+                objectMapper.writeValueAsString(
+                    UpdateItemMetadataQueueRecord(
+                        transferRequestId = transferRequestId,
+                        ownershipTime = Instant.now(),
+                        ownerId = userId,
+                    )
+                )
+            )
+        }
 
         return FulfillTransfer200Response()
             .amount(transferAmount)

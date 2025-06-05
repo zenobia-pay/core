@@ -71,6 +71,6 @@ class RdsModule {
         @Named(PG_PORT) port: String,
         @Named(PG_DATABASE) database: String
     ): String {
-        return "jdbc:postgresql://$host:$port/$database"
+        return "jdbc:postgresql://$host:$port/$database?loginTimeout=10"
     }
 }

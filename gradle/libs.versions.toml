@@ -39,6 +39,7 @@ jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin"
 jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jackson" }
 jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 jackson-nullable = { module = "org.openapitools:jackson-databind-nullable", version = "0.2.6" }
+jackson-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310" , version.ref = "jackson" }
 
 # Gradle
 postgresql = { module = "org.postgresql:postgresql", version = "42.7.5"}

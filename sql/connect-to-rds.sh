@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # Get the RDS endpoint from AWS
-RDS_ENDPOINT=$(aws rds describe-db-instances \
-  --query "DBInstances[?DBInstanceIdentifier=='metadatadb'].Endpoint.Address" \
-  --output text)
+# RDS_ENDPOINT=$(aws rds describe-db-instances \
+#   --query "DBInstances[?DBInstanceIdentifier=='metadatadb'].Endpoint.Address" \
+#   --output text)
+RDS_ENDPOINT=metadata-db-proxy-dev.proxy-c70yeoiysxgh.us-east-1.rds.amazonaws.com
 
 INSTANCE_TARGET_ID=$(aws ssm describe-instance-information \
   --query "InstanceInformationList[].InstanceId" \

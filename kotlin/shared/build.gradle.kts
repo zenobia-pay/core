@@ -32,6 +32,7 @@ dependencies {
     runtimeOnly(libs.jackson.core)
     implementation(libs.jackson.kotlin)
     api(libs.jackson.databind)
+    api(libs.jackson.jsr310)
 
     // Injection
     api(libs.dagger)
