@@ -80,6 +80,7 @@ Resources:
         MetadataDBPort: !GetAtt TableStack.Outputs.MetadataDBPort
         MetadataDBName: !GetAtt TableStack.Outputs.MetadataDBName
         MetadataDBSecret: !GetAtt TableStack.Outputs.MetadataDBSecret
+        MetadataDBKmsKeyArn: !GetAtt TableStack.Outputs.MetadataDBKmsKeyArn
         MetadataDBProxyEndpoint: !GetAtt TableStack.Outputs.MetadataDBProxyEndpoint
         ItemMetadataQueueUrl: !GetAtt ItemMetadataStack.Outputs.ItemMetadataQueueUrl
         CredentialsTableName: !GetAtt TableStack.Outputs.CredentialsTableName

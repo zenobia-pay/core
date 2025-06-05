@@ -20,6 +20,7 @@ include(
     "kotlin:shared:table:user",
     "kotlin:lambda:bank-handler",
     "kotlin:lambda:transfer-handler",
+    "kotlin:lambda:item-handler",
     "kotlin:lambda:item-metadata-handler",
     "kotlin:lambda:user-handler",
     "kotlin:lambda:webhook-handler",
@@ -36,3 +37,5 @@ include("kotlin:lambda:webhook-event-handler")
 findProject(":kotlin:lambda:webhook-event-handler")?.name = "webhook-event-handler"
 include("kotlin:shared:table:rds")
 findProject(":kotlin:shared:table:rds")?.name = "rds"
+include("kotlin:lambda:item-handler")
+findProject(":kotlin:lambda:item-handler")?.name = "item-handler"

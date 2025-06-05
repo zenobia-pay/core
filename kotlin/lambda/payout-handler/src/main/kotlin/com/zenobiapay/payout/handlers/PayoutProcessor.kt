@@ -127,7 +127,14 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
         val merchantPayout = amount - fee
         val merchantId = transferItem.data?.merchant?.id!!
 
-        assert(merchantPayout > 0)
+        if (merchantPayout <= 0) {
+            logger.info { "Payout is less than 0. Taking all money in fees." }
+            metricHelper.putMetric("SkipPayout", 1.0, mapOf())
+            metricHelper.putMetric("MerchantPayout", 0.0, mapOf())
+            metricHelper.putMetric("FeeCollected", fee.toDouble(), mapOf())
+            metricHelper.putMetric("TotalPayout", amount.toDouble(), mapOf())
+            return
+        }
         val merchantData = userDao.getUserItem(merchantId)
         assert(merchantData?.userType == UserType.MERCHANT) {
             "Merchant data for merchant ${merchantData?.pk} does not exist or is not a merchant"

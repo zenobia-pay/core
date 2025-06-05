@@ -110,7 +110,6 @@ class OrumWrapper(
         val response = getResponseOrThrowException(OrumCreateTransferResponse::class.java) {
             client.newCall(request).execute()
         }
-        waitForOrumTransferStatus(response.transfer.id)
         return response
     }
 

@@ -44,7 +44,7 @@ class RdsModule {
     @Provides
     @Named(PG_DATABASE)
     fun providePgDatabase(): String {
-        return System.getenv(ENV_METADATA_DB_NAME) ?: ""
+        return System.getenv(ENV_METADATA_DB_NAME)!!
     }
 
     @Provides
@@ -71,6 +71,6 @@ class RdsModule {
         @Named(PG_PORT) port: String,
         @Named(PG_DATABASE) database: String
     ): String {
-        return "jdbc:postgresql://$host:$port/$database"
+        return "jdbc:postgresql://$host:$port/$database?loginTimeout=10"
     }
 }
