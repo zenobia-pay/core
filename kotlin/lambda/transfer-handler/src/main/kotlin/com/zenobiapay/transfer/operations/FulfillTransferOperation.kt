@@ -139,7 +139,8 @@ class FulfillTransferOperation @Inject constructor(
         transferFunds(
             transferRequestId,
             transferAmount,
-            creditorId
+            creditorId,
+            merchantItem.data.merchantData?.displayName
         )
 
         val statementItems = transferRequestData.statementItems.map { it.toApiStatementItem() }
@@ -238,27 +239,24 @@ class FulfillTransferOperation @Inject constructor(
     private fun transferFunds(
         transferRequestId: String,
         transferAmount: Int,
-        creditorId: PaymentParticipantIdentity
+        creditorId: PaymentParticipantIdentity,
+        merchantDisplayName: String?,
     ): OrumCreateTransferResponse? {
         if (transferAmount == 0) {
             logger.info { "Transfer amount is 0. Skipping deduction." }
             return null
         }
-        try {
-            return orumWrapper.createTransfer(
-                OrumCreateTransferRequest(
-                    transferReferenceId = transferRequestId,
-                    amount = transferAmount,
-                    source = TransferParticipant(
-                        customerReferenceId = generateCustomerOrumId(creditorId.id),
-                        accountReferenceId = creditorId.bankAccountId,
-                        statementDisplayName = creditorId.name
-                    ),
-                    destination = null
-                )
+        return orumWrapper.createTransfer(
+            OrumCreateTransferRequest(
+                transferReferenceId = transferRequestId,
+                amount = transferAmount,
+                source = TransferParticipant(
+                    customerReferenceId = generateCustomerOrumId(creditorId.id),
+                    accountReferenceId = creditorId.bankAccountId,
+                    statementDisplayName = merchantDisplayName?.take(16) ?: "Zenobia Pay"
+                ),
+                destination = null
             )
-        } catch (e: WaiterFailedException) {
-            throw TransferFailedException()
-        }
+        )
     }
 }
