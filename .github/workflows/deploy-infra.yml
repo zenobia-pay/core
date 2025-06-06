@@ -58,7 +58,7 @@ jobs:
       uses: gradle/actions/dependency-submission@v4
 
   deploy-tf:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref_name == 'prod'
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name }}
     steps:
