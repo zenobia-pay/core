@@ -1,0 +1,20 @@
+{
+  "Records": [
+    {
+      "messageId": "19dd0b57-b21e-4ac1-bd88-01bbb068cb78",
+      "receiptHandle": "MessageReceiptHandle",
+      "body": "{\"merchantId\":\"e4f6cfd8-3c3e-4a9a-b8e1-2f7d0c3b6d61\",\"transferRequestId\":\"e4f6cfd8-3c3e-4a9a-b8e1-2f7d0c3b6d61\",\"creationTime\":\"2025-06-09T15:50:00Z\",\"transferMetadata\":{\"source\":\"shopify\",\"orderId\":\"order-789\",\"totalAmount\":\"99.99\",\"currency\":\"USD\"},\"itemMetadata\":{\"e4f6cfd8-3c3e-4a9a-b8e1-2f7d0c3b6d81\":{\"name\":\"Premium Widget\",\"sku\":\"SKU-001\",\"price\":\"49.99\",\"quantity\":2,\"category\":\"electronics\"},\"e4f6cfd8-3c3e-4a9a-b8e1-2f7d0c3b6d60\":{\"name\":\"Deluxe Gadget\",\"sku\":\"SKU-002\",\"price\":\"50.00\",\"quantity\":1,\"category\":\"accessories\"}},\"type\":\"PUT\"}",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1686348600000",
+        "SenderId": "123456789012",
+        "ApproximateFirstReceiveTimestamp": "1686348600001"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "7b270e59b47ff90a553787216d55d91d",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:us-west-2:123456789012:item-metadata-queue",
+      "awsRegion": "us-west-2"
+    }
+  ]
+}

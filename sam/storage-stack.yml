@@ -21,6 +21,9 @@ Parameters:
   SecurityGroupId:
     Type: String
     Description: ID of the security group for the RDS instance
+  RdsSecurityGroupId:
+    Type: String
+    Description: ID of the RDS security group for database connections
 
 Conditions:
   IsProd:
@@ -421,6 +424,7 @@ Resources:
         - !Ref PrivateSubnet2
       VpcSecurityGroupIds:
         - !Ref SecurityGroupId
+        - !Ref RdsSecurityGroupId
       RequireTLS: true
       IdleClientTimeout: 1800  # 30 minutes in seconds
       DebugLogging: false

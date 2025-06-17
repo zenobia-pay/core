@@ -24,7 +24,7 @@ class GetItemOperation @Inject constructor(private val rdsWrapper: RdsWrapper): 
         return GetItem200Response()
             .itemId(item.itemId.toString())
             .name(item.name)
-            .tags(item.tags)
+//            .tags(item.tags)
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {

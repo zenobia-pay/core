@@ -159,21 +159,23 @@ class RdsWrapper @Inject constructor(
             val id = resultSet.getObject("id", UUID::class.java)
             val name = resultSet.getString("name")
             val merchantId = resultSet.getString("merchant_id")
-            val productId = resultSet.getString("product_id")
-            val brandId = resultSet.getString("brand_id")
-            val metadataJson = resultSet.getString("metadata")
-            
-            val metadata = objectMapper.readValue(metadataJson, Map::class.java) as Map<String, Any>
-            val tags = (metadata["tags"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-            
+            val brandName = resultSet.getString("brand_name")
+            val size = resultSet.getString("size")
+            val color = resultSet.getString("color")
+            val material = resultSet.getString("material")
+            val year = resultSet.getString("year")
+            // TODO: add metadata
+
             ItemMetadataSchema(
                 itemId = id,
                 merchantId = merchantId,
                 name = name,
-                productId = productId,
-                brandId = brandId,
-                metadata = metadata,
-                tags = tags
+                brandName = brandName,
+                size = size,
+                color = color,
+                material = material,
+                year = year,
+                metadata = null,
             )
         }
         
@@ -201,25 +203,28 @@ class RdsWrapper @Inject constructor(
             
             // Process each item metadata
             itemsMetadata?.forEach { itemMetadata ->
-                val metadataJson = objectMapper.writeValueAsString(itemMetadata.metadata)
                 // Insert item using executeInsertAndGetKeys
-                val sql = "INSERT INTO items (id, name, merchant_id, product_id, brand_id, metadata, creation_time) VALUES (?, ?, ?, ?, ?, ?::jsonb, ?)" +
-                        " ON CONFLICT (id) DO UPDATE SET merchant_id = ?, name = ?, product_id = ?, brand_id = ?, metadata = ?::jsonb, creation_time = ? RETURNING id"
+                val sql = "INSERT INTO items (id, name, merchant_id, brand_name, size, color, material, year, creation_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)" +
+                        " ON CONFLICT (id) DO UPDATE SET merchant_id = ?, name = ?, brand_name = ?, size = ?, color = ?, material = ?, year = ?, creation_time = ? RETURNING id"
                 
                 val params = listOf<Any?>(
                     itemMetadata.itemId,
                     itemMetadata.name,
-                    merchantId, 
-                    itemMetadata.productId,
-                    itemMetadata.brandId,
-                    metadataJson,
+                    merchantId,
+                    itemMetadata.brandName,
+                    itemMetadata.size,
+                    itemMetadata.color,
+                    itemMetadata.material,
+                    itemMetadata.year,
                     creationTime,
                     merchantId,
                     itemMetadata.name,
-                    itemMetadata.productId,
-                    itemMetadata.brandId,
-                    metadataJson,
-                    creationTime,
+                    itemMetadata.brandName,
+                    itemMetadata.size,
+                    itemMetadata.color,
+                    itemMetadata.material,
+                    itemMetadata.year,
+                    creationTime
                 )
                 
                 val insertedItemId = executeInsertAndGetKeys(sql, params) { rs ->

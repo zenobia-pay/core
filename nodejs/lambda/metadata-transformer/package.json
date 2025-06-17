@@ -1,0 +1,21 @@
+{
+  "name": "metadata-transformer",
+  "version": "1.0.0",
+  "description": "Node.js lambda for transforming item metadata using AWS Bedrock",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "jest",
+    "clean": "rm -rf dist lambda.zip",
+    "prepare-dist": "mkdir -p dist && cp -r src package.json dist/",
+    "install-prod": "cd dist && npm install --production",
+    "package": "cd dist && zip -r ../lambda.zip .",
+    "build": "npm run clean && npm run prepare-dist && npm run install-prod && npm run package && echo \"Lambda package is at: $(pwd)/lambda.zip\" && echo \"Lambda size: $(du -h lambda.zip | cut -f1)\""
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.485.0",
+    "vm2": "^3.9.19"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0"
+  }
+}

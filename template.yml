@@ -61,6 +61,7 @@ Resources:
         PrivateSubnet1: !GetAtt VpcStack.Outputs.PrivateSubnetId1
         PrivateSubnet2: !GetAtt VpcStack.Outputs.PrivateSubnetId2
         SecurityGroupId: !GetAtt VpcStack.Outputs.SecurityGroupId
+        RdsSecurityGroupId: !GetAtt VpcStack.Outputs.RdsSecurityGroupId
   
   AuthStack:
     Type: AWS::CloudFormation::Stack
@@ -131,6 +132,7 @@ Resources:
       Parameters:
         Stage: !Ref Stage
         SecurityGroupId: !GetAtt VpcStack.Outputs.SecurityGroupId
+        RdsSecurityGroupId: !GetAtt VpcStack.Outputs.RdsSecurityGroupId
         SubnetId1: !GetAtt VpcStack.Outputs.PrivateSubnetId1
         SubnetId2: !GetAtt VpcStack.Outputs.PrivateSubnetId2
         MetadataDBProxyEndpoint: !GetAtt TableStack.Outputs.MetadataDBProxyEndpoint

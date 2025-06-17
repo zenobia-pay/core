@@ -10,10 +10,11 @@ import com.zenobiapay.events.model.PutItemMetadataQueueRecord
 import com.zenobiapay.events.model.UpdateItemMetadataQueueRecord
 import com.zenobiapay.rds.util.RdsWrapper
 import com.zenobiapay.itemmetadata.di.DaggerAppComponent
-import com.zenobiapay.itemmetadata.transform.ShopifySchemaTransformer
+import com.zenobiapay.itemmetadata.transform.ItemSchemaTransformer
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
 import java.sql.Timestamp
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -23,6 +24,9 @@ class ItemMetadataHandler : RequestHandler<SQSEvent, Unit> {
 
     @Inject
     lateinit var rdsWrapper: RdsWrapper
+
+    @Inject
+    lateinit var itemSchemaTransformer: ItemSchemaTransformer
     
     init {
         DaggerAppComponent.create().inject(this)
@@ -50,8 +54,9 @@ class ItemMetadataHandler : RequestHandler<SQSEvent, Unit> {
         logger.info { "Item metadata: ${putRecord.transferMetadata}" }
 
         val transformedItems = putRecord.itemMetadata?.map { (itemId, metadata) ->
-            ShopifySchemaTransformer().transform(itemId, putRecord.merchantId, metadata)
+            itemSchemaTransformer.transform(itemId, putRecord.merchantId, metadata)
         }?.flatten()
+        logger.info { "Transformation: $transformedItems" }
 
         rdsWrapper.storeTransferAndItemsMetadata(
             putRecord.transferRequestId,
@@ -59,6 +64,7 @@ class ItemMetadataHandler : RequestHandler<SQSEvent, Unit> {
             putRecord.transferMetadata,
             transformedItems,
         )
+        logger.info { "Successfully stored ${transformedItems?.size} in rds" }
     }
     
     private fun handleUpdateRecord(recordBody: String) {

@@ -57,6 +57,7 @@ dependencies {
     // AWS
     api(libs.aws.secretsmanager)
     api(libs.aws.cloudwatch)
+    api(libs.aws.lambda)
 
     // Testing
     testImplementation(libs.kotlin.test)

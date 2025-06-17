@@ -30,6 +30,7 @@ aws-dynamodb = { module = "software.amazon.awssdk:dynamodb", version.ref = "aws"
 aws-dynamodb-enhanced = { module = "software.amazon.awssdk:dynamodb-enhanced", version.ref = "aws" }
 aws-sqs = { module = "software.amazon.awssdk:sqs", version.ref = "aws" }
 aws-cloudwatch = { module = "software.amazon.awssdk:cloudwatch", version.ref = "aws" }
+aws-lambda = { module = "software.amazon.awssdk:lambda", version.ref = "aws" }
 aws-utils = { module = "software.amazon.awssdk:utils", version.ref = "aws" }
 
 # Jackson

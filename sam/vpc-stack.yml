@@ -130,6 +130,20 @@ Resources:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
 
+  RdsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for RDS connections
+      VpcId: !Ref ZenobiaVpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref SecurityGroup
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
   # PrivateLink
   DynamoDBVpcEndpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -160,6 +174,10 @@ Outputs:
   SecurityGroupId:
     Value: !Ref SecurityGroup
     Description: Security group ID.
+
+  RdsSecurityGroupId:
+    Value: !Ref RdsSecurityGroup
+    Description: RDS security group ID.
 
   PublicSubnetId1:
     Value: !Ref PublicSubnet1
