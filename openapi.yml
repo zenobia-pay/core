@@ -105,33 +105,6 @@ components:
     SignatureType:
       type: string
       enum: [SHA256_WITH_ECDSA]
-    Address:
-      type: object
-      required:
-        - address1
-        - city
-        - state
-        - country
-        - zip5
-      properties:
-        address1:
-          type: string
-          maxLength: 255
-        address2:
-          type: string
-          maxLength: 255
-        city:
-          type: string
-          maxLength: 255
-        state:
-          type: string
-          maxLength: 255
-        country:
-          type: string
-          enum: [US]
-        zip5:
-          type: string
-          pattern: '^\d{5}$'
     BankAccount:
       type: object
       required:
@@ -900,7 +873,6 @@ paths:
                   maxLength: 256
                 webhookUrl:
                   type: string
-                  pattern: "^https://.*$"
                   maxLength: 1000
                 merchantLocation:
                   $ref: "#/components/schemas/Location"
