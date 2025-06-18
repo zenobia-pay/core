@@ -9,6 +9,7 @@ import com.zenobiapay.api.model.exception.UnknownPathException
 import com.zenobiapay.api.util.ResponseHandler
 import com.zenobiapay.item.di.DaggerAppComponent
 import com.zenobiapay.item.operations.GetItemOperation
+import com.zenobiapay.item.operations.ListItemsOperation
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
 
@@ -23,6 +24,9 @@ class ItemHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
 
     @Inject
     lateinit var getItemOperation: GetItemOperation
+    
+    @Inject
+    lateinit var listItemsOperation: ListItemsOperation
 
     init {
         DaggerAppComponent.create().inject(this)
@@ -31,6 +35,7 @@ class ItemHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
     override fun handleRequest(input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
         val operation = when (input.path) {
             "/get-item" -> getItemOperation
+            "/list-items" -> listItemsOperation
             else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
         }
         return responseHandler.returnApiGwResponse(operation, input, context)

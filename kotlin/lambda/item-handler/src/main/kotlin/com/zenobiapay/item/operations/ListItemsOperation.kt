@@ -1,0 +1,49 @@
+package com.zenobiapay.item.operations
+
+import com.amazonaws.services.lambda.runtime.Context
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
+import com.zenobiapay.api.generated.model.ListItems200Response
+import com.zenobiapay.api.generated.model.ListItems200ResponseItemsInner
+import com.zenobiapay.api.model.EmptyApiResponse
+import com.zenobiapay.api.model.cognito.UserPoolGroup
+import com.zenobiapay.api.operation.Operation
+import com.zenobiapay.rds.model.ItemMetadataSchema
+import com.zenobiapay.rds.util.RdsWrapper
+import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.inject.Inject
+import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
+
+class ListItemsOperation @Inject constructor(private val rdsWrapper: RdsWrapper): Operation<EmptyApiResponse, ListItems200Response>() {
+    override val inputType = EmptyApiResponse::class.java
+    
+    override fun run(
+        request: EmptyApiResponse,
+        input: APIGatewayProxyRequestEvent,
+        context: Context,
+        userId: String?
+    ): ListItems200Response {
+        if (userId == null) {
+            logger.warn { "User ID is null when listing items" }
+            return ListItems200Response().items(emptyList())
+        }
+        
+        logger.info { "Listing items for user: $userId" }
+        val items = rdsWrapper.listItemsByOwnerId(userId)
+        
+        return ListItems200Response()
+            .items(
+                items.map { item ->
+                    ListItems200ResponseItemsInner()
+                        .itemId(item.itemId.toString())
+                        .name(item.name)
+                        // Add imageUrl if available in the future
+                }
+            )
+    }
+
+    override fun getUserPoolAllowList(): List<UserPoolGroup> {
+        return listOf(UserPoolGroup.CUSTOMER)
+    }
+}

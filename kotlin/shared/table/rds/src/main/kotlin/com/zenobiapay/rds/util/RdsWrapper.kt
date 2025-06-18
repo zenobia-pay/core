@@ -310,7 +310,7 @@ class RdsWrapper @Inject constructor(
             }
             
             // Update ownership for all items
-            val updateSql = "UPDATE items SET owner_id = ?, ownership_time = ? WHERE id = ANY(?)"
+            val updateSql = "UPDATE items SET owner = ?, ownership_time = ? WHERE id = ANY(?)"
             
             connection.prepareStatement(updateSql).use { statement ->
                 statement.setString(1, ownerId)
@@ -321,6 +321,39 @@ class RdsWrapper @Inject constructor(
                 logger.info { "Updated ownership for $updatedRows items in transfer ID: $transferId" }
                 return@executeTransaction updatedRows
             }
+        }
+    }
+    
+    /**
+     * Lists all items owned by a specific user
+     * @param ownerId The ID of the owner
+     * @return List of items owned by the user
+     */
+    fun listItemsByOwnerId(ownerId: String): List<ItemMetadataSchema> {
+        logger.info { "Listing items for owner ID: $ownerId" }
+        val query = "SELECT * FROM items WHERE owner = ?"
+        
+        return executeQuery(query, listOf(ownerId)) { resultSet ->
+            val id = resultSet.getObject("id", UUID::class.java)
+            val name = resultSet.getString("name")
+            val merchantId = resultSet.getString("merchant_id")
+            val brandName = resultSet.getString("brand_name")
+            val size = resultSet.getString("size")
+            val color = resultSet.getString("color")
+            val material = resultSet.getString("material")
+            val year = resultSet.getString("year")
+            
+            ItemMetadataSchema(
+                itemId = id,
+                merchantId = merchantId,
+                name = name,
+                brandName = brandName,
+                size = size,
+                color = color,
+                material = material,
+                year = year,
+                metadata = null,
+            )
         }
     }
 }
