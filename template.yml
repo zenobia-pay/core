@@ -141,6 +141,7 @@ Resources:
         MetadataDBKmsKeyArn: !GetAtt TableStack.Outputs.MetadataDBKmsKeyArn
         TransferTableName: !GetAtt TableStack.Outputs.TransferTableName
         ImageStorageBucketName: !GetAtt TableStack.Outputs.ImageStorageBucketName
+        ImageStorageBucketKmsKeyArn: !GetAtt TableStack.Outputs.ImageStorageBucketKmsKeyArn
 
 Outputs:
   WebEndpoint:

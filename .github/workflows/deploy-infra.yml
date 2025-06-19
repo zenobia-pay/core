@@ -170,4 +170,5 @@ jobs:
           WebsocketServiceEndpoint=$WEBSOCKET_SERVICE_ENDPOINT \
           ZenobiaApiEndpoint=$ZENOBIA_API_ENDPOINT \
           PlaidIpAddresses=$PLAID_IP_ADDRESSES \
-          PlaidSlackWebhook=$PLAID_SLACK_WEBHOOK
+          PlaidSlackWebhook=$PLAID_SLACK_WEBHOOK \
+          UniqueIdentifier=""
