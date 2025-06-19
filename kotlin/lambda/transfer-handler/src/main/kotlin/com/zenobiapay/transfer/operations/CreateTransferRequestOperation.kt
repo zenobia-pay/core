@@ -51,20 +51,19 @@ class CreateTransferRequestOperation @Inject constructor(
         val requestId = input.requestContext.requestId
         val merchantName = userDao.getUserItem(userId!!)?.data?.merchantData?.displayName
             ?: throw InvalidRequestException("Merchant display name not configured.")
-        val statementItemsToMetadata = getStatementItemToMetadata(request.statementItems, request.itemMetadata)
+
+        val itemIdToStatementItem = generateItemIdMapping(request.statementItems)
         transferDao.putTransferRequest(
             userId,
             requestId,
             request.amount,
             merchantName,
-            statementItemsToMetadata.map { it.first },
+            itemIdToStatementItem.map { StatementItem.fromApiRequestStatementItem(it.key, it.value) },
             expiry,
         )
 
         logger.info { "Sending sqs item to process transfer metadata" }
-        val itemMetadata: Map<String, Map<String, Any>> = statementItemsToMetadata
-            .filter { it.first.id != null && it.second != null }.associate { it.first.id!! to it.second!! }
-        if (request.transferMetadata != null || request.itemMetadata?.isNotEmpty() == true) {
+        if (request.transferMetadata != null || request.statementItems.any { it.metadata != null }) {
             sqsClient.sendMessage {
                 it.queueUrl(transferMetadataQueueUrl)
                 it.messageBody(
@@ -73,7 +72,7 @@ class CreateTransferRequestOperation @Inject constructor(
                             merchantId = userId,
                             transferMetadata = request.transferMetadata,
                             transferRequestId = requestId,
-                            itemMetadata = itemMetadata,
+                            itemMetadata = itemIdToStatementItem.mapValues { it.value.metadata },
                             creationTime = Instant.now(),
                         )
                     )
@@ -91,16 +90,10 @@ class CreateTransferRequestOperation @Inject constructor(
             )
     }
 
-    private fun getStatementItemToMetadata(
-        statementItems: List<com.zenobiapay.api.generated.model.StatementItem>,
-        itemMetadata: Map<String, Any>
-    ): List<Pair<StatementItem, Map<String, Any>?>> {
-        return statementItems.map {
-            StatementItem.fromApiRequestStatementItem(it) to it.key?.let { itemMetadata[it] }
-        }.map {
-            val uuid = UUID.randomUUID()
-            it.first.copy(id = uuid.toString()) to (it.second as? Map<String, Any>)
-        }
+    private fun generateItemIdMapping(
+        statementItems: List<com.zenobiapay.api.generated.model.StatementItem>
+    ): Map<String, com.zenobiapay.api.generated.model.StatementItem> {
+        return statementItems.associateBy { UUID.randomUUID().toString() }
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {

@@ -225,10 +225,9 @@ Resources:
             StatementItem:
               type: object
               properties:
-                key:
-                  type: string
-                  maxLength: 255
-                  minLength: 1
+                metadata:
+                  type: object
+                  additionalProperties: true
                 name:
                   type: string
                   maxLength: 255
@@ -645,9 +644,6 @@ Resources:
                           items:
                             $ref: "#/components/schemas/StatementItem"
                         transferMetadata:
-                          type: object
-                          additionalProperties: true
-                        itemMetadata:
                           type: object
                           additionalProperties: true
               responses:
