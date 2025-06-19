@@ -152,7 +152,7 @@ jobs:
       run: make kotlin
     - name: Deploy sam
       run: |
-        sam deploy --no-confirm-changeset \
+        sam build && sam deploy --no-confirm-changeset \
           --parameter-overrides \
           Stage=${{ github.ref_name }} \
           PlaidSecretsArn=$PLAID_SECRETS_ARN \
