@@ -102,6 +102,12 @@ Parameters:
   ItemMetadataQueueUrl:
     Type: String
     Description: URL of the Transfer Metadata Queue
+  ImageStorageBucketName:
+    Type: String
+    Description: Name of the S3 bucket for storing images
+  ImageStorageBucketKmsKeyArn:
+    Type: String
+    Description: ARN of the KMS key used to encrypt the image storage S3 bucket
 
 Conditions:
   IsProd: !Equals [!Ref Stage, "prod"]
@@ -1709,6 +1715,20 @@ Resources:
               Action:
                 - kms:Decrypt
               Resource: !Ref MetadataDBKmsKeyArn
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:ListBucket
+              Resource: 
+                - !Sub "arn:aws:s3:::${ImageStorageBucketName}"
+                - !Sub "arn:aws:s3:::${ImageStorageBucketName}/*"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - kms:Decrypt
+                - kms:GenerateDataKey
+              Resource: !Ref ImageStorageBucketKmsKeyArn
       Events:
         GetItem:
           Type: Api

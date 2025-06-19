@@ -99,6 +99,8 @@ Resources:
         Auth0Domain: !Ref Auth0Domain
         OrumPublicCertificate: !Ref OrumPublicCertificate
         OrumIpAddresses: !Ref OrumIpAddresses
+        ImageStorageBucketName: !GetAtt TableStack.Outputs.ImageStorageBucketName
+        ImageStorageBucketKmsKeyArn: !GetAtt TableStack.Outputs.ImageStorageBucketKmsKeyArn
         OrumSlackWebhook: !Ref OrumSlackWebhook
         PlaidIpAddresses: !Ref PlaidIpAddresses
         PlaidSlackWebhook: !Ref PlaidSlackWebhook
