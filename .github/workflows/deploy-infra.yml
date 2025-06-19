@@ -150,6 +150,11 @@ jobs:
       uses: gradle/actions/setup-gradle@v4
     - name: Build Kotlin artifacts
       run: make kotlin
+    - name: Build Node.js Lambda functions
+      run: |
+        cd nodejs/lambda/metadata-transformer
+        npm install
+        npm run build
     - name: Deploy sam
       run: |
         sam build && sam deploy --no-confirm-changeset \
