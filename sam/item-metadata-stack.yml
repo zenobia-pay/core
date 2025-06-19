@@ -129,7 +129,7 @@ Resources:
   MetadataTransformerFunction:
     Type: AWS::Serverless::Function
     Metadata:
-      BuildMethod: nodejs18.x
+      BuildMethod: makefile
     Properties:
       FunctionName: !Sub "MetadataTransformer-${Stage}"
       CodeUri: ../nodejs/lambda/metadata-transformer/
