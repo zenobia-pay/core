@@ -28,6 +28,7 @@ const DESIRED_SCHEMA = `
   color: "TODO", // Color of the item, red, green, etc.
   material: "TODO", // Material item is made of. Leather, cotton, etc.
   year: "TODO", // Year the item was released.
+  imageUrls: ["TODO"] // Array of image URLs. Should be full URLs linking to images of the product.
 }`;
 
 // Initialize clients

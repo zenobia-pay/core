@@ -13,5 +13,6 @@ data class ItemMetadataSchema(
     val color: String?,
     val material: String?,
     val year: String?,
-    val metadata: Map<String, Any>?
+    val metadata: Map<String, Any>?,
+    val imageUrls: List<String>?,
 )

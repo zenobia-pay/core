@@ -176,6 +176,7 @@ class RdsWrapper @Inject constructor(
                 material = material,
                 year = year,
                 metadata = null,
+                imageUrls = null, // TODO: add image urls
             )
         }
         
@@ -204,8 +205,7 @@ class RdsWrapper @Inject constructor(
             // Process each item metadata
             itemsMetadata?.forEach { itemMetadata ->
                 // Insert item using executeInsertAndGetKeys
-                val sql = "INSERT INTO items (id, name, merchant_id, brand_name, size, color, material, year, creation_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)" +
-                        " ON CONFLICT (id) DO UPDATE SET merchant_id = ?, name = ?, brand_name = ?, size = ?, color = ?, material = ?, year = ?, creation_time = ? RETURNING id"
+                val sql = "INSERT INTO items (id, name, merchant_id, brand_name, size, color, material, year, creation_time, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 
                 val params = listOf<Any?>(
                     itemMetadata.itemId,
@@ -217,6 +217,7 @@ class RdsWrapper @Inject constructor(
                     itemMetadata.material,
                     itemMetadata.year,
                     creationTime,
+                    itemMetadata.metadata,
                     merchantId,
                     itemMetadata.name,
                     itemMetadata.brandName,
@@ -353,6 +354,7 @@ class RdsWrapper @Inject constructor(
                 material = material,
                 year = year,
                 metadata = null,
+                imageUrls = null, // TODO: add image urls
             )
         }
     }

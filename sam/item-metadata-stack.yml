@@ -50,6 +50,9 @@ Parameters:
   TransferTableName:
     Type: String
     Description: Name of the transfer table
+  ImageStorageBucketName:
+    Type: String
+    Description: Name of the S3 bucket for storing item metadata
 
 Conditions:
   IsProd: !Equals [!Ref Stage, "prod"]
@@ -96,6 +99,7 @@ Resources:
           METADATA_DB_NAME: !Ref MetadataDBName
           METADATA_DB_SECRET_ARN: !Ref MetadataDBSecret
           METADATA_TRANSFORMER_FUNCTION_NAME: !Ref MetadataTransformerFunction
+          IMAGE_STORAGE_BUCKET_NAME: !Ref ImageStorageBucketName
       Policies:
         - AWSLambdaVPCAccessExecutionRole
         - CloudWatchPutMetricPolicy: {}

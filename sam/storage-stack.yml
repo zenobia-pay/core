@@ -442,6 +442,92 @@ Resources:
         ConnectionBorrowTimeout: 120  # 2 minutes in seconds
         SessionPinningFilters: ["EXCLUDE_VARIABLE_SETS"]
 
+  # S3 bucket for storing images with authenticated access
+  ImageStorageBucketKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Key to encrypt the image storage S3 bucket
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowRootAccount
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: "kms:*"
+            Resource: "*"
+
+  ImageStorageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "zenobia-image-storage-${Stage}-${UniqueIdentifier}"
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: !Ref ImageStorageBucketKmsKey
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldVersions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 90
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - HEAD
+            AllowedOrigins:
+              - "*"
+            MaxAge: 3600
+
+  # IAM Role for Lambda functions to generate pre-signed URLs for the image bucket
+  ImageStorageAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: S3ImageBucketAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - !GetAtt ImageStorageBucket.Arn
+                  - !Sub "${ImageStorageBucket.Arn}/*"
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                  - kms:GenerateDataKey
+                Resource: !GetAtt ImageStorageBucketKmsKey.Arn
+
 Outputs:
   CredentialsTableKeyId:
     Value: !Ref CredentialsTableKmsKey
@@ -489,4 +575,16 @@ Outputs:
     Description: ARN of the KMS key used to encrypt the Metadata RDS instance
     Export:
       Name: MetadataDBKmsKeyArn
+  ImageStorageBucketName:
+    Value: !Ref ImageStorageBucket
+    Description: Name of the S3 bucket for storing images
+  ImageStorageBucketArn:
+    Value: !GetAtt ImageStorageBucket.Arn
+    Description: ARN of the S3 bucket for storing images
+  ImageStorageBucketKmsKeyArn:
+    Value: !GetAtt ImageStorageBucketKmsKey.Arn
+    Description: ARN of the KMS key used to encrypt the image storage S3 bucket
+  ImageStorageAccessRoleArn:
+    Value: !GetAtt ImageStorageAccessRole.Arn
+    Description: ARN of the IAM role that can be assumed by Lambda functions to generate pre-signed URLs
 

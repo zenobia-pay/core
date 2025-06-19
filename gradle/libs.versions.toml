@@ -26,6 +26,7 @@ aws-sdk-core = { module = "software.amazon.awssdk:sdk-core", version.ref = "aws"
 aws-sdk-utils = { module = "software.amazon.awssdk:utils", version.ref = "aws" }
 
 aws-s3 = { module = "software.amazon.awssdk:s3", version.ref = "aws" }
+aws-s3-presigner = { module = "software.amazon.awssdk:s3-transfer-manager", version.ref = "aws" }
 aws-dynamodb = { module = "software.amazon.awssdk:dynamodb", version.ref = "aws" }
 aws-dynamodb-enhanced = { module = "software.amazon.awssdk:dynamodb-enhanced", version.ref = "aws" }
 aws-sqs = { module = "software.amazon.awssdk:sqs", version.ref = "aws" }
