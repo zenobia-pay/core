@@ -2,7 +2,8 @@ package com.zenobiapay.rds.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.rds.di.RdsModule
-import com.zenobiapay.rds.model.ItemMetadataSchema
+import com.zenobiapay.rds.model.ItemMetadata
+import com.zenobiapay.rds.model.RdsItemMetadataSchema
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
 import jakarta.inject.Named
@@ -153,7 +154,7 @@ class RdsWrapper @Inject constructor(
         }
     }
 
-    fun getItem(itemId: UUID): ItemMetadataSchema? {
+    fun getItem(itemId: UUID): RdsItemMetadataSchema? {
         val query = "SELECT * FROM items WHERE id = ?"
         val items = executeQuery(query, listOf(itemId)) { resultSet ->
             val id = resultSet.getObject("id", UUID::class.java)
@@ -166,17 +167,20 @@ class RdsWrapper @Inject constructor(
             val year = resultSet.getString("year")
             // TODO: add metadata
 
-            ItemMetadataSchema(
+            RdsItemMetadataSchema(
                 itemId = id,
                 merchantId = merchantId,
-                name = name,
-                brandName = brandName,
-                size = size,
-                color = color,
-                material = material,
-                year = year,
-                metadata = null,
-                imageUrls = null, // TODO: add image urls
+                itemMetadata = ItemMetadata(
+                    name = name,
+                    brandName = brandName,
+                    size = size,
+                    color = color,
+                    material = material,
+                    year = year,
+                    imageUrls = null,
+                ),
+                rawMetadata = null,
+                imageS3ObjectKeys = resultSet.getArray("image_keys")?.let { array -> (array.array as? Array<*>)?.mapNotNull { it as? String } },
             )
         }
         
@@ -194,7 +198,7 @@ class RdsWrapper @Inject constructor(
         transferId: String,
         merchantId: String,
         transferMetadata: Map<String, Any>?,
-        itemsMetadata: List<ItemMetadataSchema>?
+        itemsMetadata: List<RdsItemMetadataSchema>?
     ) {
         logger.info { "Storing transfer and ${itemsMetadata?.size} items metadata for transfer ID: $transferId" }
         val creationTime = Timestamp(System.currentTimeMillis())
@@ -203,12 +207,13 @@ class RdsWrapper @Inject constructor(
             val itemIds = mutableListOf<UUID>()
             
             // Process each item metadata
-            itemsMetadata?.forEach { itemMetadata ->
+            itemsMetadata?.forEach { rdsItemMetadata ->
+                val itemMetadata = rdsItemMetadata.itemMetadata
                 // Insert item using executeInsertAndGetKeys
                 val sql = "INSERT INTO items (id, name, merchant_id, brand_name, size, color, material, year, creation_time, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 
                 val params = listOf<Any?>(
-                    itemMetadata.itemId,
+                    rdsItemMetadata.itemId,
                     itemMetadata.name,
                     merchantId,
                     itemMetadata.brandName,
@@ -217,7 +222,7 @@ class RdsWrapper @Inject constructor(
                     itemMetadata.material,
                     itemMetadata.year,
                     creationTime,
-                    itemMetadata.metadata,
+                    rdsItemMetadata.rawMetadata,
                     merchantId,
                     itemMetadata.name,
                     itemMetadata.brandName,
@@ -235,7 +240,7 @@ class RdsWrapper @Inject constructor(
                 if (insertedItemId != null) {
                     itemIds.add(insertedItemId)
                 } else {
-                    throw SQLException("Failed to insert or update item metadata for item ID: ${itemMetadata.itemId}")
+                    throw SQLException("Failed to insert or update item metadata for item ID: ${rdsItemMetadata.itemId}")
                 }
             }
             
@@ -330,7 +335,7 @@ class RdsWrapper @Inject constructor(
      * @param ownerId The ID of the owner
      * @return List of items owned by the user
      */
-    fun listItemsByOwnerId(ownerId: String): List<ItemMetadataSchema> {
+    fun listItemsByOwnerId(ownerId: String): List<RdsItemMetadataSchema> {
         logger.info { "Listing items for owner ID: $ownerId" }
         val query = "SELECT * FROM items WHERE owner = ?"
         
@@ -344,17 +349,20 @@ class RdsWrapper @Inject constructor(
             val material = resultSet.getString("material")
             val year = resultSet.getString("year")
             
-            ItemMetadataSchema(
+            RdsItemMetadataSchema(
                 itemId = id,
                 merchantId = merchantId,
-                name = name,
-                brandName = brandName,
-                size = size,
-                color = color,
-                material = material,
-                year = year,
-                metadata = null,
-                imageUrls = null, // TODO: add image urls
+                itemMetadata = ItemMetadata(
+                    name = name,
+                    brandName = brandName,
+                    size = size,
+                    color = color,
+                    material = material,
+                    year = year,
+                    imageUrls = null,
+                ),
+                rawMetadata = null,
+                imageS3ObjectKeys = resultSet.getArray("image_keys")?.let { array -> (array.array as? Array<*>)?.mapNotNull { it as? String } },
             )
         }
     }

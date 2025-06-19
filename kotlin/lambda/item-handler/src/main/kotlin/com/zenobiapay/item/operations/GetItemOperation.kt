@@ -7,11 +7,15 @@ import com.zenobiapay.api.generated.model.GetItemRequest
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.model.exception.ResourceNotFoundException
 import com.zenobiapay.api.operation.Operation
+import com.zenobiapay.item.util.S3UrlGenerator
 import com.zenobiapay.rds.util.RdsWrapper
 import jakarta.inject.Inject
 import java.util.UUID
 
-class GetItemOperation @Inject constructor(private val rdsWrapper: RdsWrapper): Operation<GetItemRequest, GetItem200Response>() {
+class GetItemOperation @Inject constructor(
+    private val rdsWrapper: RdsWrapper,
+    private val s3UrlGenerator: S3UrlGenerator
+): Operation<GetItemRequest, GetItem200Response>() {
     override val inputType = GetItemRequest::class.java
     override fun run(
         request: GetItemRequest,
@@ -23,8 +27,13 @@ class GetItemOperation @Inject constructor(private val rdsWrapper: RdsWrapper): 
 
         return GetItem200Response()
             .itemId(item.itemId.toString())
-            .name(item.name)
-//            .tags(item.tags)
+            .name(item.itemMetadata.name)
+            .size(item.itemMetadata.size)
+            .color(item.itemMetadata.color)
+            .material(item.itemMetadata.material)
+            .year(item.itemMetadata.year)
+            .brandName(item.itemMetadata.brandName)
+            .imageUrls(s3UrlGenerator.generatePresignedUrls(item.imageS3ObjectKeys))
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {

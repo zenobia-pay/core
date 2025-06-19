@@ -7,15 +7,17 @@ import com.zenobiapay.api.generated.model.ListItems200ResponseItemsInner
 import com.zenobiapay.api.model.EmptyApiResponse
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.operation.Operation
-import com.zenobiapay.rds.model.ItemMetadataSchema
+import com.zenobiapay.item.util.S3UrlGenerator
 import com.zenobiapay.rds.util.RdsWrapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
-class ListItemsOperation @Inject constructor(private val rdsWrapper: RdsWrapper): Operation<EmptyApiResponse, ListItems200Response>() {
+class ListItemsOperation @Inject constructor(
+    private val rdsWrapper: RdsWrapper,
+    private val s3UrlGenerator: S3UrlGenerator
+): Operation<EmptyApiResponse, ListItems200Response>() {
     override val inputType = EmptyApiResponse::class.java
     
     override fun run(
@@ -37,8 +39,8 @@ class ListItemsOperation @Inject constructor(private val rdsWrapper: RdsWrapper)
                 items.map { item ->
                     ListItems200ResponseItemsInner()
                         .itemId(item.itemId.toString())
-                        .name(item.name)
-                        // Add imageUrl if available in the future
+                        .name(item.itemMetadata.name)
+                        .imageUrls(s3UrlGenerator.generatePresignedUrls(item.imageS3ObjectKeys))
                 }
             )
     }

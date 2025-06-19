@@ -4,10 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.events.model.PutItemMetadataQueueRecord
 import com.zenobiapay.itemmetadata.transform.ItemSchemaTransformer
 import com.zenobiapay.itemmetadata.util.S3Uploader
-import com.zenobiapay.rds.model.ItemMetadataSchema
+import com.zenobiapay.rds.model.RdsItemMetadataSchema
 import com.zenobiapay.rds.util.RdsWrapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -25,11 +26,19 @@ class PutMetadataLogic @Inject constructor(
         logger.info { "Item metadata: ${putRecord.transferMetadata}" }
 
         val transformedItems = putRecord.itemMetadata?.map { (itemId, metadata) ->
-            itemSchemaTransformer.transform(itemId, putRecord.merchantId, metadata)
+            itemSchemaTransformer.transform(metadata).map { itemMetadata ->
+                RdsItemMetadataSchema(
+                    itemId = UUID.fromString(itemId),
+                    merchantId = putRecord.merchantId,
+                    itemMetadata = itemMetadata,
+                    rawMetadata = metadata,
+                    imageS3ObjectKeys = null,
+                )
+            }
         }?.flatten()
         logger.info { "Transformation: $transformedItems" }
 
-        val transformedItemsWithInternalImages = convertToInternalImages(transformedItems)
+        val transformedItemsWithInternalImages = convertToS3ObjectKeys(transformedItems)
 
         rdsWrapper.storeTransferAndItemsMetadata(
             putRecord.transferRequestId,
@@ -40,10 +49,10 @@ class PutMetadataLogic @Inject constructor(
         logger.info { "Successfully stored ${transformedItems?.size} in rds" }
     }
 
-    private fun convertToInternalImages(itemMetadataList: List<ItemMetadataSchema>?): List<ItemMetadataSchema>? {
+    private fun convertToS3ObjectKeys(itemMetadataList: List<RdsItemMetadataSchema>?): List<RdsItemMetadataSchema>? {
         return itemMetadataList?.map { metadata ->
             metadata.copy(
-                imageUrls = metadata.imageUrls?.mapNotNull { imageUrl ->
+                imageS3ObjectKeys = metadata.itemMetadata.imageUrls?.mapNotNull { imageUrl ->
                     s3Uploader.uploadImageFromUrl(imageUrl = imageUrl, prefix = "item/${metadata.itemId}")
                 }
             )

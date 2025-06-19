@@ -59,7 +59,6 @@ dependencies {
     api(libs.aws.cloudwatch)
     api(libs.aws.lambda)
     api(libs.aws.s3)
-    api(libs.aws.s3.presigner)
     implementation(libs.okhttp)
 
     // Testing

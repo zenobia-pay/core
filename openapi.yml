@@ -1090,7 +1090,17 @@ paths:
                     type: string
                   name:
                     type: string
-                  tags:
+                  brandName:
+                    type: string
+                  size:
+                    type: string
+                  color:
+                    type: string
+                  material:
+                    type: string
+                  year:
+                    type: string
+                  imageUrls:
                     type: array
                     items:
                       type: string
@@ -1127,8 +1137,10 @@ paths:
                           type: string
                         name:
                           type: string
-                        imageUrl:
-                          type: string
+                        imageUrls:
+                          type: array
+                          items:
+                            type: string
         "400":
           $ref: "#/components/responses/BadRequest"
         "403":

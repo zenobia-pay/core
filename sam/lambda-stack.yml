@@ -789,7 +789,6 @@ Resources:
                   $ref: "#/components/responses/NotFound"
                 "500":
                   $ref: "#/components/responses/InternalServerError"
-
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
@@ -835,7 +834,6 @@ Resources:
                   $ref: "#/components/responses/NotFound"
                 "500":
                   $ref: "#/components/responses/InternalServerError"
-
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
@@ -890,7 +888,6 @@ Resources:
                   $ref: "#/components/responses/NotFound"
                 "500":
                   $ref: "#/components/responses/InternalServerError"
-
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
@@ -990,7 +987,6 @@ Resources:
                   $ref: "#/components/responses/NotFound"
                 "500":
                   $ref: "#/components/responses/InternalServerError"
-
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
@@ -1275,7 +1271,17 @@ Resources:
                             type: string
                           name:
                             type: string
-                          tags:
+                          brandName:
+                            type: string
+                          size:
+                            type: string
+                          color:
+                            type: string
+                          material:
+                            type: string
+                          year:
+                            type: string
+                          imageUrls:
                             type: array
                             items:
                               type: string
@@ -1313,8 +1319,10 @@ Resources:
                                   type: string
                                 name:
                                   type: string
-                                imageUrl:
-                                  type: string
+                                imageUrls:
+                                  type: array
+                                  items:
+                                    type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -1705,6 +1713,7 @@ Resources:
           METADATA_DB_PROXY_ENDPOINT: !Ref MetadataDBProxyEndpoint
           METADATA_DB_NAME: !Ref MetadataDBName
           METADATA_DB_SECRET_ARN: !Ref MetadataDBSecret
+          IMAGE_STORAGE_BUCKET_NAME: !Ref ImageStorageBucketName
       Policies:
         - AWSLambdaVPCAccessExecutionRole
         - CloudWatchPutMetricPolicy: {}

@@ -2,7 +2,7 @@ package com.zenobiapay.itemmetadata.transform
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.itemmetadata.di.METADATA_TRANSFORMER_LAMBDA_NAME
-import com.zenobiapay.rds.model.ItemMetadataSchema
+import com.zenobiapay.rds.model.ItemMetadata
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
 import jakarta.inject.Named
@@ -10,7 +10,6 @@ import software.amazon.awssdk.core.SdkBytes
 import software.amazon.awssdk.services.lambda.LambdaClient
 import software.amazon.awssdk.services.lambda.model.InvokeRequest
 import java.nio.charset.StandardCharsets
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -19,7 +18,7 @@ class ItemSchemaTransformer @Inject constructor(
     private val lambdaClient: LambdaClient,
     @Named(METADATA_TRANSFORMER_LAMBDA_NAME) private val metadataTransformerLambdaName: String,
 ) {
-    fun transform(itemId: String, merchantId: String, metadata: Map<String, Any>): List<ItemMetadataSchema> {
+    fun transform(metadata: Map<String, Any>): List<ItemMetadata> {
         try {
             val metadataJson = objectMapper.writeValueAsString(metadata)
             val invokeRequest = InvokeRequest.builder()
@@ -43,16 +42,10 @@ class ItemSchemaTransformer @Inject constructor(
                 ?: throw RuntimeException("Response does not contain 'body.transformedMetadata' key")
             
             // Read the ItemMetadataSchema from the transformedMetadata
-            val itemsMetadata = objectMapper.readValue<ItemMetadataSchema>(transformedMetadataJson, ItemMetadataSchema::class.java)
+            val itemsMetadata = objectMapper.readValue<ItemMetadata>(transformedMetadataJson, ItemMetadata::class.java)
             
             logger.info { "Successfully transformed metadata into ${itemsMetadata.size} items" }
-            return listOf(
-                itemsMetadata.copy(
-                    itemId = UUID.fromString(itemId),
-                    merchantId = merchantId,
-                    metadata = metadata,
-                )
-            )
+            return listOf(itemsMetadata)
         } catch (e: Exception) {
             logger.error(e) { "Failed to transform metadata" }
             throw RuntimeException("Failed to transform metadata", e)
