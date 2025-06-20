@@ -151,9 +151,13 @@ class RdsWrapper @Inject constructor(
             is java.util.Date -> statement.setTimestamp(index, Timestamp(value.time))
             is UUID -> statement.setObject(index, value)
             is Map<*, *> -> {
-                // Convert map to JSON string and set as string parameter for JSONB
+                // Convert map to JSON string and set as PGobject for JSONB
                 val jsonString = objectMapper.writeValueAsString(value)
-                statement.setString(index, jsonString)
+                val jsonbObject = PGobject().apply {
+                    type = "jsonb"
+                    this.value = jsonString
+                }
+                statement.setObject(index, jsonbObject)
             }
             null -> statement.setNull(index, Types.NULL)
             else -> statement.setObject(index, value)
@@ -218,6 +222,15 @@ class RdsWrapper @Inject constructor(
                 // Insert item using executeInsertAndGetKeys
                 val sql = "INSERT INTO items (id, name, merchant_id, brand_name, size, color, material, year, creation_time, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 
+                // Create PGobject for jsonb metadata if it exists
+                val metadataParam = if (rdsItemMetadata.rawMetadata != null) {
+                    val jsonString = objectMapper.writeValueAsString(rdsItemMetadata.rawMetadata)
+                    PGobject().apply {
+                        type = "jsonb"
+                        value = jsonString
+                    }
+                } else null
+                
                 val params = listOf<Any?>(
                     rdsItemMetadata.itemId,
                     itemMetadata.name,
@@ -228,7 +241,7 @@ class RdsWrapper @Inject constructor(
                     itemMetadata.material,
                     itemMetadata.year,
                     creationTime,
-                    rdsItemMetadata.rawMetadata
+                    metadataParam
                 )
                 
                 val insertedItemId = executeInsertAndGetKeys(sql, params) { rs ->
