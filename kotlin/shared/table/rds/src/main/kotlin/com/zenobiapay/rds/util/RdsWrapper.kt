@@ -310,11 +310,11 @@ class RdsWrapper @Inject constructor(
         
         return executeTransaction { connection ->
             // First, get the item IDs associated with this transfer
-            val getItemIdsSql = "SELECT item_ids FROM transfers WHERE id = ?"
+            val getItemIdsSql = "SELECT item_ids FROM transfers WHERE id = ?::uuid"
             val itemIds = mutableListOf<UUID>()
             
             connection.prepareStatement(getItemIdsSql).use { statement ->
-                statement.setObject(1, transferId)
+                statement.setString(1, transferId)
                 statement.executeQuery().use { resultSet ->
                     if (resultSet.next()) {
                         val itemIdsArray = resultSet.getArray("item_ids")
