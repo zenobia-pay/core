@@ -243,7 +243,7 @@ class RdsWrapper @Inject constructor(
             
             // Insert transfer with item IDs using executeInsertAndGetKeys
             val transferMetadataJson = objectMapper.writeValueAsString(transferMetadata)
-            val transferSql = "INSERT INTO transfers (id, item_ids, metadata) VALUES (?, ?, ?::jsonb) ON CONFLICT (id) DO UPDATE SET item_ids = ?, metadata = ?::jsonb RETURNING id"
+            val transferSql = "INSERT INTO transfers (id, item_ids, metadata) VALUES (?, ?, CAST(? AS jsonb)) ON CONFLICT (id) DO UPDATE SET item_ids = ?, metadata = CAST(? AS jsonb) RETURNING id"
 
             if (transferMetadata != null) {
                 // We need to create the array in the connection context
