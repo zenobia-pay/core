@@ -149,6 +149,11 @@ class RdsWrapper @Inject constructor(
             is Timestamp -> statement.setTimestamp(index, value)
             is java.util.Date -> statement.setTimestamp(index, Timestamp(value.time))
             is UUID -> statement.setObject(index, value)
+            is Map<*, *> -> {
+                // Convert map to JSON string and set as string parameter for JSONB
+                val jsonString = objectMapper.writeValueAsString(value)
+                statement.setString(index, jsonString)
+            }
             null -> statement.setNull(index, Types.NULL)
             else -> statement.setObject(index, value)
         }
