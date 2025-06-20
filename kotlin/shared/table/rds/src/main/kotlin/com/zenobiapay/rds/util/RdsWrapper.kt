@@ -339,7 +339,7 @@ class RdsWrapper @Inject constructor(
             }
             
             // Update ownership for all items
-            val updateSql = "UPDATE items SET owner = ?, ownership_time = ? WHERE id = ANY(?)"
+            val updateSql = "UPDATE items SET owner = ?, acquired_time = ? WHERE id = ANY(?)"
             
             connection.prepareStatement(updateSql).use { statement ->
                 statement.setString(1, ownerId)
