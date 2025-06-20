@@ -171,4 +171,4 @@ jobs:
           ZenobiaApiEndpoint=$ZENOBIA_API_ENDPOINT \
           PlaidIpAddresses=$PLAID_IP_ADDRESSES \
           PlaidSlackWebhook=$PLAID_SLACK_WEBHOOK \
-          UniqueIdentifier=""
+          UniqueIdentifier=''
