@@ -23,12 +23,12 @@ Rules:
 const DESIRED_SCHEMA = `
 {
   name: "TODO", // Name of the item
-  brand: "TODO", // Brand of the item. This should be the brand of the item, not the merchant.
-  size: "TODO", // Small, Medium, Large, etc.
+  brandName: "TODO", // Brand of the item. Nike, Hermes, etc.
+  size: "TODO", // Small, Medium, Large, X-Large, etc. Only standard sizes.
   color: "TODO", // Color of the item, red, green, etc.
   material: "TODO", // Material item is made of. Leather, cotton, etc.
   year: "TODO", // Year the item was released.
-  imageUrls: ["TODO"] // Array of image URLs. Should be full URLs linking to images of the product.
+  imageUrls: ["TODO"] // Array of image URLs. Should be full URLs linking to images of the product. First link should be the main image.
 }`;
 
 // Initialize clients
