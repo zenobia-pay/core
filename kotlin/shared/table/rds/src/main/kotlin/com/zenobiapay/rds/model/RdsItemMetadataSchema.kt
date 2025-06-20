@@ -5,7 +5,7 @@ import java.util.UUID
 
 data class ItemMetadata(
     val name: String,
-    val brand: String?,
+    val brandName: String?,
     val size: String?,
     val color: String?,
     val material: String?,
