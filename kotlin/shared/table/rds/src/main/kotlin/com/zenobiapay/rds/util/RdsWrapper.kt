@@ -220,7 +220,7 @@ class RdsWrapper @Inject constructor(
             itemsMetadata?.forEach { rdsItemMetadata ->
                 val itemMetadata = rdsItemMetadata.itemMetadata
                 // Insert item using executeInsertAndGetKeys
-                val sql = "INSERT INTO items (id, name, merchant_id, brand_name, size, color, material, year, creation_time, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                val sql = "INSERT INTO items (id, name, merchant_id, brand_name, size, color, material, year, creation_time, metadata, image_keys) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 
                 // Create PGobject for jsonb metadata if it exists
                 val metadataParam = if (rdsItemMetadata.rawMetadata != null) {
@@ -229,6 +229,11 @@ class RdsWrapper @Inject constructor(
                         type = "jsonb"
                         value = jsonString
                     }
+                } else null
+                
+                // Create array for image keys if they exist
+                val imageKeysArray = if (rdsItemMetadata.imageS3ObjectKeys != null && rdsItemMetadata.imageS3ObjectKeys.isNotEmpty()) {
+                    connection.createArrayOf("text", rdsItemMetadata.imageS3ObjectKeys.toTypedArray())
                 } else null
                 
                 val params = listOf<Any?>(
@@ -241,7 +246,8 @@ class RdsWrapper @Inject constructor(
                     itemMetadata.material,
                     itemMetadata.year,
                     creationTime,
-                    metadataParam
+                    metadataParam,
+                    imageKeysArray
                 )
                 
                 val insertedItemId = executeInsertAndGetKeys(sql, params) { rs ->
