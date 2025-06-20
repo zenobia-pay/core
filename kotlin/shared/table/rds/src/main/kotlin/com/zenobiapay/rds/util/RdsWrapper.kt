@@ -227,15 +227,7 @@ class RdsWrapper @Inject constructor(
                     itemMetadata.material,
                     itemMetadata.year,
                     creationTime,
-                    rdsItemMetadata.rawMetadata,
-                    merchantId,
-                    itemMetadata.name,
-                    itemMetadata.brandName,
-                    itemMetadata.size,
-                    itemMetadata.color,
-                    itemMetadata.material,
-                    itemMetadata.year,
-                    creationTime
+                    rdsItemMetadata.rawMetadata
                 )
                 
                 val insertedItemId = executeInsertAndGetKeys(sql, params) { rs ->
