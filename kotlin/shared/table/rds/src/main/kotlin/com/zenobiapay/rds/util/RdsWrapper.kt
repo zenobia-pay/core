@@ -16,6 +16,7 @@ import java.sql.SQLException
 import java.sql.Timestamp
 import java.sql.Types
 import java.util.UUID
+import org.postgresql.util.PGobject
 
 private val logger = KotlinLogging.logger {}
 
@@ -243,16 +244,22 @@ class RdsWrapper @Inject constructor(
             
             // Insert transfer with item IDs using executeInsertAndGetKeys
             val transferMetadataJson = objectMapper.writeValueAsString(transferMetadata)
-            val transferSql = "INSERT INTO transfers (id, item_ids, metadata) VALUES (?, ?, CAST(? AS jsonb)) ON CONFLICT (id) DO UPDATE SET item_ids = ?, metadata = CAST(? AS jsonb) RETURNING id"
+            val transferSql = "INSERT INTO transfers (id, item_ids, metadata) VALUES (?, ?, ?) ON CONFLICT (id) DO UPDATE SET item_ids = ?, metadata = ? RETURNING id"
 
             if (transferMetadata != null) {
+                // Create PGobject for jsonb data
+                val jsonbObject = PGobject().apply {
+                    type = "jsonb"
+                    value = transferMetadataJson
+                }
+                
                 // We need to create the array in the connection context
                 connection.prepareStatement(transferSql, PreparedStatement.RETURN_GENERATED_KEYS).use { statement ->
                     statement.setObject(1, UUID.fromString(transferId))
                     statement.setArray(2, connection.createArrayOf("uuid", itemIds.toTypedArray()))
-                    statement.setString(3, transferMetadataJson)
+                    statement.setObject(3, jsonbObject)
                     statement.setArray(4, connection.createArrayOf("uuid", itemIds.toTypedArray()))
-                    statement.setString(5, transferMetadataJson)
+                    statement.setObject(5, jsonbObject)
 
                     statement.executeUpdate()
 
