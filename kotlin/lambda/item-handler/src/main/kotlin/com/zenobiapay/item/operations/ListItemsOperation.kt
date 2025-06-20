@@ -2,8 +2,8 @@ package com.zenobiapay.item.operations
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
+import com.zenobiapay.api.generated.model.Item
 import com.zenobiapay.api.generated.model.ListItems200Response
-import com.zenobiapay.api.generated.model.ListItems200ResponseItemsInner
 import com.zenobiapay.api.model.EmptyApiResponse
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.operation.Operation
@@ -37,9 +37,14 @@ class ListItemsOperation @Inject constructor(
         return ListItems200Response()
             .items(
                 items.map { item ->
-                    ListItems200ResponseItemsInner()
+                    Item()
                         .itemId(item.itemId.toString())
                         .name(item.itemMetadata.name)
+                        .brandName(item.itemMetadata.brandName)
+                        .size(item.itemMetadata.size)
+                        .color(item.itemMetadata.color)
+                        .material(item.itemMetadata.material)
+                        .year(item.itemMetadata.year)
                         .imageUrls(s3UrlGenerator.generatePresignedUrls(item.imageS3ObjectKeys))
                 }
             )
