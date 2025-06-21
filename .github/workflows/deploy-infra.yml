@@ -171,4 +171,4 @@ jobs:
           ParameterKey=ZenobiaApiEndpoint,ParameterValue=$ZENOBIA_API_ENDPOINT \
           ParameterKey=PlaidIpAddresses,ParameterValue=$PLAID_IP_ADDRESSES \
           ParameterKey=PlaidSlackWebhook,ParameterValue=$PLAID_SLACK_WEBHOOK \
-          ParameterKey=UniqueIdentifier,ParameterValue=''
+          ParameterKey=UniqueIdentifier,ParameterValue='v1'
