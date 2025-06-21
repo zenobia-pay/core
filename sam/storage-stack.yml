@@ -461,7 +461,7 @@ Resources:
   ImageStorageBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "zenobia-image-storage-${Stage}${UniqueIdentifier}"
+      BucketName: !Sub "zenobia-image-storage-${Stage}-${UniqueIdentifier}"
       AccessControl: Private
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true

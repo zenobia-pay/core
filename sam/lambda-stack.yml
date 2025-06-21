@@ -1329,6 +1329,33 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
+          /sell-item:
+            post:
+              summary: "Sell item"
+              operationId: "SellItem"
+              responses:
+                "200":
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          itemId:
+                            type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ItemHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
   CustomAuthorizerFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -1743,6 +1770,12 @@ Resources:
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /list-items
+            Method: POST
+        SellItem:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /sell-item
             Method: POST
 
   PaginationSigningSecret:
