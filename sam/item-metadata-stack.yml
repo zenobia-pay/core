@@ -14,6 +14,7 @@ Globals:
     VpcConfig:
       SecurityGroupIds:
         - !Ref SecurityGroupId
+        - !Ref RdsSecurityGroupId
       SubnetIds:
         - !Ref SubnetId1
         - !Ref SubnetId2
@@ -25,6 +26,9 @@ Parameters:
   SecurityGroupId:
     Type: String
     Description: ID of the security group for the Lambda function
+  RdsSecurityGroupId:
+    Type: String
+    Description: ID of the RDS security group for database connections
   SubnetId1:
     Type: String
     Description: ID of the first subnet for the Lambda function
@@ -46,6 +50,12 @@ Parameters:
   TransferTableName:
     Type: String
     Description: Name of the transfer table
+  ImageStorageBucketName:
+    Type: String
+    Description: Name of the S3 bucket for storing item metadata
+  ImageStorageBucketKmsKeyArn:
+    Type: String
+    Description: ARN of the KMS key used to encrypt the image storage S3 bucket
 
 Conditions:
   IsProd: !Equals [!Ref Stage, "prod"]
@@ -91,6 +101,8 @@ Resources:
           METADATA_DB_PROXY_ENDPOINT: !Ref MetadataDBProxyEndpoint
           METADATA_DB_NAME: !Ref MetadataDBName
           METADATA_DB_SECRET_ARN: !Ref MetadataDBSecret
+          METADATA_TRANSFORMER_FUNCTION_NAME: !Ref MetadataTransformerFunction
+          IMAGE_STORAGE_BUCKET_NAME: !Ref ImageStorageBucketName
       Policies:
         - AWSLambdaVPCAccessExecutionRole
         - CloudWatchPutMetricPolicy: {}
@@ -105,6 +117,26 @@ Resources:
               Action:
                 - kms:Decrypt
               Resource: !Ref MetadataDBKmsKeyArn 
+        - Statement:
+            - Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource: !GetAtt MetadataTransformerFunction.Arn
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:GetObject
+                - s3:ListBucket
+              Resource: 
+                - !Sub "arn:aws:s3:::${ImageStorageBucketName}"
+                - !Sub "arn:aws:s3:::${ImageStorageBucketName}/*"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - kms:Decrypt
+                - kms:GenerateDataKey
+              Resource: !Ref ImageStorageBucketKmsKeyArn
       Events:
         SQSEvent:
           Type: SQS
@@ -115,6 +147,28 @@ Resources:
       DeadLetterQueue:
         Type: SQS
         TargetArn: !GetAtt ItemMetadataRecorderDLQ.Arn
+
+  MetadataTransformerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: nodejs18.x
+    Properties:
+      FunctionName: !Sub "MetadataTransformer-${Stage}"
+      CodeUri: ../nodejs/lambda/metadata-transformer/
+      Handler: src/index.handler
+      Runtime: nodejs18.x
+      MemorySize: 256
+      Environment:
+        Variables:
+          STAGE: !Ref Stage
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - CloudWatchPutMetricPolicy: {}
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: "*"
 
 Outputs:
   ItemMetadataQueueUrl:

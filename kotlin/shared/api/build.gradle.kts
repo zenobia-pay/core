@@ -37,7 +37,6 @@ dependencies {
     implementation(libs.jackson.kotlin)
     api(libs.jackson.databind)
     api(libs.jackson.annotations)
-    implementation(libs.hibernate)
     implementation(libs.jakarta.el)
     implementation(libs.jakarta.glassfish)
 

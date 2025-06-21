@@ -1,0 +1,43 @@
+{
+  "items": [
+    {
+      "id": 36110175633573,
+      "title": "Red Rain Coat - Small",
+      "key": "794864229:03af7a8cb59a4c3c45595c76fa8cb53c",
+      "price": 12900,
+      "line_price": 12900,
+      "quantity": 2,
+      "sku": null,
+      "grams": 0,
+      "vendor": "Louis Vuitton",
+      "properties": {},
+      "variant_id": 794864229,
+      "gift_card": false,
+      "url": "/products/red-rain-coat?variant=794864229",
+      "featured_image": {
+        "url": "http://cdn.shopify.com/s/files/1/0040/7092/products/red-rain-coat.jpeg?v=1402604893",
+        "aspect_ratio": 1.0,
+        "alt": "Red rain coat with a hood"
+      },
+      "image": "http://cdn.shopify.com/s/files/1/0040/7092/products/red-rain-coat.jpeg?v=1402604893",
+      "handle": "red-rain-coat",
+      "requires_shipping": true,
+      "product_title": "Red Rain Coat",
+      "product_description": "A bright red rain coat for rainy days!",
+      "product_type": "Coat",
+      "properties" : null,
+      "variant_title": "Red",
+      "variant_options": ["Red"],
+      "options_with_values": [
+        {
+          "name": "Color",
+          "value": "Red"
+        },
+        {
+          "name": "Material",
+          "value": "Nylon"
+        }
+      ]
+    }
+  ]
+}

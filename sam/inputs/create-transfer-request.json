@@ -5,7 +5,7 @@
   "headers": {
     "Content-Type": "application/json"
   },
-  "body": "{\"amount\":100}",
+  "body": "{\"amount\":100, \"statementItems\": [{\"name\": \"Item 1\", \"amount\": 75, \"metadata\": {\"category\": \"food\", \"description\": \"Lunch order\"}}, {\"name\": \"Item 2\", \"amount\": 25, \"metadata\": {\"category\": \"service\", \"description\": \"Service fee\"}}], \"transferMetadata\": {\"orderId\": \"ORD-12345\", \"timestamp\": \"2025-06-18T21:05:15-07:00\"}}",
   "isBase64Encoded": false,
   "requestContext": {
     "accountId": "123456789012",
@@ -17,7 +17,7 @@
     },
     "authorizer": {
       "principalId": "user123",
-      "sub": "auth0|67f0a8703cc36ca458f5cf7b",
+      "sub": "google-oauth2|101544010672980959360",
       "email": "user@example.com",
       "role": "MERCHANT"
     }

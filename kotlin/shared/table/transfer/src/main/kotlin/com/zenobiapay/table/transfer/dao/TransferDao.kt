@@ -156,7 +156,7 @@ class TransferDao @Inject constructor(
     fun updateTransferPaidOut(
         transferItem: TransferItem,
         fee: Int?,
-        orumPayoutId: String,
+        orumPayoutId: String?,
         version: Int,
     ) {
         val updatedItem = transferItem.copy(

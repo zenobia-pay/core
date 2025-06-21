@@ -127,14 +127,6 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
         val merchantPayout = amount - fee
         val merchantId = transferItem.data?.merchant?.id!!
 
-        if (merchantPayout <= 0) {
-            logger.info { "Payout is less than 0. Taking all money in fees." }
-            metricHelper.putMetric("SkipPayout", 1.0, mapOf())
-            metricHelper.putMetric("MerchantPayout", 0.0, mapOf())
-            metricHelper.putMetric("FeeCollected", fee.toDouble(), mapOf())
-            metricHelper.putMetric("TotalPayout", amount.toDouble(), mapOf())
-            return
-        }
         val merchantData = userDao.getUserItem(merchantId)
         assert(merchantData?.userType == UserType.MERCHANT) {
             "Merchant data for merchant ${merchantData?.pk} does not exist or is not a merchant"
@@ -148,22 +140,26 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
         logger.info { "Locking transfer payout" }
         transferDao.updateTransferPayoutLocked(transferItem)
 
-        logger.info { "Sending orum payout response" }
-        val transferResponse = orumWrapper.createTransfer(
-            OrumCreateTransferRequest(
-                transferReferenceId = "$PAYOUT_PREFIX#${transferItem.requestId}",
-                amount = merchantPayout,
-                destination = TransferParticipant(
-                    customerReferenceId = merchantData.data.orumReferenceId!!,
-                    accountReferenceId = bankAccountId,
-                    // TODO: make more descriptive display name
-                    statementDisplayName = "ZenobiaPay"
+        val transferResponse = if (merchantPayout > 0) {
+            logger.info { "Sending orum payout" }
+            orumWrapper.createTransfer(
+                OrumCreateTransferRequest(
+                    transferReferenceId = "$PAYOUT_PREFIX#${transferItem.requestId}",
+                    amount = merchantPayout,
+                    destination = TransferParticipant(
+                        customerReferenceId = merchantData.data.orumReferenceId!!,
+                        accountReferenceId = bankAccountId,
+                        // TODO: make more descriptive display name
+                        statementDisplayName = "Zenobia Pay"
+                    )
                 )
             )
-        )
-
+        } else null.also {
+            logger.info { "Skipping payout, payount <= 0" }
+            metricHelper.putMetric("SkipPayout", 1.0, mapOf())
+        }
         logger.info { "Payout complete. Marking transfer as paid out." }
-        transferDao.updateTransferPaidOut(transferItem, fee, transferResponse.transfer.id, version = transferItem.version!! + 1)
+        transferDao.updateTransferPaidOut(transferItem, fee, transferResponse?.transfer?.id, version = transferItem.version!! + 1)
         metricHelper.putMetric("MerchantPayout", merchantPayout.toDouble(), mapOf())
         metricHelper.putMetric("FeeCollected", fee.toDouble(), mapOf())
         metricHelper.putMetric("TotalPayout", amount.toDouble(), mapOf())

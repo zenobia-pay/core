@@ -39,3 +39,5 @@ include("kotlin:shared:table:rds")
 findProject(":kotlin:shared:table:rds")?.name = "rds"
 include("kotlin:lambda:item-handler")
 findProject(":kotlin:lambda:item-handler")?.name = "item-handler"
+include("kotlin:shared:llm")
+findProject(":kotlin:shared:llm")?.name = "llm"

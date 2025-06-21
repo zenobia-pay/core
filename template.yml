@@ -43,6 +43,9 @@ Parameters:
   ZenobiaApiEndpoint:
     Type: String
     Description: Endpoint to api service. In prod this should be https://api.zenobiapay.com/ needed for plaid webhooks
+  ResaleServiceEndpoint:
+    Type: String
+    Description: Endpoint to resale service that automates reselling.
 
 Resources:
   VpcStack:
@@ -61,6 +64,7 @@ Resources:
         PrivateSubnet1: !GetAtt VpcStack.Outputs.PrivateSubnetId1
         PrivateSubnet2: !GetAtt VpcStack.Outputs.PrivateSubnetId2
         SecurityGroupId: !GetAtt VpcStack.Outputs.SecurityGroupId
+        RdsSecurityGroupId: !GetAtt VpcStack.Outputs.RdsSecurityGroupId
   
   AuthStack:
     Type: AWS::CloudFormation::Stack
@@ -98,6 +102,8 @@ Resources:
         Auth0Domain: !Ref Auth0Domain
         OrumPublicCertificate: !Ref OrumPublicCertificate
         OrumIpAddresses: !Ref OrumIpAddresses
+        ImageStorageBucketName: !GetAtt TableStack.Outputs.ImageStorageBucketName
+        ImageStorageBucketKmsKeyArn: !GetAtt TableStack.Outputs.ImageStorageBucketKmsKeyArn
         OrumSlackWebhook: !Ref OrumSlackWebhook
         PlaidIpAddresses: !Ref PlaidIpAddresses
         PlaidSlackWebhook: !Ref PlaidSlackWebhook
@@ -105,6 +111,7 @@ Resources:
         RefreshTokenHashingSecret: !GetAtt AuthStack.Outputs.RefreshTokenHashingSecret
         BankAccountHashingSecret: !GetAtt AuthStack.Outputs.BankAccountHashingSecret
         ZenobiaApiEndpoint: !Ref ZenobiaApiEndpoint
+        ResaleServiceEndpoint: !Ref ResaleServiceEndpoint
 
   PayoutStack:
     Type: AWS::CloudFormation::Stack
@@ -131,6 +138,7 @@ Resources:
       Parameters:
         Stage: !Ref Stage
         SecurityGroupId: !GetAtt VpcStack.Outputs.SecurityGroupId
+        RdsSecurityGroupId: !GetAtt VpcStack.Outputs.RdsSecurityGroupId
         SubnetId1: !GetAtt VpcStack.Outputs.PrivateSubnetId1
         SubnetId2: !GetAtt VpcStack.Outputs.PrivateSubnetId2
         MetadataDBProxyEndpoint: !GetAtt TableStack.Outputs.MetadataDBProxyEndpoint
@@ -138,6 +146,8 @@ Resources:
         MetadataDBSecret: !GetAtt TableStack.Outputs.MetadataDBSecret
         MetadataDBKmsKeyArn: !GetAtt TableStack.Outputs.MetadataDBKmsKeyArn
         TransferTableName: !GetAtt TableStack.Outputs.TransferTableName
+        ImageStorageBucketName: !GetAtt TableStack.Outputs.ImageStorageBucketName
+        ImageStorageBucketKmsKeyArn: !GetAtt TableStack.Outputs.ImageStorageBucketKmsKeyArn
 
 Outputs:
   WebEndpoint:

@@ -32,10 +32,6 @@ class ResponseHandler @Inject constructor(
     val objectMapper: ObjectMapper,
     val metricHandler: MetricHelper
 ) {
-    private val validator: Validator by lazy {
-        Validation.buildDefaultValidatorFactory().validator
-    }
-
     fun <I, O> returnApiGwResponse(operation: Operation<I, O>, input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
         return wrapOperation(input.path) {
             val userId = input.requestContext.getUserId()
@@ -55,11 +51,6 @@ class ResponseHandler @Inject constructor(
             } catch (e: UnrecognizedPropertyException) {
                 logger.error(e) { "Unrecognized property provided"}
                 throw InvalidRequestException("Unrecognized property provided")
-            }
-
-            val violations = validator.validate(request)
-            if (violations.isNotEmpty()) {
-                throw InvalidRequestException("${violations.first().propertyPath} ${violations.first().message}")
             }
             operation.run(request, input, context, userId)
         }

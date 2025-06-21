@@ -50,6 +50,27 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
   schemas:
+    Item:
+      type: object
+      properties:
+        itemId:
+          type: string
+        name:
+          type: string
+        brandName:
+          type: string
+        size:
+          type: string
+        color:
+          type: string
+        material:
+          type: string
+        year:
+          type: string
+        imageUrls:
+          type: array
+          items:
+            type: string
     ErrorResponse:
       type: object
       properties:
@@ -75,10 +96,9 @@ components:
     StatementItem:
       type: object
       properties:
-        key:
-          type: string
-          maxLength: 255
-          minLength: 1
+        metadata:
+          type: object
+          additionalProperties: true
         name:
           type: string
           maxLength: 255
@@ -105,33 +125,6 @@ components:
     SignatureType:
       type: string
       enum: [SHA256_WITH_ECDSA]
-    Address:
-      type: object
-      required:
-        - address1
-        - city
-        - state
-        - country
-        - zip5
-      properties:
-        address1:
-          type: string
-          maxLength: 255
-        address2:
-          type: string
-          maxLength: 255
-        city:
-          type: string
-          maxLength: 255
-        state:
-          type: string
-          maxLength: 255
-        country:
-          type: string
-          enum: [US]
-        zip5:
-          type: string
-          pattern: '^\d{5}$'
     BankAccount:
       type: object
       required:
@@ -512,9 +505,6 @@ paths:
                   items:
                     $ref: "#/components/schemas/StatementItem"
                 transferMetadata:
-                  type: object
-                  additionalProperties: true
-                itemMetadata:
                   type: object
                   additionalProperties: true
       responses:
@@ -900,7 +890,6 @@ paths:
                   maxLength: 256
                 webhookUrl:
                   type: string
-                  pattern: "^https://.*$"
                   maxLength: 1000
                 merchantLocation:
                   $ref: "#/components/schemas/Location"
@@ -1116,16 +1105,61 @@ paths:
           content:
             application/json:
               schema:
+                $ref: "#/components/schemas/Item"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ItemHandlerFunction.Arn}:prod/invocations
+        httpMethod: POST
+        type: aws_proxy
+  /list-items:
+    post:
+      summary: "Lists items"
+      operationId: "ListItems"
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
                 type: object
                 properties:
-                  itemId:
-                    type: string
-                  name:
-                    type: string
-                  tags:
+                  items:
                     type: array
                     items:
-                      type: string
+                      $ref: "#/components/schemas/Item"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ItemHandlerFunction.Arn}:prod/invocations
+        httpMethod: POST
+        type: aws_proxy
+  /sell-item:
+    post:
+      summary: "Sell item"
+      operationId: "SellItem"
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sellJobId:
+                    type: string
         "400":
           $ref: "#/components/responses/BadRequest"
         "403":

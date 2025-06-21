@@ -30,6 +30,7 @@ aws-dynamodb = { module = "software.amazon.awssdk:dynamodb", version.ref = "aws"
 aws-dynamodb-enhanced = { module = "software.amazon.awssdk:dynamodb-enhanced", version.ref = "aws" }
 aws-sqs = { module = "software.amazon.awssdk:sqs", version.ref = "aws" }
 aws-cloudwatch = { module = "software.amazon.awssdk:cloudwatch", version.ref = "aws" }
+aws-lambda = { module = "software.amazon.awssdk:lambda", version.ref = "aws" }
 aws-utils = { module = "software.amazon.awssdk:utils", version.ref = "aws" }
 
 # Jackson
@@ -59,7 +60,6 @@ jakarta-annotation = { group = "jakarta.annotation", name = "jakarta.annotation-
 jakarta-validation = { group = "jakarta.validation", name = "jakarta.validation-api", version = "3.1.1" }
 jakarta-el = { module = "jakarta.el:jakarta.el-api", version = "6.0.1" }
 jakarta-glassfish = { module = "org.glassfish:jakarta.el", version = "5.0.0-M1" }
-hibernate = { module = "org.hibernate.validator:hibernate-validator", version = "9.0.0.CR1" }
 
 # Plaid
 plaid = { module = "com.plaid:plaid-java", version = "31.0.0" }

@@ -2,7 +2,8 @@ package com.zenobiapay.rds.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.rds.di.RdsModule
-import com.zenobiapay.rds.model.ItemMetadataSchema
+import com.zenobiapay.rds.model.ItemMetadata
+import com.zenobiapay.rds.model.RdsItemMetadataSchema
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
 import jakarta.inject.Named
@@ -15,6 +16,7 @@ import java.sql.SQLException
 import java.sql.Timestamp
 import java.sql.Types
 import java.util.UUID
+import org.postgresql.util.PGobject
 
 private val logger = KotlinLogging.logger {}
 
@@ -148,32 +150,47 @@ class RdsWrapper @Inject constructor(
             is Timestamp -> statement.setTimestamp(index, value)
             is java.util.Date -> statement.setTimestamp(index, Timestamp(value.time))
             is UUID -> statement.setObject(index, value)
+            is Map<*, *> -> {
+                // Convert map to JSON string and set as PGobject for JSONB
+                val jsonString = objectMapper.writeValueAsString(value)
+                val jsonbObject = PGobject().apply {
+                    type = "jsonb"
+                    this.value = jsonString
+                }
+                statement.setObject(index, jsonbObject)
+            }
             null -> statement.setNull(index, Types.NULL)
             else -> statement.setObject(index, value)
         }
     }
 
-    fun getItem(itemId: UUID): ItemMetadataSchema? {
+    fun getItem(itemId: UUID): RdsItemMetadataSchema? {
         val query = "SELECT * FROM items WHERE id = ?"
         val items = executeQuery(query, listOf(itemId)) { resultSet ->
             val id = resultSet.getObject("id", UUID::class.java)
             val name = resultSet.getString("name")
             val merchantId = resultSet.getString("merchant_id")
-            val productId = resultSet.getString("product_id")
-            val brandId = resultSet.getString("brand_id")
-            val metadataJson = resultSet.getString("metadata")
-            
-            val metadata = objectMapper.readValue(metadataJson, Map::class.java) as Map<String, Any>
-            val tags = (metadata["tags"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-            
-            ItemMetadataSchema(
+            val brandName = resultSet.getString("brand_name")
+            val size = resultSet.getString("size")
+            val color = resultSet.getString("color")
+            val material = resultSet.getString("material")
+            val year = resultSet.getString("year")
+            // TODO: add metadata
+
+            RdsItemMetadataSchema(
                 itemId = id,
                 merchantId = merchantId,
-                name = name,
-                productId = productId,
-                brandId = brandId,
-                metadata = metadata,
-                tags = tags
+                itemMetadata = ItemMetadata(
+                    name = name,
+                    brandName = brandName,
+                    size = size,
+                    color = color,
+                    material = material,
+                    year = year,
+                    imageUrls = null,
+                ),
+                rawMetadata = null,
+                imageS3ObjectKeys = resultSet.getArray("image_keys")?.let { array -> (array.array as? Array<*>)?.mapNotNull { it as? String } },
             )
         }
         
@@ -191,7 +208,7 @@ class RdsWrapper @Inject constructor(
         transferId: String,
         merchantId: String,
         transferMetadata: Map<String, Any>?,
-        itemsMetadata: List<ItemMetadataSchema>?
+        itemsMetadata: List<RdsItemMetadataSchema>?
     ) {
         logger.info { "Storing transfer and ${itemsMetadata?.size} items metadata for transfer ID: $transferId" }
         val creationTime = Timestamp(System.currentTimeMillis())
@@ -200,26 +217,37 @@ class RdsWrapper @Inject constructor(
             val itemIds = mutableListOf<UUID>()
             
             // Process each item metadata
-            itemsMetadata?.forEach { itemMetadata ->
-                val metadataJson = objectMapper.writeValueAsString(itemMetadata.metadata)
+            itemsMetadata?.forEach { rdsItemMetadata ->
+                val itemMetadata = rdsItemMetadata.itemMetadata
                 // Insert item using executeInsertAndGetKeys
-                val sql = "INSERT INTO items (id, name, merchant_id, product_id, brand_id, metadata, creation_time) VALUES (?, ?, ?, ?, ?, ?::jsonb, ?)" +
-                        " ON CONFLICT (id) DO UPDATE SET merchant_id = ?, name = ?, product_id = ?, brand_id = ?, metadata = ?::jsonb, creation_time = ? RETURNING id"
+                val sql = "INSERT INTO items (id, name, merchant_id, brand_name, size, color, material, year, creation_time, metadata, image_keys) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                
+                // Create PGobject for jsonb metadata if it exists
+                val metadataParam = if (rdsItemMetadata.rawMetadata != null) {
+                    val jsonString = objectMapper.writeValueAsString(rdsItemMetadata.rawMetadata)
+                    PGobject().apply {
+                        type = "jsonb"
+                        value = jsonString
+                    }
+                } else null
+                
+                // Create array for image keys if they exist
+                val imageKeysArray = if (rdsItemMetadata.imageS3ObjectKeys != null && rdsItemMetadata.imageS3ObjectKeys.isNotEmpty()) {
+                    connection.createArrayOf("text", rdsItemMetadata.imageS3ObjectKeys.toTypedArray())
+                } else null
                 
                 val params = listOf<Any?>(
-                    itemMetadata.itemId,
+                    rdsItemMetadata.itemId,
                     itemMetadata.name,
-                    merchantId, 
-                    itemMetadata.productId,
-                    itemMetadata.brandId,
-                    metadataJson,
-                    creationTime,
                     merchantId,
-                    itemMetadata.name,
-                    itemMetadata.productId,
-                    itemMetadata.brandId,
-                    metadataJson,
+                    itemMetadata.brandName,
+                    itemMetadata.size,
+                    itemMetadata.color,
+                    itemMetadata.material,
+                    itemMetadata.year,
                     creationTime,
+                    metadataParam,
+                    imageKeysArray
                 )
                 
                 val insertedItemId = executeInsertAndGetKeys(sql, params) { rs ->
@@ -229,22 +257,28 @@ class RdsWrapper @Inject constructor(
                 if (insertedItemId != null) {
                     itemIds.add(insertedItemId)
                 } else {
-                    throw SQLException("Failed to insert or update item metadata for item ID: ${itemMetadata.itemId}")
+                    throw SQLException("Failed to insert or update item metadata for item ID: ${rdsItemMetadata.itemId}")
                 }
             }
             
             // Insert transfer with item IDs using executeInsertAndGetKeys
             val transferMetadataJson = objectMapper.writeValueAsString(transferMetadata)
-            val transferSql = "INSERT INTO transfers (id, item_ids, metadata) VALUES (?, ?, ?::jsonb) ON CONFLICT (id) DO UPDATE SET item_ids = ?, metadata = ?::jsonb RETURNING id"
+            val transferSql = "INSERT INTO transfers (id, item_ids, metadata) VALUES (?, ?, ?) ON CONFLICT (id) DO UPDATE SET item_ids = ?, metadata = ? RETURNING id"
 
             if (transferMetadata != null) {
+                // Create PGobject for jsonb data
+                val jsonbObject = PGobject().apply {
+                    type = "jsonb"
+                    value = transferMetadataJson
+                }
+                
                 // We need to create the array in the connection context
                 connection.prepareStatement(transferSql, PreparedStatement.RETURN_GENERATED_KEYS).use { statement ->
                     statement.setObject(1, UUID.fromString(transferId))
                     statement.setArray(2, connection.createArrayOf("uuid", itemIds.toTypedArray()))
-                    statement.setString(3, transferMetadataJson)
+                    statement.setObject(3, jsonbObject)
                     statement.setArray(4, connection.createArrayOf("uuid", itemIds.toTypedArray()))
-                    statement.setString(5, transferMetadataJson)
+                    statement.setObject(5, jsonbObject)
 
                     statement.executeUpdate()
 
@@ -276,11 +310,11 @@ class RdsWrapper @Inject constructor(
         
         return executeTransaction { connection ->
             // First, get the item IDs associated with this transfer
-            val getItemIdsSql = "SELECT item_ids FROM transfers WHERE id = ?"
+            val getItemIdsSql = "SELECT item_ids FROM transfers WHERE id = ?::uuid"
             val itemIds = mutableListOf<UUID>()
             
             connection.prepareStatement(getItemIdsSql).use { statement ->
-                statement.setObject(1, transferId)
+                statement.setString(1, transferId)
                 statement.executeQuery().use { resultSet ->
                     if (resultSet.next()) {
                         val itemIdsArray = resultSet.getArray("item_ids")
@@ -305,7 +339,7 @@ class RdsWrapper @Inject constructor(
             }
             
             // Update ownership for all items
-            val updateSql = "UPDATE items SET owner_id = ?, ownership_time = ? WHERE id = ANY(?)"
+            val updateSql = "UPDATE items SET owner = ?, acquired_time = ? WHERE id = ANY(?)"
             
             connection.prepareStatement(updateSql).use { statement ->
                 statement.setString(1, ownerId)
@@ -316,6 +350,43 @@ class RdsWrapper @Inject constructor(
                 logger.info { "Updated ownership for $updatedRows items in transfer ID: $transferId" }
                 return@executeTransaction updatedRows
             }
+        }
+    }
+    
+    /**
+     * Lists all items owned by a specific user
+     * @param ownerId The ID of the owner
+     * @return List of items owned by the user
+     */
+    fun listItemsByOwnerId(ownerId: String): List<RdsItemMetadataSchema> {
+        logger.info { "Listing items for owner ID: $ownerId" }
+        val query = "SELECT * FROM items WHERE owner = ?"
+        
+        return executeQuery(query, listOf(ownerId)) { resultSet ->
+            val id = resultSet.getObject("id", UUID::class.java)
+            val name = resultSet.getString("name")
+            val merchantId = resultSet.getString("merchant_id")
+            val brandName = resultSet.getString("brand_name")
+            val size = resultSet.getString("size")
+            val color = resultSet.getString("color")
+            val material = resultSet.getString("material")
+            val year = resultSet.getString("year")
+            
+            RdsItemMetadataSchema(
+                itemId = id,
+                merchantId = merchantId,
+                itemMetadata = ItemMetadata(
+                    name = name,
+                    brandName = brandName,
+                    size = size,
+                    color = color,
+                    material = material,
+                    year = year,
+                    imageUrls = null,
+                ),
+                rawMetadata = null,
+                imageS3ObjectKeys = resultSet.getArray("image_keys")?.let { array -> (array.array as? Array<*>)?.mapNotNull { it as? String } },
+            )
         }
     }
 }

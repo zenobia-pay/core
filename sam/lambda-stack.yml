@@ -102,6 +102,15 @@ Parameters:
   ItemMetadataQueueUrl:
     Type: String
     Description: URL of the Transfer Metadata Queue
+  ImageStorageBucketName:
+    Type: String
+    Description: Name of the S3 bucket for storing images
+  ImageStorageBucketKmsKeyArn:
+    Type: String
+    Description: ARN of the KMS key used to encrypt the image storage S3 bucket
+  ResaleServiceEndpoint:
+    Type: String
+    Description: Endpoint of the resale service used to automate selling on resale marketplaces.
 
 Conditions:
   IsProd: !Equals [!Ref Stage, "prod"]
@@ -200,6 +209,27 @@ Resources:
                   schema:
                     $ref: "#/components/schemas/ErrorResponse"
           schemas:
+            Item:
+              type: object
+              properties:
+                itemId:
+                  type: string
+                name:
+                  type: string
+                brandName:
+                  type: string
+                size:
+                  type: string
+                color:
+                  type: string
+                material:
+                  type: string
+                year:
+                  type: string
+                imageUrls:
+                  type: array
+                  items:
+                    type: string
             ErrorResponse:
               type: object
               properties:
@@ -225,10 +255,9 @@ Resources:
             StatementItem:
               type: object
               properties:
-                key:
-                  type: string
-                  maxLength: 255
-                  minLength: 1
+                metadata:
+                  type: object
+                  additionalProperties: true
                 name:
                   type: string
                   maxLength: 255
@@ -255,33 +284,6 @@ Resources:
             SignatureType:
               type: string
               enum: [SHA256_WITH_ECDSA]
-            Address:
-              type: object
-              required:
-                - address1
-                - city
-                - state
-                - country
-                - zip5
-              properties:
-                address1:
-                  type: string
-                  maxLength: 255
-                address2:
-                  type: string
-                  maxLength: 255
-                city:
-                  type: string
-                  maxLength: 255
-                state:
-                  type: string
-                  maxLength: 255
-                country:
-                  type: string
-                  enum: [US]
-                zip5:
-                  type: string
-                  pattern: '^\d{5}$'
             BankAccount:
               type: object
               required:
@@ -674,9 +676,6 @@ Resources:
                         transferMetadata:
                           type: object
                           additionalProperties: true
-                        itemMetadata:
-                          type: object
-                          additionalProperties: true
               responses:
                 "200":
                   description: "Successful response"
@@ -814,7 +813,6 @@ Resources:
                   $ref: "#/components/responses/NotFound"
                 "500":
                   $ref: "#/components/responses/InternalServerError"
-
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
@@ -860,7 +858,6 @@ Resources:
                   $ref: "#/components/responses/NotFound"
                 "500":
                   $ref: "#/components/responses/InternalServerError"
-
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
@@ -915,7 +912,6 @@ Resources:
                   $ref: "#/components/responses/NotFound"
                 "500":
                   $ref: "#/components/responses/InternalServerError"
-
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
@@ -1015,7 +1011,6 @@ Resources:
                   $ref: "#/components/responses/NotFound"
                 "500":
                   $ref: "#/components/responses/InternalServerError"
-
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
@@ -1073,7 +1068,6 @@ Resources:
                           maxLength: 256
                         webhookUrl:
                           type: string
-                          pattern: "^https://.*$"
                           maxLength: 1000
                         merchantLocation:
                           $ref: "#/components/schemas/Location"
@@ -1295,16 +1289,63 @@ Resources:
                   content:
                     application/json:
                       schema:
+                        $ref: "#/components/schemas/Item"
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ItemHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /list-items:
+            post:
+              summary: "Lists items"
+              operationId: "ListItems"
+              responses:
+                "200":
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
                         type: object
                         properties:
-                          itemId:
-                            type: string
-                          name:
-                            type: string
-                          tags:
+                          items:
                             type: array
-                            items:
-                              type: string
+                            items: 
+                              $ref: "#/components/schemas/Item"
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ItemHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /sell-item:
+            post:
+              summary: "Sell item"
+              operationId: "SellItem"
+              responses:
+                "200":
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          sellJobId:
+                            type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -1695,6 +1736,8 @@ Resources:
           METADATA_DB_PROXY_ENDPOINT: !Ref MetadataDBProxyEndpoint
           METADATA_DB_NAME: !Ref MetadataDBName
           METADATA_DB_SECRET_ARN: !Ref MetadataDBSecret
+          IMAGE_STORAGE_BUCKET_NAME: !Ref ImageStorageBucketName
+          RESALE_SERVICE_ENDPOINT: !Ref ResaleServiceEndpoint
       Policies:
         - AWSLambdaVPCAccessExecutionRole
         - CloudWatchPutMetricPolicy: {}
@@ -1705,12 +1748,38 @@ Resources:
               Action:
                 - kms:Decrypt
               Resource: !Ref MetadataDBKmsKeyArn
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:ListBucket
+              Resource: 
+                - !Sub "arn:aws:s3:::${ImageStorageBucketName}"
+                - !Sub "arn:aws:s3:::${ImageStorageBucketName}/*"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - kms:Decrypt
+                - kms:GenerateDataKey
+              Resource: !Ref ImageStorageBucketKmsKeyArn
       Events:
         GetItem:
           Type: Api
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /get-item
+            Method: POST
+        ListItems:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /list-items
+            Method: POST
+        SellItem:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /sell-item
             Method: POST
 
   PaginationSigningSecret:

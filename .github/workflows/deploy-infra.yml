@@ -117,6 +117,7 @@ jobs:
       ZENOBIA_API_ENDPOINT: ${{ vars.ZENOBIA_API_ENDPOINT }}
       PLAID_IP_ADDRESSES: ${{ vars.PLAID_IP_ADDRESSES }}
       PLAID_SLACK_WEBHOOK: ${{ vars.PLAID_SLACK_WEBHOOK }}
+      RESALE_SERVICE_ENDPOINT: ${{ vars.RESALE_SERVICE_ENDPOINT }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v3
@@ -150,19 +151,26 @@ jobs:
       uses: gradle/actions/setup-gradle@v4
     - name: Build Kotlin artifacts
       run: make kotlin
+    - name: Build Node.js Lambda functions
+      run: |
+        cd nodejs/lambda/metadata-transformer
+        npm install
+        npm run build
     - name: Deploy sam
       run: |
-        sam deploy --no-confirm-changeset \
+        sam build && sam deploy --no-confirm-changeset \
           --parameter-overrides \
-          Stage=${{ github.ref_name }} \
-          PlaidSecretsArn=$PLAID_SECRETS_ARN \
-          OrumSecretsArn=$ORUM_SECRETS_ARN \
-          Auth0SecretsArn=$AUTH0_SECRETS_ARN \
-          Auth0Domain=$AUTH0_DOMAIN \
-          OrumPublicCertificate=$ORUM_PUBLIC_CERTIFICATE \
-          OrumIpAddresses=$ORUM_IP_ADDRESSES \
-          OrumSlackWebhook=$ORUM_SLACK_WEBHOOK\
-          WebsocketServiceEndpoint=$WEBSOCKET_SERVICE_ENDPOINT \
-          ZenobiaApiEndpoint=$ZENOBIA_API_ENDPOINT \
-          PlaidIpAddresses=$PLAID_IP_ADDRESSES \
-          PlaidSlackWebhook=$PLAID_SLACK_WEBHOOK
+          ParameterKey=Stage,ParameterValue=${{ github.ref_name }} \
+          ParameterKey=PlaidSecretsArn,ParameterValue=$PLAID_SECRETS_ARN \
+          ParameterKey=OrumSecretsArn,ParameterValue=$ORUM_SECRETS_ARN \
+          ParameterKey=Auth0SecretsArn,ParameterValue=$AUTH0_SECRETS_ARN \
+          ParameterKey=Auth0Domain,ParameterValue=$AUTH0_DOMAIN \
+          ParameterKey=OrumPublicCertificate,ParameterValue=$ORUM_PUBLIC_CERTIFICATE \
+          ParameterKey=OrumIpAddresses,ParameterValue=$ORUM_IP_ADDRESSES \
+          ParameterKey=OrumSlackWebhook,ParameterValue=$ORUM_SLACK_WEBHOOK \
+          ParameterKey=WebsocketServiceEndpoint,ParameterValue=$WEBSOCKET_SERVICE_ENDPOINT \
+          ParameterKey=ZenobiaApiEndpoint,ParameterValue=$ZENOBIA_API_ENDPOINT \
+          ParameterKey=PlaidIpAddresses,ParameterValue=$PLAID_IP_ADDRESSES \
+          ParameterKey=PlaidSlackWebhook,ParameterValue=$PLAID_SLACK_WEBHOOK \
+          ParameterKey=UniqueIdentifier,ParameterValue='v1' \
+          ParameterKey=ResaleServiceEndpoint,ParameterValue=$RESALE_SERVICE_ENDPOINT

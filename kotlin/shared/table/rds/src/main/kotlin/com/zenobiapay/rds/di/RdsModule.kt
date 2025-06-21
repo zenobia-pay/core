@@ -4,8 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.rds.model.MetadataTableSecret
 import dagger.Module
 import dagger.Provides
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Named
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
+
+private val logger = KotlinLogging.logger {}
 
 @Module
 class RdsModule {
