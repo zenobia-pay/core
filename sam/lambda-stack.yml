@@ -1341,7 +1341,7 @@ Resources:
                       schema:
                         type: object
                         properties:
-                          itemId:
+                          sellJobId:
                             type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
