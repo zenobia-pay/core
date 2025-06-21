@@ -55,7 +55,7 @@ class ResaleUtil @Inject constructor(
             
             // Create HTTP request
             val request = HttpRequest.newBuilder()
-                .uri(URI.create("http://$resaleServiceEndpoint/api/depop/listings"))
+                .uri(URI.create("https://$resaleServiceEndpoint/api/depop/listings"))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                 .build()

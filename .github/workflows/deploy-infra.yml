@@ -173,4 +173,4 @@ jobs:
           ParameterKey=PlaidIpAddresses,ParameterValue=$PLAID_IP_ADDRESSES \
           ParameterKey=PlaidSlackWebhook,ParameterValue=$PLAID_SLACK_WEBHOOK \
           ParameterKey=UniqueIdentifier,ParameterValue='v1' \
-          ParameterKey=ResaleServiceEndpoint,ParameterValue='$RESALE_SERVICE_ENDPOINT'
+          ParameterKey=ResaleServiceEndpoint,ParameterValue=$RESALE_SERVICE_ENDPOINT
