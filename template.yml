@@ -43,6 +43,9 @@ Parameters:
   ZenobiaApiEndpoint:
     Type: String
     Description: Endpoint to api service. In prod this should be https://api.zenobiapay.com/ needed for plaid webhooks
+  ResaleServiceEndpoint:
+    Type: String
+    Description: Endpoint to resale service that automates reselling.
 
 Resources:
   VpcStack:
@@ -108,6 +111,7 @@ Resources:
         RefreshTokenHashingSecret: !GetAtt AuthStack.Outputs.RefreshTokenHashingSecret
         BankAccountHashingSecret: !GetAtt AuthStack.Outputs.BankAccountHashingSecret
         ZenobiaApiEndpoint: !Ref ZenobiaApiEndpoint
+        ResaleServiceEndpoint: !Ref ResaleServiceEndpoint
 
   PayoutStack:
     Type: AWS::CloudFormation::Stack

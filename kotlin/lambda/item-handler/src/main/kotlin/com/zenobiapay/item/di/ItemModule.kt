@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
 class ItemModule {
     companion object {
         const val IMAGE_STORAGE_BUCKET_NAME = "IMAGE_STORAGE_BUCKET_NAME"
+        const val RESALE_SERVICE_ENDPOINT = "RESALE_SERVICE_ENDPOINT"
     }
 
     @Provides
@@ -34,6 +35,12 @@ class ItemModule {
     @Named(IMAGE_STORAGE_BUCKET_NAME)
     fun provideImageStorageBucketName(): String {
         return System.getenv(IMAGE_STORAGE_BUCKET_NAME) ?: ""
+    }
+
+    @Provides
+    @Named(RESALE_SERVICE_ENDPOINT)
+    fun provideResaleServiceEndpoint(): String {
+        return System.getenv("RESALE_SERVICE_ENDPOINT") ?: throw Exception("RESALE_SERVICE_ENDPOINT environment variable is not set")
     }
 
     @Provides

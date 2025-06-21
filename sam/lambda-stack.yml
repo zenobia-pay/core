@@ -108,6 +108,9 @@ Parameters:
   ImageStorageBucketKmsKeyArn:
     Type: String
     Description: ARN of the KMS key used to encrypt the image storage S3 bucket
+  ResaleServiceEndpoint:
+    Type: String
+    Description: Endpoint of the resale service used to automate selling on resale marketplaces.
 
 Conditions:
   IsProd: !Equals [!Ref Stage, "prod"]
@@ -1734,6 +1737,7 @@ Resources:
           METADATA_DB_NAME: !Ref MetadataDBName
           METADATA_DB_SECRET_ARN: !Ref MetadataDBSecret
           IMAGE_STORAGE_BUCKET_NAME: !Ref ImageStorageBucketName
+          RESALE_SERVICE_ENDPOINT: !Ref ResaleServiceEndpoint
       Policies:
         - AWSLambdaVPCAccessExecutionRole
         - CloudWatchPutMetricPolicy: {}

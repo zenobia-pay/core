@@ -1,9 +1,11 @@
 package com.zenobiapay.item.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobiapay.item.di.ItemModule.Companion.RESALE_SERVICE_ENDPOINT
 import com.zenobiapay.rds.model.RdsItemMetadataSchema
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
+import jakarta.inject.Named
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -13,7 +15,8 @@ import java.time.Duration
 private val logger = KotlinLogging.logger {}
 
 class ResaleUtil @Inject constructor(
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    @Named(RESALE_SERVICE_ENDPOINT) private val resaleServiceEndpoint: String,
 ) {
     private val httpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(10))
@@ -52,7 +55,7 @@ class ResaleUtil @Inject constructor(
             
             // Create HTTP request
             val request = HttpRequest.newBuilder()
-                .uri(URI.create("http://reseller.zenobiapay.com/api/depop/listings"))
+                .uri(URI.create("http://$resaleServiceEndpoint/api/depop/listings"))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                 .build()
