@@ -2,7 +2,9 @@ package com.zenobiapay.item.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.item.di.ItemModule.Companion.RESALE_SERVICE_ENDPOINT
+import com.zenobiapay.item.di.ItemModule.Companion.RESALE_SIGNING_SECRET
 import com.zenobiapay.rds.model.RdsItemMetadataSchema
+import com.zenobiapay.table.util.signHmacSha256
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
 import jakarta.inject.Named
@@ -17,6 +19,7 @@ private val logger = KotlinLogging.logger {}
 class ResaleUtil @Inject constructor(
     private val objectMapper: ObjectMapper,
     @Named(RESALE_SERVICE_ENDPOINT) private val resaleServiceEndpoint: String,
+    @Named(RESALE_SIGNING_SECRET) private val resaleSigningSecret: String,
 ) {
     private val httpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(10))
@@ -53,10 +56,14 @@ class ResaleUtil @Inject constructor(
             // Convert payload to JSON
             val jsonPayload = objectMapper.writeValueAsString(listingPayload)
             
+            // Generate signature for the request
+            val signature = signHmacSha256(jsonPayload, resaleSigningSecret)
+            
             // Create HTTP request
             val request = HttpRequest.newBuilder()
                 .uri(URI.create("https://$resaleServiceEndpoint/api/depop/listings"))
                 .header("Content-Type", "application/json")
+                .header("Signature", signature)
                 .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                 .build()
             

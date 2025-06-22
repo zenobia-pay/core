@@ -111,6 +111,9 @@ Parameters:
   ResaleServiceEndpoint:
     Type: String
     Description: Endpoint of the resale service used to automate selling on resale marketplaces.
+  ResaleSigningSecret:
+    Type: String
+    Description: Signing secret used to authenticate requests to the resale service.
 
 Conditions:
   IsProd: !Equals [!Ref Stage, "prod"]

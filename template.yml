@@ -112,6 +112,7 @@ Resources:
         BankAccountHashingSecret: !GetAtt AuthStack.Outputs.BankAccountHashingSecret
         ZenobiaApiEndpoint: !Ref ZenobiaApiEndpoint
         ResaleServiceEndpoint: !Ref ResaleServiceEndpoint
+        ResaleSigningSecret: !GetAtt AuthStack.Outputs.ResaleSigningSecret
 
   PayoutStack:
     Type: AWS::CloudFormation::Stack

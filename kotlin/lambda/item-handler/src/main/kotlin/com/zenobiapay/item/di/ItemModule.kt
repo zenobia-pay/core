@@ -13,6 +13,7 @@ class ItemModule {
     companion object {
         const val IMAGE_STORAGE_BUCKET_NAME = "IMAGE_STORAGE_BUCKET_NAME"
         const val RESALE_SERVICE_ENDPOINT = "RESALE_SERVICE_ENDPOINT"
+        const val RESALE_SIGNING_SECRET = "RESALE_SIGNING_SECRET"
     }
 
     @Provides
@@ -41,6 +42,13 @@ class ItemModule {
     @Named(RESALE_SERVICE_ENDPOINT)
     fun provideResaleServiceEndpoint(): String {
         return System.getenv("RESALE_SERVICE_ENDPOINT") ?: throw Exception("RESALE_SERVICE_ENDPOINT environment variable is not set")
+    }
+
+    @Provides
+    @Named(RESALE_SIGNING_SECRET)
+    fun provideResaleSigningSecret(): String {
+        val secretName = System.getenv(RESALE_SIGNING_SECRET) ?: throw Exception("$RESALE_SIGNING_SECRET environment variable is not set")
+        return provideSecretsManager().getSecretValue { it.secretId(secretName) }.secretString()
     }
 
     @Provides
