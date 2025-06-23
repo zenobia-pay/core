@@ -2,8 +2,8 @@ package com.zenobiapay.item.operations
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
-import com.zenobiapay.api.generated.model.CompleteSellJob200Response
 import com.zenobiapay.api.generated.model.CompleteSellJobRequest
+import com.zenobiapay.api.model.EmptyApiResponse
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.item.util.ResaleUtil
@@ -19,7 +19,7 @@ class CompleteSellJobOperation @Inject constructor(
     private val rdsWrapper: RdsWrapper,
     private val resaleUtil: ResaleUtil,
     val s3UrlGenerator: S3UrlGenerator,
-): Operation<CompleteSellJobRequest, CompleteSellJob200Response>() {
+): Operation<CompleteSellJobRequest, EmptyApiResponse>() {
     override val inputType = CompleteSellJobRequest::class.java
 
     override fun run(
@@ -27,7 +27,7 @@ class CompleteSellJobOperation @Inject constructor(
         input: APIGatewayProxyRequestEvent,
         context: Context,
         userId: String?
-    ): CompleteSellJob200Response {
+    ): EmptyApiResponse {
         logger.info { "Processing sell item request" }
         val itemUuid = try {
             UUID.fromString(request.itemId)
@@ -44,11 +44,8 @@ class CompleteSellJobOperation @Inject constructor(
 
         val itemImageUrls = s3UrlGenerator.generatePresignedUrlForS3Prefix(S3UrlGenerator.generateCustomerImagePrefix(request.itemId, request.sellJobId))
         
-        val listingCreated = resaleUtil.createDepopListing(item, itemImageUrls)
-        assert(listingCreated)
-        
-        // Return response with listing status
-        return CompleteSellJob200Response()
+        resaleUtil.createDepopListing(item, itemImageUrls)
+        return EmptyApiResponse()
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {
