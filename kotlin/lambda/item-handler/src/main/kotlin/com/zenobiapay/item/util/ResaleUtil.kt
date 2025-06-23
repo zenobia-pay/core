@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.item.di.ItemModule.Companion.RESALE_SERVICE_ENDPOINT
 import com.zenobiapay.item.di.ItemModule.Companion.RESALE_SIGNING_SECRET
 import com.zenobiapay.rds.model.RdsItemMetadataSchema
+import com.zenobiapay.rds.util.RdsWrapper
 import com.zenobiapay.table.util.signHmacSha256
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
@@ -20,6 +21,7 @@ class ResaleUtil @Inject constructor(
     private val objectMapper: ObjectMapper,
     @Named(RESALE_SERVICE_ENDPOINT) private val resaleServiceEndpoint: String,
     @Named(RESALE_SIGNING_SECRET) private val resaleSigningSecret: String,
+    private val rdsWrapper: RdsWrapper,
 ) {
     private val httpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(10))
@@ -69,7 +71,11 @@ class ResaleUtil @Inject constructor(
             
             // Send the request
             val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-            
+            val responseBody = objectMapper.readTree(response.body())
+            val id = responseBody.get("id").asText()
+            logger.info { "Setting job id as $id" }
+            rdsWrapper.updateItemResaleJobId(item.itemId, id)
+
             // Check if the request was successful
             val isSuccess = response.statusCode() in 200..299
             if (isSuccess) {

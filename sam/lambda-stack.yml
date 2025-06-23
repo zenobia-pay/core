@@ -1741,6 +1741,7 @@ Resources:
           METADATA_DB_SECRET_ARN: !Ref MetadataDBSecret
           IMAGE_STORAGE_BUCKET_NAME: !Ref ImageStorageBucketName
           RESALE_SERVICE_ENDPOINT: !Ref ResaleServiceEndpoint
+          RESALE_SIGNING_SECRET: !Ref ResaleSigningSecret
       Policies:
         - AWSLambdaVPCAccessExecutionRole
         - CloudWatchPutMetricPolicy: {}
