@@ -78,7 +78,8 @@ var validCustomerRoutes = []Route{
 	{"POST", "delete-refresh-token"},
 	{"POST", "get-item"},
 	{"POST", "list-items"},
-	{"POST", "sell-item"},
+	{"POST", "create-sell-job"},
+    {"POST", "complete-sell-job"},
 }
 
 var validOrumRoutes = []Route{
