@@ -1,6 +1,7 @@
 package com.zenobiapay.item.util
 
 import com.zenobiapay.item.di.ItemModule.Companion.IMAGE_STORAGE_BUCKET_NAME
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
 import jakarta.inject.Named
 import software.amazon.awssdk.services.s3.S3Client
@@ -12,6 +13,8 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest
 import java.time.Duration
 import javax.inject.Singleton
+
+private val logger = KotlinLogging.logger {}
 
 @Singleton
 class S3UrlGenerator @Inject constructor(
@@ -39,9 +42,11 @@ class S3UrlGenerator @Inject constructor(
             .build()
         
         val response = s3Client.listObjectsV2(request)
+        logger.info { "Found ${response.contents().size} objects with prefix $prefix" }
         
         if (response.hasContents()) {
             val objectKeys = response.contents().map { it.key() }
+            logger.info { "Got object keys $objectKeys" }
             return generatePresignedUrls(objectKeys, expirationMinutes)
         }
         
@@ -76,6 +81,7 @@ class S3UrlGenerator @Inject constructor(
      * @return Presigned URL as a string
      */
     fun generatePresignedUrl(objectKey: String, expirationMinutes: Long = 15): String {
+        logger.info { "Generating presigned url for object key $objectKey, bucket $bucketName" }
         S3Presigner.create().use { presigner ->
             val getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
