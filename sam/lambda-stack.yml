@@ -1860,6 +1860,18 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /list-items
             Method: POST
+        CreateSellJob:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /create-sell-job
+            Method: POST
+        CompleteSellJob:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /complete-sell-job
+            Method: POST
         SellItem:
           Type: Api
           Properties:

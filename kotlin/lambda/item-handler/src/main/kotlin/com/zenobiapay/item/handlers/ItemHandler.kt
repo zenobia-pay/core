@@ -44,9 +44,9 @@ class ItemHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
         val operation = when (input.path) {
             "/get-item" -> getItemOperation
             "/list-items" -> listItemsOperation
-            "/sell-item" -> completeSellJobOperation
             "/create-sell-job" -> createSellJobOperation
-            else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
+            "/complete-sell-job" -> completeSellJobOperation
+            else -> throw UnknownPathException()
         }
         return responseHandler.returnApiGwResponse(operation, input, context)
     }
