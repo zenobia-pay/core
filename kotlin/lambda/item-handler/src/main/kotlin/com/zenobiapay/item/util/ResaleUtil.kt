@@ -32,7 +32,7 @@ class ResaleUtil @Inject constructor(
      * @param item The item to list on Depop
      * @return true if the listing was created successfully, false otherwise
      */
-    fun createDepopListing(item: RdsItemMetadataSchema): Boolean {
+    fun createDepopListing(item: RdsItemMetadataSchema, itemImageUrls: List<String>): Boolean {
         try {
             logger.info { "Creating Depop listing for item ${item.itemId}" }
             
@@ -49,7 +49,7 @@ class ResaleUtil @Inject constructor(
                 "brand" to (item.itemMetadata.brandName ?: "Unknown"),
                 "size" to (item.itemMetadata.size ?: "Standard"),
                 "condition" to "Good",
-                "photos" to (item.itemMetadata.imageUrls),
+                "photos" to (itemImageUrls),
                 "shipping_address" to "165 Attorney St 5C, New York, NY, 10002",
                 "color" to (item.itemMetadata.color ?: "Various"),
                 "age" to (item.itemMetadata.year ?: "Unknown"),
