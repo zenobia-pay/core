@@ -1392,11 +1392,20 @@ Resources:
                       type: object
                       required:
                         - sellJobId
+                        - itemId
                       properties:
                         sellJobId:
                           type: string
                         itemId:
                           type: string
+                        category:
+                          type: string
+                        condition:
+                          type: string
+                        shippingAddress:
+                          type: string
+                        price:
+                          type: integer
               responses:
                 "200":
                   description: "Successful response"

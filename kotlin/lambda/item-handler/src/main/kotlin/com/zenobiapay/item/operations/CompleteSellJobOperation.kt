@@ -44,7 +44,14 @@ class CompleteSellJobOperation @Inject constructor(
 
         val itemImageUrls = s3UrlGenerator.generatePresignedUrlForS3Prefix(S3UrlGenerator.generateCustomerImagePrefix(request.itemId, request.sellJobId))
         
-        resaleUtil.createDepopListing(item, itemImageUrls)
+        resaleUtil.createDepopListing(
+            item = item,
+            itemImageUrls = itemImageUrls,
+            price = request.price,
+            category = request.category,
+            shippingAddress = request.shippingAddress,
+            condition = request.condition
+        )
         return EmptyApiResponse()
     }
 
