@@ -45,6 +45,7 @@ class CompleteSellJobOperation @Inject constructor(
         val itemImageUrls = s3UrlGenerator.generatePresignedUrlForS3Prefix(S3UrlGenerator.generateCustomerImagePrefix(request.itemId, request.sellJobId))
         
         resaleUtil.createDepopListing(
+            jobId = request.sellJobId,
             item = item,
             itemImageUrls = itemImageUrls,
             price = request.price,

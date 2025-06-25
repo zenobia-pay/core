@@ -33,6 +33,7 @@ class ResaleUtil @Inject constructor(
      * @return true if the listing was created successfully, false otherwise
      */
     fun createDepopListing(
+        jobId: String,
         item: RdsItemMetadataSchema,
         itemImageUrls: List<String>,
         price: Int,
@@ -45,6 +46,7 @@ class ResaleUtil @Inject constructor(
             
             // Build the listing payload based on the item metadata
             val listingPayload = mapOf(
+                "jobId" to jobId,
                 "title" to (item.itemMetadata.name),
                 "description" to "Quality item from ${item.itemMetadata.brandName ?: "Unknown Brand"}. " +
                         "Size: ${item.itemMetadata.size ?: "Standard"}, " +
@@ -78,11 +80,6 @@ class ResaleUtil @Inject constructor(
             
             // Send the request
             val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-            val responseBody = objectMapper.readTree(response.body())
-            val id = responseBody.get("id").asText()
-            logger.info { "Setting job id as $id" }
-            rdsWrapper.updateItemResaleJobId(item.itemId, id)
-
             // Check if the request was successful
             val isSuccess = response.statusCode() in 200..299
             if (isSuccess) {
