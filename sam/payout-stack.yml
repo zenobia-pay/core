@@ -26,6 +26,9 @@ Parameters:
   WebsocketServiceEndpoint:
     Type: String
     Description: Websocket endpoint to send transfer updates to.
+  Stage:
+    Type: String
+    Description: Stage this code is being deployed to (dev, beta, gamma, prod)
 
 Resources:
   TransferStreamPipe:
@@ -240,6 +243,7 @@ Resources:
         Variables:
           WEBHOOK_KMS_ALIAS: !Ref WebhookSignatureKeyAlias
           WEBSOCKET_SERVICE_ENDPOINT: !Ref WebsocketServiceEndpoint
+          STAGE: !Ref Stage
       Policies:
         - CloudWatchPutMetricPolicy: {}
         - AWSSecretsManagerGetSecretValuePolicy:
