@@ -126,6 +126,7 @@ Resources:
         UserKeyId: !GetAtt TableStack.Outputs.UserKeyId
         OrumSecretsArn: !Ref OrumSecretsArn
         WebsocketServiceEndpoint: !Ref WebsocketServiceEndpoint
+        Stage: !Ref Stage
 
   DashboardStack:
     Type: AWS::CloudFormation::Stack
