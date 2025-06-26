@@ -10,7 +10,7 @@ go:
 		for dir in $(GO_LAMBDA_DIRS); do \
 			echo "Building $$dir..." && \
 			mkdir -p $$dir/build && \
-			GOOS=linux GOARCH=amd64 go build -buildvcs=false -o $$dir/build/bootstrap ./$$dir && \
+			GOOS=linux GOARCH=amd64 GOPROXY=https://proxy.golang.org,direct go build -buildvcs=false -o $$dir/build/bootstrap ./$$dir && \
 			(cd $$dir/build && zip function.zip bootstrap); \
 		done'
 
@@ -19,7 +19,7 @@ go-dev:
 	@for dir in $(GO_LAMBDA_DIRS); do \
  		echo "Building $$dir..."; \
  		cd golang && \
-		GOOS=linux GOARCH=amd64 go build -o $$dir/build/bootstrap ./$$dir && \
+		GOOS=linux GOARCH=amd64 GOPROXY=https://proxy.golang.org,direct go build -o $$dir/build/bootstrap ./$$dir && \
 		chmod +x $$dir/build/bootstrap && \
 		cd $$dir/build && \
 		zip function.zip bootstrap && \
