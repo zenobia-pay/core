@@ -23,7 +23,19 @@ func main() {
 }
 
 func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	println("Recieved request to fetch jwt token")
+	println("Received request for path: " + request.Path)
+
+	// Handle the generate-challenge endpoint
+	if request.Path == "/generate-challenge" {
+		return generateChallenge(ctx, request)
+	}
+
+	// Handle the verify-attestation endpoint
+	if request.Path == "/verify-attestation" {
+		return HandleVerifyAttestation(ctx, request)
+	}
+
+	// Handle the issue-jwt endpoint
 	if request.Path != "/issue-jwt" {
 		fmt.Printf("Invalid path %s", request.RequestContext.Path)
 		return generateInvalidRequestResponse(), nil

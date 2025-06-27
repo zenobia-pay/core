@@ -443,6 +443,84 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
+          /generate-challenge:
+            post:
+              summary: "Generate challenge for ios app attest"
+              operationId: "GenerateChallenge"
+              responses:
+                "200":
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          challenge:
+                            type: string
+                          requestId:
+                            type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${JwtIssuerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /verify-attestation:
+            post:
+              summary: "Verify Apple App Attest attestation object"
+              operationId: "VerifyAttestation"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - attestationObject
+                        - clientDataJSON
+                        - challenge
+                        - keyId
+                      properties:
+                        attestationObject:
+                          type: string
+                        clientDataJSON:
+                          type: string
+                        challenge:
+                          type: string
+                        keyId:
+                          type: string
+              responses:
+                "200":
+                  description: "Successful verification"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          status:
+                            type: string
+                          message:
+                            type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${JwtIssuerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
           /create-link-token:
             post:
               summary: "Creates a plaid link token"
@@ -1539,6 +1617,18 @@ Resources:
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /issue-jwt
+            Method: POST
+        GenerateChallenge:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /generate-challenge
+            Method: POST
+        VerifyAttestation:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /verify-attestation
             Method: POST
 
   BankHandlerFunction:

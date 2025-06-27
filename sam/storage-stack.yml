@@ -86,6 +86,9 @@ Resources:
         SSEEnabled: true
         KMSMasterKeyId: !Ref CredentialsTableKmsKey
         SSEType: KMS
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
 
