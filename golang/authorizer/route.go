@@ -47,6 +47,7 @@ var validUnauthenticatedRoutes = []Route{
 	{"POST", "create-link-token"},
 	{"POST", "exchange-token"},
 	{"POST", "issue-jwt"},
+	{"GET", "get-customer-transfer"},
 }
 
 // TODO: use valid merchant and customer routes
