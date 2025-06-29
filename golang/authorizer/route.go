@@ -44,6 +44,8 @@ func getOperationArn(methodArn string, route Route) (*string, error) {
 }
 
 var validUnauthenticatedRoutes = []Route{
+	{"POST", "generate-challenge"},
+	{"POST", "verify-attestation"},
 	{"POST", "create-link-token"},
 	{"POST", "exchange-token"},
 	{"POST", "issue-jwt"},
@@ -79,7 +81,7 @@ var validCustomerRoutes = []Route{
 	{"POST", "get-item"},
 	{"POST", "list-items"},
 	{"POST", "create-sell-job"},
-    {"POST", "complete-sell-job"},
+	{"POST", "complete-sell-job"},
 }
 
 var validOrumRoutes = []Route{

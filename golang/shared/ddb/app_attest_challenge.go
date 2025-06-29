@@ -11,3 +11,11 @@ type AppAttestChallenge struct {
 	Challenge string `dynamodbav:"challenge" json:"challenge"`
 	TTL       int64  `dynamodbav:"ttl" json:"ttl"`
 }
+
+func GeneratePk(keyId string) string {
+	return "APP_ATTEST#k_" + keyId
+}
+
+func GenerateSk() string {
+	return "DETAILS"
+}

@@ -487,6 +487,7 @@ Resources:
                         - clientDataJSON
                         - challenge
                         - keyId
+                        - requestId
                       properties:
                         attestationObject:
                           type: string
@@ -495,6 +496,8 @@ Resources:
                         challenge:
                           type: string
                         keyId:
+                          type: string
+                        requestId:
                           type: string
               responses:
                 "200":
@@ -1606,7 +1609,7 @@ Resources:
             SecretArn: !Ref RefreshTokenHashingSecret
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref CustomerJwtSigningSecret
-        - DynamoDBReadPolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref CredentialsTableName
         - KMSDecryptPolicy:
             KeyId: !Ref CredentialsTableKeyId
