@@ -96,6 +96,8 @@ components:
     StatementItem:
       type: object
       properties:
+        itemId:
+          type: string
         metadata:
           type: object
           additionalProperties: true
