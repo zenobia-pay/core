@@ -506,6 +506,10 @@ paths:
                   type: array
                   items:
                     $ref: "#/components/schemas/StatementItem"
+                expirySeconds:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
                 transferMetadata:
                   type: object
                   additionalProperties: true
