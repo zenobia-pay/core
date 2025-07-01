@@ -23,7 +23,9 @@ resource "auth0_client" "zenobia_app" {
   callbacks       = var.ENVIRONMENT == "prod" ? [
     "https://dashboard.zenobiapay.com/callback",
     "https://dashboard.zenobiapay.com/login",
-    "zenobia://login-callback"
+    "zenobia://login-callback",
+    "http://localhost:3000",
+    "http://localhost:3000/login"
   ] : [
     "https://beta-dashboard.zenobiapay.com/callback",
     "https://beta-dashboard.zenobiapay.com/login",
@@ -32,7 +34,8 @@ resource "auth0_client" "zenobia_app" {
     "http://localhost:3000/login"
   ]
   allowed_logout_urls = var.ENVIRONMENT == "prod" ? [
-    "https://dashboard.zenobiapay.com"
+    "https://dashboard.zenobiapay.com",
+    "http://localhost:3000"
   ] : [
     "https://beta-dashboard.zenobiapay.com",
     "http://localhost:3000"
