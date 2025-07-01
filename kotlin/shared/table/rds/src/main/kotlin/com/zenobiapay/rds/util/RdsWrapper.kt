@@ -389,4 +389,17 @@ class RdsWrapper @Inject constructor(
             )
         }
     }
+    
+    /**
+     * Updates the resale job ID for a specific item
+     * @param itemId The UUID of the item to update
+     * @param resaleJobId The resale job ID to set
+     * @return Number of rows affected (1 if successful, 0 if item not found)
+     */
+    fun updateItemResaleJobId(itemId: UUID, resaleJobId: String): Int {
+        logger.info { "Updating resale job ID for item ID: $itemId to: $resaleJobId" }
+        val updateSql = "UPDATE items SET resale_job_id = ? WHERE id = ?"
+        
+        return executeUpdate(updateSql, listOf(resaleJobId, itemId))
+    }
 }

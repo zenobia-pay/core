@@ -8,9 +8,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.model.exception.UnknownPathException
 import com.zenobiapay.api.util.ResponseHandler
 import com.zenobiapay.item.di.DaggerAppComponent
+import com.zenobiapay.item.operations.CreateSellJobOperation
 import com.zenobiapay.item.operations.GetItemOperation
 import com.zenobiapay.item.operations.ListItemsOperation
-import com.zenobiapay.item.operations.SellItemOperation
+import com.zenobiapay.item.operations.CompleteSellJobOperation
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
 
@@ -30,7 +31,10 @@ class ItemHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
     lateinit var listItemsOperation: ListItemsOperation
 
     @Inject
-    lateinit var sellItemOperation: SellItemOperation
+    lateinit var completeSellJobOperation: CompleteSellJobOperation
+
+    @Inject
+    lateinit var createSellJobOperation: CreateSellJobOperation
 
     init {
         DaggerAppComponent.create().inject(this)
@@ -40,8 +44,9 @@ class ItemHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
         val operation = when (input.path) {
             "/get-item" -> getItemOperation
             "/list-items" -> listItemsOperation
-            "/sell-item" -> sellItemOperation
-            else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
+            "/create-sell-job" -> createSellJobOperation
+            "/complete-sell-job" -> completeSellJobOperation
+            else -> throw UnknownPathException()
         }
         return responseHandler.returnApiGwResponse(operation, input, context)
     }

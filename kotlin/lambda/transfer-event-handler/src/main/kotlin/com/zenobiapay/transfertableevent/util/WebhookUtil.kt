@@ -3,6 +3,7 @@ package com.zenobiapay.transfertableevent.util
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.generated.model.TransferStatus
+import com.zenobiapay.transfertableevent.di.IS_PROD
 import com.zenobiapay.transfertableevent.model.TransferWebhookBody
 import io.github.oshai.kotlinlogging.KotlinLogging
 import okhttp3.OkHttpClient
@@ -11,6 +12,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okio.IOException
 import java.time.Instant
 import jakarta.inject.Inject
+import jakarta.inject.Named
 import okhttp3.Response
 
 private val logger = KotlinLogging.logger {}
@@ -19,6 +21,8 @@ class WebhookUtil @Inject constructor(
     private val okHttpClient: OkHttpClient,
     private val objectMapper: ObjectMapper,
     private val jwtUtil: JwtUtil,
+    @Named(IS_PROD)
+    private val isProd: Boolean,
 ) {
     companion object {
         const val EXPIRY_OFFSET_SECONDS = 60 * 5L // 5 minutes
@@ -37,6 +41,7 @@ class WebhookUtil @Inject constructor(
             transferRequestId = transferRequestId,
             amount = amount,
             status = status,
+            isTest = !isProd
         )
         val body = objectMapper.writeValueAsString(webhookBody)
         val mapBody = objectMapper.convertValue(webhookBody, object: TypeReference<Map<String, Any?>>() {})

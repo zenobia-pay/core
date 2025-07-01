@@ -5,6 +5,7 @@ import com.zenobia.metric.METRIC_NAMESPACE
 import com.zenobiapay.table.model.HmacSecret
 import dagger.Module
 import dagger.Provides
+import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.services.cloudwatch.CloudWatchClient
 import software.amazon.awssdk.services.kms.KmsClient
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
@@ -13,6 +14,9 @@ import jakarta.inject.Named
 const val WEBHOOK_KMS_ALIAS = "WEBHOOK_KMS_ALIAS"
 const val TRANSFER_STATUS_NOTIFICATION_SECRET = "TRANSFER_STATUS_NOTIFICATION_SECRET"
 const val WEBSOCKET_SERVICE_ENDPOINT = "WEBSOCKET_SERVICE_ENDPOINT"
+const val IS_PROD = "IS_PROD"
+
+private val logger = KotlinLogging.logger {}
 
 @Module
 class TransferTableEventModule {
@@ -46,6 +50,14 @@ class TransferTableEventModule {
     @Named(WEBSOCKET_SERVICE_ENDPOINT)
     fun provideWebhookServiceEndpoint(): String {
         return System.getenv("WEBSOCKET_SERVICE_ENDPOINT")
+    }
+
+    @Provides
+    @Named(IS_PROD)
+    fun provideIsProd(): Boolean {
+        return (System.getenv("STAGE") == "prod").also {
+            logger.info { "Got isProd $it"}
+        }
     }
 
     @Provides

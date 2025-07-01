@@ -158,6 +158,9 @@ data class StatementItem(
     }
 
     fun toApiStatementItem(): com.zenobiapay.api.generated.model.StatementItem {
-        return com.zenobiapay.api.generated.model.StatementItem().name(name).amount(amount)
+        return com.zenobiapay.api.generated.model.StatementItem()
+            .name(name)
+            .amount(amount)
+            .itemId(itemId)
     }
 }

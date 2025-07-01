@@ -111,6 +111,9 @@ Parameters:
   ResaleServiceEndpoint:
     Type: String
     Description: Endpoint of the resale service used to automate selling on resale marketplaces.
+  ResaleSigningSecret:
+    Type: String
+    Description: Signing secret used to authenticate requests to the resale service.
 
 Conditions:
   IsProd: !Equals [!Ref Stage, "prod"]
@@ -255,6 +258,8 @@ Resources:
             StatementItem:
               type: object
               properties:
+                itemId:
+                  type: string
                 metadata:
                   type: object
                   additionalProperties: true
@@ -673,6 +678,10 @@ Resources:
                           type: array
                           items:
                             $ref: "#/components/schemas/StatementItem"
+                        expirySeconds:
+                          type: integer
+                          minimum: 0
+                          exclusiveMinimum: true
                         transferMetadata:
                           type: object
                           additionalProperties: true
@@ -1332,6 +1341,93 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
+          /create-sell-job:
+            post:
+              summary: "Return job id and presigned urls for image uploads"
+              operationId: "CreateSellJob"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - itemId
+                      properties:
+                        itemId:
+                          type: string
+                          minLength: 1
+                          maxLength: 256
+              responses:
+                "200":
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          sellJobId:
+                            type: string
+                          imageUploadUrls:
+                            type: array
+                            items: 
+                              type: string
+
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ItemHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /complete-sell-job:
+            post:
+              summary: "Complete sell job"
+              operationId: "CompleteSellJob"
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - sellJobId
+                        - itemId
+                      properties:
+                        sellJobId:
+                          type: string
+                        itemId:
+                          type: string
+                        category:
+                          type: string
+                        condition:
+                          type: string
+                        shippingAddress:
+                          type: string
+                        price:
+                          type: integer
+              responses:
+                "200":
+                  description: "Successful response"
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ItemHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
           /sell-item:
             post:
               summary: "Sell item"
@@ -1738,11 +1834,14 @@ Resources:
           METADATA_DB_SECRET_ARN: !Ref MetadataDBSecret
           IMAGE_STORAGE_BUCKET_NAME: !Ref ImageStorageBucketName
           RESALE_SERVICE_ENDPOINT: !Ref ResaleServiceEndpoint
+          RESALE_SIGNING_SECRET: !Ref ResaleSigningSecret
       Policies:
         - AWSLambdaVPCAccessExecutionRole
         - CloudWatchPutMetricPolicy: {}
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref MetadataDBSecret
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref ResaleSigningSecret
         - Statement:
             - Effect: Allow
               Action:
@@ -1753,6 +1852,7 @@ Resources:
               Action:
                 - s3:GetObject
                 - s3:ListBucket
+                - s3:PutObject
               Resource: 
                 - !Sub "arn:aws:s3:::${ImageStorageBucketName}"
                 - !Sub "arn:aws:s3:::${ImageStorageBucketName}/*"
@@ -1774,6 +1874,18 @@ Resources:
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /list-items
+            Method: POST
+        CreateSellJob:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /create-sell-job
+            Method: POST
+        CompleteSellJob:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /complete-sell-job
             Method: POST
         SellItem:
           Type: Api

@@ -112,6 +112,7 @@ Resources:
         BankAccountHashingSecret: !GetAtt AuthStack.Outputs.BankAccountHashingSecret
         ZenobiaApiEndpoint: !Ref ZenobiaApiEndpoint
         ResaleServiceEndpoint: !Ref ResaleServiceEndpoint
+        ResaleSigningSecret: !GetAtt AuthStack.Outputs.ResaleSigningSecret
 
   PayoutStack:
     Type: AWS::CloudFormation::Stack
@@ -125,6 +126,7 @@ Resources:
         UserKeyId: !GetAtt TableStack.Outputs.UserKeyId
         OrumSecretsArn: !Ref OrumSecretsArn
         WebsocketServiceEndpoint: !Ref WebsocketServiceEndpoint
+        Stage: !Ref Stage
 
   DashboardStack:
     Type: AWS::CloudFormation::Stack

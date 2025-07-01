@@ -39,6 +39,18 @@ Resources:
         PasswordLength: 64
         ExcludeCharacters: "\"@/\\^`|&[](){}$=+"
 
+  ResaleSigningSecret:
+    Type: AWS::SecretsManager::Secret
+    DeletionPolicy: Retain
+    Properties:
+      Name: credentials/resale/hmac
+      Description: HMAC secret for signing resale requests
+      GenerateSecretString:
+        SecretStringTemplate: "{}"
+        GenerateStringKey: secret
+        PasswordLength: 64
+        ExcludeCharacters: "\"@/\\^`|&[](){}$=+"
+
 Outputs:
   CustomerJwtSigningSecret:
     Value: !Ref CustomerJwtSigningSecret
@@ -49,3 +61,6 @@ Outputs:
   BankAccountHashingSecret:
     Value: !Ref BankAccountHashingSecret
     Description: Signing secret for bank account
+  ResaleSigningSecret:
+    Value: !Ref ResaleSigningSecret
+    Description: Signing secret for resale requests
