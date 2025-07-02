@@ -19,8 +19,16 @@ const namespace = "Authorizer"
 func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 	fmt.Printf("Got requestId %s, path %s\n", event.RequestContext.RequestID, event.Path)
 
+	// Print out all header keys
+	fmt.Println("Header keys:")
+	for key := range event.Headers {
+		fmt.Printf("- %s\n", key)
+	}
+
 	var hasUnauthenticatedHeader = false
 	if authorization, ok := event.Headers["authorization"]; ok {
+		hasUnauthenticatedHeader = authorization == "NONE" // Explicitly set by app if no auth is provided
+	} else if authorization, ok := event.Headers["Authorization"]; ok {
 		hasUnauthenticatedHeader = authorization == "NONE" // Explicitly set by app if no auth is provided
 	}
 	if isValidPath(event.Path, validOrumRoutes) {
