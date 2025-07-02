@@ -19,15 +19,15 @@ const namespace = "Authorizer"
 func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 	fmt.Printf("Got requestId %s, path %s\n", event.RequestContext.RequestID, event.Path)
 
-	var hasAuthorizationHeader = false
-	if authorization, ok := event.Headers["Authorization"]; ok {
-		hasAuthorizationHeader = authorization != "NONE" // Explicitly set by app if no auth is provided
+	var hasUnauthenticatedHeader = false
+	if authorization, ok := event.Headers["authorization"]; ok {
+		hasUnauthenticatedHeader = authorization == "NONE" // Explicitly set by app if no auth is provided
 	}
 	if isValidPath(event.Path, validOrumRoutes) {
 		return handleOrumWebhookEndpoint(ctx, event)
 	} else if isValidPath(event.Path, validPlaidRoutes) {
 		return handlePlaidWebhookEndpoint(ctx, event)
-	} else if !hasAuthorizationHeader && isValidPath(event.Path, validUnauthenticatedRoutes) {
+	} else if hasUnauthenticatedHeader && isValidPath(event.Path, validUnauthenticatedRoutes) {
 		return handleUnprotectedEndpoint(ctx, event)
 	} else if isValidPath(event.Path, validCustomerRoutes) || isValidPath(event.Path, validMerchantRoutes) {
 		return handleProtectedEndpoint(ctx, event)
