@@ -42,9 +42,7 @@ class CreateLinkTokenOperation @Inject constructor(
 
     private fun getPlaidProducts(product: CreateLinkTokenRequest.ProductEnum): List<Products> {
         return when (product) {
-            // TODO: re-enable plaid signal
-//            CreateLinkTokenRequest.ProductEnum.AUTH -> listOf(Products.AUTH, Products.IDENTITY, Products.SIGNAL)
-            CreateLinkTokenRequest.ProductEnum.AUTH -> listOf(Products.AUTH, Products.IDENTITY)
+            CreateLinkTokenRequest.ProductEnum.AUTH -> listOf(Products.AUTH, Products.IDENTITY, Products.SIGNAL)
         }
     }
 
