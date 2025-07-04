@@ -1555,6 +1555,7 @@ Resources:
       FunctionName: BankHandler
       CodeUri: ../kotlin/lambda/bank-handler/build/libs/lambda.jar
       Handler: com.zenobiapay.bank.handlers.BankHandler::handleRequest
+      Tracing: Active
       MemorySize: 2048
       ProvisionedConcurrencyConfig: 
         Fn::If:
@@ -1568,6 +1569,12 @@ Resources:
           CREDENTIALS_TABLE_NAME: !Ref CredentialsTableName
           API_GATEWAY_ENDPOINT: !Ref ZenobiaApiEndpoint
       Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - xray:PutTraceSegments
+                - xray:PutTelemetryRecords
+              Resource: "*"
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref PlaidSecretsArn
         - AWSSecretsManagerGetSecretValuePolicy:
@@ -1640,6 +1647,7 @@ Resources:
       FunctionName: TransferHandler
       CodeUri: ../kotlin/lambda/transfer-handler/build/libs/lambda.jar
       Handler: com.zenobiapay.transfer.handlers.TransferHandler::handleRequest
+      Tracing: Active
       MemorySize: 2048
       ProvisionedConcurrencyConfig: 
         Fn::If:
@@ -1654,6 +1662,12 @@ Resources:
           AVAILABLE_BALANCE_BUFFER: "1.1"
           ITEM_METADATA_QUEUE_URL: !Ref ItemMetadataQueueUrl
       Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - xray:PutTraceSegments
+                - xray:PutTelemetryRecords
+              Resource: "*"
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref OrumSecretsArn
         - AWSSecretsManagerGetSecretValuePolicy:
@@ -1736,6 +1750,7 @@ Resources:
       FunctionName: UserHandler
       CodeUri: ../kotlin/lambda/user-handler/build/libs/lambda.jar
       Handler: com.zenobiapay.user.handlers.UserHandler::handleRequest
+      Tracing: Active
       MemorySize: 2048
       ProvisionedConcurrencyConfig: 
         Fn::If:
@@ -1769,6 +1784,12 @@ Resources:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref PaginationSigningSecret
         - CloudWatchPutMetricPolicy: {}
+        - Statement:
+            - Effect: Allow
+              Action:
+                - xray:PutTraceSegments
+                - xray:PutTelemetryRecords
+              Resource: "*"
       Events:
         UpdateMerchant:
           Type: Api
@@ -1821,6 +1842,7 @@ Resources:
       FunctionName: ItemHandler
       CodeUri: ../kotlin/lambda/item-handler/build/libs/lambda.jar
       Handler: com.zenobiapay.item.handlers.ItemHandler::handleRequest
+      Tracing: Active
       MemorySize: 1024
       ProvisionedConcurrencyConfig: 
         Fn::If:
@@ -1862,6 +1884,12 @@ Resources:
                 - kms:Decrypt
                 - kms:GenerateDataKey
               Resource: !Ref ImageStorageBucketKmsKeyArn
+        - Statement:
+            - Effect: Allow
+              Action:
+                - xray:PutTraceSegments
+                - xray:PutTelemetryRecords
+              Resource: "*"
       Events:
         GetItem:
           Type: Api
@@ -1924,6 +1952,7 @@ Resources:
       FunctionName: WebhookHandler
       CodeUri: ../kotlin/lambda/webhook-handler/build/libs/lambda.jar
       Handler: com.zenobiapay.webhook.handlers.WebhookHandler::handleRequest
+      Tracing: Active
       MemorySize: 2048
       Environment:
         Variables:
@@ -1936,6 +1965,12 @@ Resources:
             QueueName: !GetAtt WebhookEventQueue.QueueName
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref PlaidSecretsArn
+        - Statement:
+            - Effect: Allow
+              Action:
+                - xray:PutTraceSegments
+                - xray:PutTelemetryRecords
+              Resource: "*"
       Events:
         OrumWebhook:
           Type: Api
@@ -1981,9 +2016,10 @@ Resources:
     Metadata:
       SkipBuild: true
     Properties:
-      FunctionName: WebhookEventHandlerFunction
+      FunctionName: WebhookEventHandler
       CodeUri: ../kotlin/lambda/webhook-event-handler/build/libs/lambda.jar
       Handler: com.zenobia.webhook.event.handlers.WebhookEventHandler::handleRequest
+      Tracing: Active
       Environment:
         Variables:
           ORUM_SLACK_WEBHOOK: !Ref OrumSlackWebhook
@@ -2001,6 +2037,12 @@ Resources:
             QueueName: !GetAtt WebhookEventFunctionDLQ.QueueName
         - SQSPollerPolicy:
             QueueName: !GetAtt WebhookEventQueue.QueueName
+        - Statement:
+            - Effect: Allow
+              Action:
+                - xray:PutTraceSegments
+                - xray:PutTelemetryRecords
+              Resource: "*"
       Events:
         EventFromWebhookEventQueue:
           Type: SQS
