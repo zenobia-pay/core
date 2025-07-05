@@ -42,6 +42,11 @@ dependencies {
     // HTTP
     api(libs.okhttp)
 
+    // AWS X-Ray
+    api(libs.aws.xray)
+    api(libs.aws.xray.interceptor)
+    api(libs.aws.xray.sqs)
+
     // Logging
     runtimeOnly(libs.slf4j)
 }

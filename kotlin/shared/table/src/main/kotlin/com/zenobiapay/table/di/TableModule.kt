@@ -7,6 +7,7 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import jakarta.inject.Named
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
+import software.amazon.awssdk.core.interceptor.ExecutionInterceptor
 import software.amazon.awssdk.core.retry.RetryPolicy
 
 const val BANK_TABLE_NAME = "BANK_TABLE_NAME"
@@ -33,7 +34,7 @@ class TableModule {
     fun provideCredentialsTableName(): String = System.getenv("CREDENTIALS_TABLE_NAME")!!
 
     @Provides
-    fun provideDynamoDbClient(): DynamoDbClient {
+    fun provideDynamoDbClient(tracingInterceptor: ExecutionInterceptor): DynamoDbClient {
         return DynamoDbClient.builder()
             .overrideConfiguration(
                 ClientOverrideConfiguration.builder()
@@ -41,7 +42,8 @@ class TableModule {
                         .toBuilder()
                         .numRetries(5)
                         .build()
-                    ).build()
+                    ).addExecutionInterceptor(tracingInterceptor)
+                    .build()
             )
             .region(Region.US_EAST_1)
             .build()

@@ -32,6 +32,7 @@ dependencies {
     api(libs.dagger)
     ksp(libs.dagger.compiler)
     api(libs.aws.cloudwatch)
+    api(libs.aws.xray)
 
     // Logging
     implementation(libs.kotlin.logging)

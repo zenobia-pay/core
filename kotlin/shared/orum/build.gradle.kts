@@ -26,6 +26,7 @@ repositories {
 }
 
 dependencies {
+    api(project(":kotlin:shared:metrics"))
     api(libs.kotlin.stdlib)
     implementation(libs.kotlin.coroutines)
     api(libs.dagger)
@@ -49,6 +50,7 @@ dependencies {
 
     // AWS
     api(libs.aws.secretsmanager)
+    api(libs.aws.xray)
 
     // Testing
     testImplementation(libs.mockk)

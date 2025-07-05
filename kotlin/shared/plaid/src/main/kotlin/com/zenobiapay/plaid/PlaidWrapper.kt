@@ -29,6 +29,7 @@ import com.plaid.client.model.SignalEvaluateRequest
 import com.plaid.client.model.WebhookVerificationKeyGetRequest
 import com.plaid.client.model.WebhookVerificationKeyGetResponse
 import com.plaid.client.request.PlaidApi
+import com.zenobia.metric.MetricHelper
 import com.zenobiapay.plaid.model.SignalResult
 import io.github.oshai.kotlinlogging.KotlinLogging
 import retrofit2.Response
@@ -172,10 +173,12 @@ class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
     }
 
     private fun <T> getResponseOrThrowException(operationName: String, block: () -> Response<T>): T {
-        val response = block()
-        if (response.isSuccessful) {
-            return response.body()!!
+        return MetricHelper.withXray("Plaid.$operationName") {
+            val response = block()
+            if (response.isSuccessful) {
+                return@withXray response.body()!!
+            }
+            throw PlaidException("Failed to call $operationName. Error code ${response.code()}, body ${response.errorBody()?.string()}")
         }
-        throw PlaidException("Failed to call $operationName. Error code ${response.code()}, body ${response.errorBody()?.string()}")
     }
 }

@@ -32,6 +32,9 @@ aws-sqs = { module = "software.amazon.awssdk:sqs", version.ref = "aws" }
 aws-cloudwatch = { module = "software.amazon.awssdk:cloudwatch", version.ref = "aws" }
 aws-lambda = { module = "software.amazon.awssdk:lambda", version.ref = "aws" }
 aws-utils = { module = "software.amazon.awssdk:utils", version.ref = "aws" }
+aws-xray = { module = "com.amazonaws:aws-xray-recorder-sdk-core", version = "2.18.2"}
+aws-xray-interceptor = { module = "com.amazonaws:aws-xray-recorder-sdk-aws-sdk-v2", version = "2.18.2"}
+aws-xray-sqs = { module = "com.amazonaws:aws-xray-recorder-sdk-aws-sdk-v2-instrumentor", version = "2.18.2"}
 
 # Jackson
 jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }

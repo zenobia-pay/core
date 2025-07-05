@@ -1465,6 +1465,7 @@ Resources:
       Runtime: provided.al2
       CodeUri: ../golang/authorizer/build/function.zip
       Timeout: 5
+      Tracing: Active
       SnapStart:
         ApplyOn: None
       Environment:
@@ -1477,6 +1478,12 @@ Resources:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref CustomerJwtSigningSecret
         - CloudWatchPutMetricPolicy: {}
+        - Statement:
+            - Effect: Allow
+              Action:
+                - xray:PutTraceSegments
+                - xray:PutTelemetryRecords
+              Resource: "*"
 
   ApiGatewayLogGroup:
     Type: AWS::Logs::LogGroup

@@ -1,9 +1,12 @@
 package com.zenobiapay.webhook.di
 
+import com.amazonaws.retry.RetryPolicy
 import com.zenobia.metric.METRIC_NAMESPACE
 import dagger.Module
 import dagger.Provides
 import jakarta.inject.Named
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
+import software.amazon.awssdk.core.interceptor.ExecutionInterceptor
 import software.amazon.awssdk.services.cloudwatch.CloudWatchClient
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
 import software.amazon.awssdk.services.sqs.SqsClient
@@ -32,8 +35,13 @@ class EnvironmentModule {
     }
 
     @Provides
-    fun provideSqsClient(): SqsClient {
+    fun provideSqsClient(tracingInterceptor: ExecutionInterceptor): SqsClient {
         return SqsClient.builder()
+            .overrideConfiguration(
+                ClientOverrideConfiguration.builder()
+                    .addExecutionInterceptor(tracingInterceptor)
+                    .build()
+            )
             .build()
     }
 
