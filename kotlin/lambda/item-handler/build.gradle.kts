@@ -43,7 +43,7 @@ dependencies {
     api(libs.jackson.databind)
     implementation(libs.jackson.kotlin)
 
-    // Injection
+    // Injection - Dagger needs to be api for generated code to work
     api(libs.dagger)
     ksp(libs.dagger.compiler)
     api(libs.jakarta.inject)
@@ -85,14 +85,49 @@ tasks {
         archiveBaseName.set("lambda")
         archiveClassifier.set("")
         archiveVersion.set("")
+        
+        // Enable minimization to remove unused classes
+        minimize()
+        
+        // Merge service files to avoid duplication
+        mergeServiceFiles()
+        
+        // Exclude unnecessary files
+        exclude("META-INF/LICENSE")
+        exclude("META-INF/NOTICE")
+        exclude("META-INF/*.SF")
+        exclude("META-INF/*.DSA")
+        exclude("META-INF/*.RSA")
+        exclude("mozilla/public-suffix-list.txt")
+        
+        // Exclude development tools that should not be in runtime
+        exclude("org/openjdk/tools/**")
+        exclude("com/google/googlejavaformat/**")
+        
         manifest {
             attributes(mapOf("Main-Class" to "com.zenobiapay.user.handlers.UserHandler"))
         }
     }
+    
     jar {
         enabled = false
     }
+    
     build {
         dependsOn(shadowJar)
+    }
+    
+    // Add JAR analysis task
+    register("analyzeJar") {
+        dependsOn("shadowJar")
+        doLast {
+            val jarFile = shadowJar.get().archiveFile.get().asFile
+            println("JAR size: ${jarFile.length() / (1024 * 1024)} MB")
+            
+            // Print largest files in JAR
+            exec {
+                commandLine("sh", "-c", "unzip -l ${jarFile.absolutePath} | sort -k1,1nr | head -20")
+            }
+        }
     }
 }
