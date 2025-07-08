@@ -54,7 +54,8 @@ dependencies {
     api(libs.jakarta.inject)
 
     implementation(libs.kotlin.logging)
-    implementation(libs.slf4j)
+    runtimeOnly(libs.slf4j)
+    runtimeOnly(libs.log4j)
 
     // AWS 
     implementation(libs.aws.secretsmanager)
