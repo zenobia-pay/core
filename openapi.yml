@@ -899,6 +899,9 @@ paths:
                   maxLength: 1000
                 merchantLocation:
                   $ref: "#/components/schemas/Location"
+                notificationEmail:
+                  type: string
+                  maxLength: 1000
       responses:
         "200":
           description: "Successful response"

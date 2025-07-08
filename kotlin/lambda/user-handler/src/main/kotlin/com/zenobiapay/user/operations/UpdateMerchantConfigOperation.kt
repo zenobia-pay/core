@@ -44,6 +44,7 @@ class UpdateMerchantConfigOperation @Inject constructor(
             request.merchantDescription,
             request.merchantLocation,
             request.webhookUrl?.toString(),
+            request.notificationEmail,
         )
         return EmptyApiResponse()
     }
