@@ -9,6 +9,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import software.amazon.awssdk.services.cloudwatch.CloudWatchClient
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
 import jakarta.inject.Named
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
+import software.amazon.awssdk.core.interceptor.ExecutionInterceptor
 import software.amazon.awssdk.services.sqs.SqsClient
 
 const val PAGINATION_SECRET = "PAGINATION_SECRET"
@@ -60,8 +62,14 @@ class TransferModule {
     fun provideTransferMetadataQueueUrl(): String = System.getenv("ITEM_METADATA_QUEUE_URL")
 
     @Provides
-    fun provideSqsClient(): SqsClient {
-        return SqsClient.create()
+    fun provideSqsClient(tracingInterceptor: ExecutionInterceptor): SqsClient {
+        return SqsClient.builder()
+            .overrideConfiguration(
+                ClientOverrideConfiguration.builder()
+                    .addExecutionInterceptor(tracingInterceptor)
+                    .build()
+            )
+            .build()
     }
 
     @Provides

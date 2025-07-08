@@ -1,6 +1,7 @@
 package com.zenobiapay.orum
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zenobia.metric.MetricHelper
 import com.zenobiapay.orum.model.OrumCloseExternalAccountResponse
 import com.zenobiapay.orum.model.OrumCreateBusinessRequest
 import com.zenobiapay.orum.model.OrumCreateBusinessResponse
@@ -191,13 +192,15 @@ class OrumWrapper(
     }
 
     private fun <T> getResponseOrThrowException(responseClass: Class<T>, block: () -> Response): T {
-        val response = block()
-        if (response.isSuccessful) {
-            val body = response.body!!.string()
-            logger.debug { "Got Orum response $body" }
-            return objectMapper.readValue(body, responseClass)
+        return MetricHelper.withXray("Orum.$responseClass.simpleName") {
+            val response = block()
+            if (response.isSuccessful) {
+                val body = response.body!!.string()
+                logger.debug { "Got Orum response $body" }
+                return@withXray objectMapper.readValue(body, responseClass)
+            }
+            throw OrumException(response.code, "Failed to get response ${responseClass.simpleName}. Error code ${response.code}, body ${response.body?.string()}")
         }
-        throw OrumException(response.code, "Failed to get response ${responseClass.simpleName}. Error code ${response.code}, body ${response.body?.string()}")
     }
 }
 

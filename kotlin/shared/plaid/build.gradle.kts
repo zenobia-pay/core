@@ -26,6 +26,8 @@ repositories {
 }
 
 dependencies {
+    api(project(":kotlin:shared:metrics"))
+
     api(libs.kotlin.stdlib)
     api(libs.dagger)
     runtimeOnly(libs.dagger.compiler)

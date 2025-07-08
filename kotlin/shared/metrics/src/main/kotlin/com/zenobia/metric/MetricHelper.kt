@@ -6,6 +6,7 @@ import software.amazon.awssdk.services.cloudwatch.model.MetricDatum
 import software.amazon.awssdk.services.cloudwatch.model.StandardUnit
 import jakarta.inject.Inject
 import jakarta.inject.Named
+import com.amazonaws.xray.AWSXRay
 
 const val METRIC_NAMESPACE = "namespace"
 
@@ -38,6 +39,30 @@ class MetricHelper @Inject constructor(private val cloudwatchClient: CloudWatchC
         } catch (e: Exception) {
             putMetric(metricName, 0.0, dimensions)
             throw e
+        }
+    }
+
+    companion object {
+        /**
+         * Executes the provided code block within an AWS X-Ray segment.
+         * This allows for tracing and monitoring of the code execution.
+         *
+         * @param segmentName The name of the X-Ray segment to create
+         * @param block The code block to execute within the X-Ray segment
+         * @return The result of the executed block
+         */
+        fun <T> withXray(segmentName: String, block: () -> T): T {
+            val segment = AWSXRay.beginSegment(segmentName)
+
+            try {
+                return block().also {
+                    AWSXRay.endSegment()
+                }
+            } catch (e: Exception) {
+                segment.addException(e)
+                AWSXRay.endSegment()
+                throw e
+            }
         }
     }
 }

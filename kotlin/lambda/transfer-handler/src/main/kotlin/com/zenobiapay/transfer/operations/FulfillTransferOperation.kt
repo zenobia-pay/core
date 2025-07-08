@@ -210,10 +210,9 @@ class FulfillTransferOperation @Inject constructor(
     }
 
     private fun shouldPreApprove(transferAmount: Int, accessToken: String, bankAccountId: String, transferRequestId: String, sub: String): Boolean {
-        // TODO: RE_ENABLE PLAID SIGNAL
-//        val signalResult = plaidWrapper.getRiskDecision(accessToken, bankAccountId, transferRequestId, transferAmount, sub)
-//        logger.info { "Got signal result $signalResult" }
-//        if (signalResult == SignalResult.DENY) throw DeclinedException()
+        val signalResult = plaidWrapper.getRiskDecision(accessToken, bankAccountId, transferRequestId, transferAmount, sub)
+        logger.info { "Got signal result $signalResult" }
+        if (signalResult == SignalResult.DENY) throw DeclinedException()
 
         try {
             runBlocking {
@@ -228,12 +227,10 @@ class FulfillTransferOperation @Inject constructor(
                 }
             }
         } catch (e: TimeoutCancellationException) {
-//            logger.info { "Failed to fetch available funds for $bankAccountId. Returning signal result $signalResult" }
+            logger.info { "Failed to fetch available funds for $bankAccountId. Returning signal result $signalResult" }
             metricHelper.putMetric("PlaidBalanceGetTimeout", 1.0, mapOf("path" to "/fulfill-transfer"))
         }
-        // TODO: re-enable
-//        return signalResult == SignalResult.ACCEPT
-        return false
+        return signalResult == SignalResult.ACCEPT
     }
 
     private fun transferFunds(
