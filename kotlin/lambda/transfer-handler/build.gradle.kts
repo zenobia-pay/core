@@ -129,9 +129,6 @@ tasks {
         exclude("about_files/**")
         exclude("plugin.properties")
         exclude("plugin.xml")
-        exclude("**/*.kotlin_metadata")
-        exclude("**/*.kotlin_module")
-        exclude("**/*.kotlin_builtins")
         
         // Exclude development tools
         exclude("org/openjdk/tools/**")
