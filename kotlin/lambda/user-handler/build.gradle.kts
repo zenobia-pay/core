@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.aws.dynamodb.enhanced)
     implementation(libs.aws.secretsmanager)
     implementation(libs.aws.cloudwatch)
+    implementation(libs.aws.http.client)
 
     // Auth0
     api(libs.auth0)
@@ -100,6 +101,9 @@ tasks {
         
         // Merge service files to avoid duplication
         mergeServiceFiles()
+        
+        // Preserve service provider configuration files
+        transform(com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer::class.java)
         
         // Exclude unnecessary files
         exclude("META-INF/LICENSE")

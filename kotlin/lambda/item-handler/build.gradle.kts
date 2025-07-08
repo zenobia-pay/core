@@ -51,14 +51,15 @@ dependencies {
     // JSON
     implementation(libs.jackson.core)
 
+    // AWS
+    implementation(libs.aws.secretsmanager)
+    implementation(libs.aws.cloudwatch)
+    implementation(libs.aws.http.client)
+    api(libs.aws.s3)
+
     // Logging
     implementation(libs.kotlin.logging)
     implementation(libs.slf4j)
-
-    // AWS
-    api(libs.aws.secretsmanager)
-    api(libs.aws.cloudwatch)
-    api(libs.aws.s3)
 
     // Testing
     testImplementation(libs.kotlin.test)
@@ -91,6 +92,9 @@ tasks {
         
         // Merge service files to avoid duplication
         mergeServiceFiles()
+        
+        // Preserve service provider configuration files
+        transform(com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer::class.java)
         
         // Exclude unnecessary files
         exclude("META-INF/LICENSE")

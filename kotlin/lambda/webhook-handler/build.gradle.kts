@@ -47,6 +47,7 @@ dependencies {
 
     // AWS
     api(libs.aws.sqs)
+    implementation(libs.aws.http.client)
 
     // JWT verification
     api(libs.auth0.jwt)
@@ -92,6 +93,9 @@ tasks {
         
         // Merge service files to avoid duplication
         mergeServiceFiles()
+        
+        // Preserve service provider configuration files
+        transform(com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer::class.java)
         
         // Exclude unnecessary files
         exclude("META-INF/LICENSE")

@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.aws.cloudwatch)
     api(libs.aws.lambda)
     implementation(libs.aws.s3)
+    implementation(libs.aws.http.client)
     implementation(libs.okhttp)
 
     // Testing
@@ -91,6 +92,9 @@ tasks {
         
         // Merge service files to avoid duplication
         mergeServiceFiles()
+        
+        // Preserve service provider configuration files
+        transform(com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer::class.java)
         
         // Exclude unnecessary files
         exclude("META-INF/LICENSE")

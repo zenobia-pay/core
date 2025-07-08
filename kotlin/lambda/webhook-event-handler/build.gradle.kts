@@ -53,6 +53,9 @@ dependencies {
     // Logging
     implementation(libs.kotlin.logging)
     implementation(libs.slf4j)
+    
+    // AWS
+    implementation(libs.aws.http.client)
 
     // Testing
     testImplementation(libs.kotlin.test)
@@ -85,6 +88,9 @@ tasks {
         
         // Merge service files to avoid duplication
         mergeServiceFiles()
+        
+        // Preserve service provider configuration files
+        transform(com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer::class.java)
         
         // Exclude unnecessary files
         exclude("META-INF/LICENSE")

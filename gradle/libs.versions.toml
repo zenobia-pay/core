@@ -33,6 +33,7 @@ aws-cloudwatch = { module = "software.amazon.awssdk:cloudwatch", version.ref = "
 aws-lambda = { module = "software.amazon.awssdk:lambda", version.ref = "aws" }
 aws-utils = { module = "software.amazon.awssdk:utils", version.ref = "aws" }
 aws-ses = { module = "software.amazon.awssdk:ses", version.ref = "aws" }
+aws-http-client = { module = "software.amazon.awssdk:apache-client", version.ref = "aws" }
 aws-xray = { module = "com.amazonaws:aws-xray-recorder-sdk-core", version = "2.18.2"}
 aws-xray-interceptor = { module = "com.amazonaws:aws-xray-recorder-sdk-aws-sdk-v2", version = "2.18.2"}
 aws-xray-sqs = { module = "com.amazonaws:aws-xray-recorder-sdk-aws-sdk-v2-instrumentor", version = "2.18.2"}

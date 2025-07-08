@@ -66,6 +66,9 @@ dependencies {
     implementation(libs.aws.secretsmanager)
     implementation(libs.aws.cloudwatch)
     api(libs.aws.sqs)
+    
+    // AWS HTTP Client implementation
+    implementation(libs.aws.http.client)
 
     // Plaid
     implementation(libs.plaid)
@@ -111,6 +114,9 @@ tasks {
         
         // Merge service files to avoid duplication
         mergeServiceFiles()
+        
+        // Preserve service provider configuration files
+        transform(com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer::class.java)
         
         // Exclude unnecessary files
         exclude("META-INF/maven/**")
