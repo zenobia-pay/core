@@ -29,6 +29,9 @@ Parameters:
   Stage:
     Type: String
     Description: Stage this code is being deployed to (dev, beta, gamma, prod)
+  SenderEmail:
+    Type: String
+    Description: Email address to use as the sender for notification emails
 
 Resources:
   TransferStreamPipe:
@@ -244,6 +247,7 @@ Resources:
           WEBHOOK_KMS_ALIAS: !Ref WebhookSignatureKeyAlias
           WEBSOCKET_SERVICE_ENDPOINT: !Ref WebsocketServiceEndpoint
           STAGE: !Ref Stage
+          SENDER_EMAIL: !Ref SenderEmail
       Policies:
         - CloudWatchPutMetricPolicy: {}
         - AWSSecretsManagerGetSecretValuePolicy:

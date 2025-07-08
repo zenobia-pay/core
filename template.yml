@@ -46,6 +46,10 @@ Parameters:
   ResaleServiceEndpoint:
     Type: String
     Description: Endpoint to resale service that automates reselling.
+  SenderEmail:
+    Type: String
+    Description: Email address to use as the sender for notification emails
+    Default: "notifications@zenobiapay.com"
 
 Resources:
   VpcStack:
@@ -127,6 +131,7 @@ Resources:
         OrumSecretsArn: !Ref OrumSecretsArn
         WebsocketServiceEndpoint: !Ref WebsocketServiceEndpoint
         Stage: !Ref Stage
+        SenderEmail: !Ref SenderEmail
 
   DashboardStack:
     Type: AWS::CloudFormation::Stack

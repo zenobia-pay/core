@@ -33,6 +33,7 @@ dependencies {
     implementation(project(":kotlin:shared:api:model"))
     implementation(project(":kotlin:shared:table"))
     implementation(project(":kotlin:shared:table:transfer"))
+    implementation(project(":kotlin:shared:table:user"))
 
     api(libs.kotlin.stdlib)
     api(libs.lambda.core)
@@ -59,6 +60,7 @@ dependencies {
     api(libs.aws.kms)
     implementation(libs.aws.secretsmanager)
     implementation(libs.aws.cloudwatch)
+    implementation(libs.aws.ses)
 
     // Testing
     testImplementation(libs.kotlin.test)

@@ -5,6 +5,8 @@ import com.zenobiapay.api.generated.model.TransferStatus
 import com.zenobiapay.table.transfer.model.InboundTransferStatus
 import com.zenobiapay.table.transfer.model.TransferItem
 import com.zenobiapay.table.transfer.model.OutboundTransferStatus
+import com.zenobiapay.table.user.dao.UserDao
+import com.zenobiapay.transfertableevent.util.EmailUtil
 import com.zenobiapay.transfertableevent.util.WebhookUtil
 import com.zenobiapay.transfertableevent.util.WebsocketUtil
 import com.zenobiapay.webhook.util.isValidWebhook
@@ -17,6 +19,8 @@ class TransferTableEventLogic @Inject constructor(
     private val webhookUtil: WebhookUtil,
     private val websocketUtil: WebsocketUtil,
     private val metricsHelper: MetricHelper,
+    private val userDao: UserDao,
+    private val emailUtil: EmailUtil,
 ) {
     fun handleRecord(oldImage: TransferItem?, newImage: TransferItem?) {
         val hasOldImage = oldImage != null
@@ -41,12 +45,13 @@ class TransferTableEventLogic @Inject constructor(
             return
         }
         logger.info { "Sending status $status for requestId $requestId" }
+        val merchantId = newItem.data!!.merchant!!.id
         var isWebhookStatusSuccessful = true
         if (webhookUrl != null) {
             if (isValidWebhook(webhookUrl)) {
                 val response = webhookUtil.sendTransferStatus(
                     webhookUrl,
-                    newItem.data?.merchant?.id!!,
+                    merchantId,
                     newItem.requestId,
                     status,
                     newItem.amount!!
@@ -64,7 +69,7 @@ class TransferTableEventLogic @Inject constructor(
         // Note: webhook needs to send before websocket to ensure merchant backend is notified first.
         websocketUtil.sendWebsocketUpdate(
             newItem.requestId,
-            newItem.data?.merchant!!.id,
+            merchantId,
             status,
             newItem.data?.customer!!.name,
         )
@@ -72,6 +77,18 @@ class TransferTableEventLogic @Inject constructor(
         if (!isWebhookStatusSuccessful) {
             metricsHelper.putMetric("WebhookSendFailure", 1.0)
             throw Exception("Failed to send webhook status.")
+        }
+
+        val merchantItem = userDao.getUserItem(newItem.data?.merchant!!.id)
+        merchantItem?.data?.merchantData?.notificationEmail?.let {
+            logger.info { "Got notification email $it. Sending email"}
+            emailUtil.sendEmail(
+                it,
+                merchantItem.data!!.merchantData!!.displayName!!,
+                newItem.data!!.customer!!.name!!,
+                newItem.requestId,
+                newItem.outboundStatus,
+            )
         }
     }
 
