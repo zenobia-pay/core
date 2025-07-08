@@ -40,6 +40,7 @@ dependencies {
     implementation(project(":kotlin:shared:table:user"))
 
     api(libs.kotlin.stdlib)
+    api(libs.kotlin.reflect)
     api(libs.kotlin.coroutines)
     api(libs.lambda.core)
     api(libs.lambda.events)
@@ -67,7 +68,6 @@ dependencies {
     implementation(libs.aws.cloudwatch)
     api(libs.aws.sqs)
     
-    // AWS HTTP Client implementation
     implementation(libs.aws.http.client)
 
     // Plaid
@@ -102,6 +102,14 @@ tasks {
         
         // Enable minimization to remove unused classes
         minimize {
+            // Exclude AWS HTTP client classes from minimization
+            exclude(dependency("software.amazon.awssdk:apache-client:.*"))
+            // Exclude Kotlin reflection classes from minimization
+            exclude(dependency("org.jetbrains.kotlin:kotlin-reflect:.*"))
+            // Exclude Jackson Kotlin module classes from minimization
+            exclude(dependency("com.fasterxml.jackson.module:jackson-module-kotlin:.*"))
+            // Exclude DynamoDB enhanced client classes from minimization
+            exclude(dependency("software.amazon.awssdk:dynamodb-enhanced:.*"))
             // Exclude these classes from minimization as they might be loaded via reflection
             exclude(dependency("com.google.dagger:dagger:.*"))
             exclude(dependency("org.jetbrains.kotlin:kotlin-stdlib:.*"))

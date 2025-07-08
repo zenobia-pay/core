@@ -34,20 +34,20 @@ dependencies {
     implementation(project(":kotlin:shared:table:rds"))
 
     api(libs.kotlin.stdlib)
+    api(libs.kotlin.reflect)
     api(libs.lambda.core)
     api(libs.lambda.events)
 
     // Json processing
     runtimeOnly(libs.jackson.databind)
     runtimeOnly(libs.jackson.kotlin)
+    runtimeOnly(libs.jackson.core)
+    runtimeOnly(libs.postgresql)
 
     // Injection
     api(libs.dagger)
     ksp(libs.dagger.compiler)
     api(libs.jakarta.inject)
-
-    // JSON
-    runtimeOnly(libs.jackson.core)
 
     // Logging
     implementation(libs.kotlin.logging)
@@ -88,7 +88,18 @@ tasks {
         archiveVersion.set("")
         
         // Enable minimization to remove unused classes
-        minimize()
+        minimize {
+            // Exclude AWS HTTP client classes from minimization
+            exclude(dependency("software.amazon.awssdk:apache-client:.*"))
+            // Exclude Kotlin reflection classes from minimization
+            exclude(dependency("org.jetbrains.kotlin:kotlin-reflect:.*"))
+            // Exclude Jackson Kotlin module classes from minimization
+            exclude(dependency("com.fasterxml.jackson.module:jackson-module-kotlin:.*"))
+            // Exclude DynamoDB enhanced client classes from minimization
+            exclude(dependency("software.amazon.awssdk:dynamodb-enhanced:.*"))
+            // Exclude PostgreSQL JDBC driver from minimization
+            exclude(dependency("org.postgresql:postgresql:.*"))
+        }
         
         // Merge service files to avoid duplication
         mergeServiceFiles()

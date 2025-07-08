@@ -244,6 +244,7 @@ Resources:
       CodeUri: ../kotlin/lambda/transfer-event-handler/build/libs/lambda.jar
       Environment:
         Variables:
+          USER_TABLE_NAME: !Ref UserTableName
           WEBHOOK_KMS_ALIAS: !Ref WebhookSignatureKeyAlias
           WEBSOCKET_SERVICE_ENDPOINT: !Ref WebsocketServiceEndpoint
           STAGE: !Ref Stage

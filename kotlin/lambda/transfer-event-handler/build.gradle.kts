@@ -36,6 +36,7 @@ dependencies {
     implementation(project(":kotlin:shared:table:user"))
 
     api(libs.kotlin.stdlib)
+    api(libs.kotlin.reflect)
     api(libs.lambda.core)
     api(libs.lambda.events)
 
@@ -90,7 +91,16 @@ tasks {
         archiveVersion.set("")
         
         // Enable minimization to remove unused classes
-        minimize()
+        minimize {
+            // Exclude AWS HTTP client classes from minimization
+            exclude(dependency("software.amazon.awssdk:apache-client:.*"))
+            // Exclude Kotlin reflection classes from minimization
+            exclude(dependency("org.jetbrains.kotlin:kotlin-reflect:.*"))
+            // Exclude Jackson Kotlin module classes from minimization
+            exclude(dependency("com.fasterxml.jackson.module:jackson-module-kotlin:.*"))
+            // Exclude DynamoDB enhanced client classes from minimization
+            exclude(dependency("software.amazon.awssdk:dynamodb-enhanced:.*"))
+        }
         
         // Merge service files to avoid duplication
         mergeServiceFiles()
@@ -111,7 +121,7 @@ tasks {
         exclude("com/google/googlejavaformat/**")
         
         manifest {
-            attributes(mapOf("Main-Class" to "com.zenobiapay.user.handlers.UserHandler"))
+            attributes(mapOf("Main-Class" to "com.zenobiapay.transfertableevent.handlers.TransferTableEventHandler"))
         }
     }
     
