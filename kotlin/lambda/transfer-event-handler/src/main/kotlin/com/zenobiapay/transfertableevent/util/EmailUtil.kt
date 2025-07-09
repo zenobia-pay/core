@@ -77,10 +77,11 @@ class EmailUtil @Inject constructor(
     }
 
     private fun getSubjectLine(status: ApiTransferStatus): String? {
+        val sandboxPrefix = if (!isProd) "Sandbox " else ""
         return when (status) {
-            ApiTransferStatus.SETTLED -> "Payment Settled"
-            ApiTransferStatus.PAID -> "Payment Complete"
-            ApiTransferStatus.FAILED -> "Payment Failed"
+            ApiTransferStatus.SETTLED -> "${sandboxPrefix}Payment Settled"
+            ApiTransferStatus.PAID -> "${sandboxPrefix}Payment Complete"
+            ApiTransferStatus.FAILED -> "${sandboxPrefix}Payment Failed"
             else -> null
         }
     }
