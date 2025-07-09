@@ -30,10 +30,12 @@ import com.plaid.client.model.WebhookVerificationKeyGetRequest
 import com.plaid.client.model.WebhookVerificationKeyGetResponse
 import com.plaid.client.request.PlaidApi
 import com.zenobia.metric.MetricHelper
+import com.zenobiapay.plaid.di.IS_PLAID_SANDBOX
 import com.zenobiapay.plaid.model.SignalResult
 import io.github.oshai.kotlinlogging.KotlinLogging
 import retrofit2.Response
 import jakarta.inject.Inject
+import jakarta.inject.Named
 import kotlin.math.floor
 
 private val logger = KotlinLogging.logger {}
@@ -41,7 +43,11 @@ private val logger = KotlinLogging.logger {}
 open class PlaidException(message: String) : Exception(message)
 class PlaidBankAccountNotFoundException(): PlaidException("Could not find bank account")
 
-class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
+class PlaidWrapper @Inject constructor(
+    private val plaidApi: PlaidApi,
+    @Named(IS_PLAID_SANDBOX)
+    private val isPlaidSandbox: Boolean,
+) {
     fun createLinkToken(userId: String, webhookUrl: String, product: List<Products>): LinkTokenCreateResponse {
         val user = LinkTokenCreateRequestUser()
             .clientUserId(userId)
@@ -149,6 +155,10 @@ class PlaidWrapper @Inject constructor(private val plaidApi: PlaidApi) {
     }
 
     fun getRiskDecision(accessToken: String, accountId: String, requestId: String, amount: Int, userId: String): SignalResult {
+        if (isPlaidSandbox) {
+            logger.info { "In sandbox. Return ACCEPT." }
+            return SignalResult.ACCEPT
+        }
         val request = SignalEvaluateRequest()
             .accessToken(accessToken)
             .accountId(accountId)
