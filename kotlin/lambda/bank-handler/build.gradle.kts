@@ -108,6 +108,13 @@ tasks {
             exclude(dependency("org.apache.logging.log4j:log4j-core:.*"))
             exclude(dependency("org.apache.logging.log4j:log4j-slf4j2-impl:.*"))
             exclude(dependency("org.slf4j:slf4j-api:.*"))
+            // Exclude BouncyCastle classes from minimization
+            exclude(dependency("org.bouncycastle:bcprov-jdk15on:.*"))
+            exclude(dependency("org.bouncycastle:bcpkix-jdk15on:.*"))
+            exclude(dependency("org.bouncycastle:bcutil-jdk15on:.*"))
+            exclude(dependency("org.bouncycastle:bcprov-jdk18on:.*"))
+            exclude(dependency("org.bouncycastle:bcpkix-jdk18on:.*"))
+            exclude(dependency("org.bouncycastle:bcutil-jdk18on:.*"))
         }
         
         // Merge service files to avoid duplication
