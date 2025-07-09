@@ -1051,6 +1051,8 @@ Resources:
                             type: string
                           merchantLocation:
                             $ref: "#/components/schemas/Location"
+                          notificationEmail:
+                            type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
