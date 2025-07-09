@@ -683,6 +683,8 @@ paths:
                       $ref: "#/components/schemas/StatementItem"
                   statusMessage:
                     type: string
+                  customerName:
+                    type: string
         "400":
           $ref: "#/components/responses/BadRequest"
         "403":
@@ -782,6 +784,8 @@ paths:
                         status:
                           type: string
                         transferRequestId:
+                          type: string
+                        customerName:
                           type: string
         "400":
           $ref: "#/components/responses/BadRequest"
