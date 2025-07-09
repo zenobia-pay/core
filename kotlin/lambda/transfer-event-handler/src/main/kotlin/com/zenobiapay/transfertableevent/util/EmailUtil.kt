@@ -1,7 +1,7 @@
 package com.zenobiapay.transfertableevent.util
 
-import com.zenobiapay.table.transfer.model.OutboundTransferStatus
 import com.zenobiapay.transfertableevent.di.SENDER_EMAIL
+import com.zenobiapay.transfertableevent.di.IS_PROD
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
 import jakarta.inject.Named
@@ -14,7 +14,8 @@ private val logger = KotlinLogging.logger {}
 
 class EmailUtil @Inject constructor(
     private val sesClient: SesClient,
-    @Named(SENDER_EMAIL) private val senderEmail: String
+    @Named(SENDER_EMAIL) private val senderEmail: String,
+    @Named(IS_PROD) private val isProd: Boolean
 ) {
     /**
      * Sends a formatted email notification about a transfer status change
@@ -49,11 +50,14 @@ class EmailUtil @Inject constructor(
                 return
             }
             
-            val subject = "Payment $statusText - Transfer ID: $requestId"
-            val htmlBody = buildEmailBody(merchantName, customerName, requestId, status)
+            val subject = getSubjectLine(status)
+            val htmlBody = buildEmailBody(merchantName, customerName, requestId, status, isProd)
             
+            // Format the source with a friendly name: "Zenobia Pay <email@example.com>"
+            val senderName = if (isProd) "Zenobia Pay" else "Sandbox Zenobia Pay"
+            val formattedSource = "$senderName <$senderEmail>"
             val request = SendEmailRequest.builder()
-                .source(senderEmail)
+                .source(formattedSource)
                 .destination(Destination.builder().toAddresses(recipientEmail).build())
                 .message(Message.builder()
                     .subject(Content.builder().data(subject).charset("UTF-8").build())
@@ -71,6 +75,15 @@ class EmailUtil @Inject constructor(
             // So we just log the error and continue
         }
     }
+
+    private fun getSubjectLine(status: ApiTransferStatus): String? {
+        return when (status) {
+            ApiTransferStatus.COMPLETED -> "Payment Settled"
+            ApiTransferStatus.IN_FLIGHT -> "New Payment Approved"
+            ApiTransferStatus.FAILED -> "Payment Failed"
+            else -> null
+        }
+    }
     
     private fun getStatusText(status: ApiTransferStatus): String? {
         return when (status) {
@@ -85,7 +98,8 @@ class EmailUtil @Inject constructor(
         merchantName: String,
         customerName: String,
         requestId: String,
-        status: ApiTransferStatus
+        status: ApiTransferStatus,
+        isProd: Boolean,
     ): String {
         val statusColor = when (status) {
             ApiTransferStatus.COMPLETED -> "#28a745" // Green
@@ -100,6 +114,19 @@ class EmailUtil @Inject constructor(
             ApiTransferStatus.IN_FLIGHT -> "The payment is approved. Funds are in flight to your checking account."
             ApiTransferStatus.FAILED -> "The payment has been rejected. Ensure the customer has enough funds and has a bank account in good standing."
             else -> "The payment status has been updated." // Should not happen due to filtering
+        }
+        
+        // Create sandbox warning banner for non-production environments
+        val sandboxWarningBanner = if (!isProd) {
+            """
+            <div style="background-color: #ffebee; border: 3px solid #f44336; color: #b71c1c; padding: 15px; margin: 20px 0; border-radius: 5px; text-align: center;">
+                <h2 style="margin: 0; color: #b71c1c; font-size: 24px;">⚠️ SANDBOX PAYMENT ⚠️</h2>
+                <p style="font-size: 18px; font-weight: bold; margin: 10px 0;">NO REAL MONEY WAS SENT</p>
+                <p style="margin: 0;">This is a test transaction in the sandbox environment.</p>
+            </div>
+            """
+        } else {
+            ""
         }
         
         return """
@@ -124,6 +151,7 @@ class EmailUtil @Inject constructor(
                 <div class="header">
                     <h1>Payment Notification</h1>
                 </div>
+                $sandboxWarningBanner
                 <div class="content">
                     <p>Hello $merchantName,</p>
                     <p>This is a notification about a payment from $customerName.</p>
@@ -152,6 +180,7 @@ class EmailUtil @Inject constructor(
                         <a href="https://dashboard.zenobiapay.com/?tab=transactions&subtab=details&transactionId=${requestId}" style="background-color: #000000; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">View Transfer</a>
                     </div>
                 </div>
+                $sandboxWarningBanner
                 <div class="footer">
                     <p>This is an automated message from Zenobia Pay. Please do not reply to this email.</p>
                     <p>&copy; ${Calendar.getInstance().get(Calendar.YEAR)} Zenobia Pay. All rights reserved.</p>
