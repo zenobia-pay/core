@@ -40,6 +40,16 @@ resource "auth0_client" "zenobia_app" {
     "https://beta-dashboard.zenobiapay.com",
     "http://localhost:3000"
   ]
+  # Disable Username-Password Authentication
+  is_first_party = true
+  oidc_conformant = true
+  jwt_configuration {
+    alg = "RS256"
+  }
+  # Restrict to social connections only (Google OAuth)
+  client_metadata = {
+    disable_username_password_authentication = "true"
+  }
 }
 
 resource "auth0_client_grant" "zenobia_app_client_grant" {
@@ -114,12 +124,107 @@ resource "auth0_trigger_actions" "bind_credentials_exchange_registration" {
   }
 }
 
-output "client_id" {
-  value = auth0_client.zenobia_app.client_id
+# New Auth0 client for admin interface
+resource "auth0_client" "zenobia_admin_app" {
+  name            = "Zenobia Admin"
+  app_type        = "regular_web"
+  logo_uri        = "https://zenobiapay.com/android-chrome-192x192.png"
+  callbacks       = var.ENVIRONMENT == "prod" ? [
+    "https://admin.zenobiapay.com/callback",
+    "https://admin.zenobiapay.com/login",
+    "http://localhost:3001/callback",
+    "http://localhost:3001/login"
+  ] : [
+    "https://beta-admin.zenobiapay.com/callback",
+    "https://beta-admin.zenobiapay.com/login",
+    "http://localhost:3001/callback",
+    "http://localhost:3001/login"
+  ]
+  allowed_logout_urls = var.ENVIRONMENT == "prod" ? [
+    "https://admin.zenobiapay.com",
+    "http://localhost:3001"
+  ] : [
+    "https://beta-admin.zenobiapay.com",
+    "http://localhost:3001"
+  ]
+  jwt_configuration {
+    alg = "RS256"
+  }
+  # Add metadata to identify this as an admin application
+  client_metadata = {
+    role = "ADMIN"
+  }
+  # Enable required grant types for refresh tokens
+  grant_types = [
+    "authorization_code",
+    "implicit",
+    "refresh_token"
+  ]
+  # Enable MFA (2FA) for this application
+  initiate_login_uri = var.ENVIRONMENT == "prod" ? "https://admin.zenobiapay.com/login" : "https://beta-admin.zenobiapay.com/login"
+  refresh_token {
+    rotation_type   = "rotating"
+    expiration_type = "expiring"
+    leeway          = 0
+    token_lifetime  = 2592000 # 30 days
+    idle_token_lifetime = 1296000 # 15 days
+    infinite_token_lifetime = false
+    infinite_idle_token_lifetime = false
+  }
+  # Require MFA
+  organization_usage = "require"
+  oidc_conformant = true
 }
 
-output "api_identifier" {
-  value = auth0_resource_server.zenobia_api.identifier
+resource "auth0_client_grant" "zenobia_admin_app_client_grant" {
+  client_id = auth0_client.zenobia_admin_app.id
+  audience  = "https://admin.zenobiapay.com"
+  scopes    = []
+}
+
+resource "auth0_client_credentials" "zenobia_admin_app_credentials" {
+  client_id = auth0_client.zenobia_admin_app.id
+  authentication_method = "none"
+}
+
+resource "auth0_resource_server" "zenobia_admin_api" {
+  name                 = "Zenobia Admin API"
+  identifier           = "https://admin.zenobiapay.com"
+  signing_alg          = "RS256"
+  token_lifetime       = 36000
+  skip_consent_for_verifiable_first_party_clients = true
+}
+
+resource "auth0_action" "admin_authorization" {
+  name    = "Admin-Authorization"
+  runtime = "node22"
+  deploy  = true
+  supported_triggers {
+    id      = "post-login"
+    version = "v3"
+  }
+  
+  code = file("${path.module}/auth0/actions/admin-authorization.js")
+  
+  dependencies {
+    name    = "auth0"
+    version = "2.44.0"
+  }
+}
+
+resource "auth0_trigger_actions" "bind_admin_authorization" {
+  trigger = "post-login"
+
+  actions {
+    id           = auth0_action.admin_authorization.id
+    display_name = auth0_action.admin_authorization.name
+  }
+  
+  # Keep the existing post-login action
+  actions {
+    id           = auth0_action.user_login_webhook.id
+    display_name = auth0_action.user_login_webhook.name
+  }
 }
 
 resource "auth0_connection" "google_oauth2" {
@@ -138,4 +243,20 @@ resource "auth0_connection_clients" "google_oauth2_clients" {
   count           = var.ENVIRONMENT == "prod" ? 1 : 0
   enabled_clients = [auth0_client.zenobia_app.id]
   connection_id   = auth0_connection.google_oauth2[0].id
+}
+
+output "client_id" {
+  value = auth0_client.zenobia_app.client_id
+}
+
+output "api_identifier" {
+  value = auth0_resource_server.zenobia_api.identifier
+}
+
+output "admin_client_id" {
+  value = auth0_client.zenobia_admin_app.client_id
+}
+
+output "admin_api_identifier" {
+  value = auth0_resource_server.zenobia_admin_api.identifier
 }
