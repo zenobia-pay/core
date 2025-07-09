@@ -155,10 +155,10 @@ class PlaidWrapper @Inject constructor(
     }
 
     fun getRiskDecision(accessToken: String, accountId: String, requestId: String, amount: Int, userId: String): SignalResult {
-        if (isPlaidSandbox) {
-            logger.info { "In sandbox. Return ACCEPT." }
-            return SignalResult.ACCEPT
-        }
+//        if (isPlaidSandbox) {
+//            logger.info { "In sandbox. Return ACCEPT." }
+//            return SignalResult.ACCEPT
+//        }
         val request = SignalEvaluateRequest()
             .accessToken(accessToken)
             .accountId(accountId)
@@ -171,7 +171,8 @@ class PlaidWrapper @Inject constructor(
         val response = getResponseOrThrowException("SignalEvaluate") {
             plaidApi.signalEvaluate(request).execute()
         }
-        return SignalResult.getResult(response.ruleset?.triggeredRuleDetails?.result)
+        logger.info { "Got signal response $response" }
+        return SignalResult.getResult(response.ruleset?.triggeredRuleDetails?.customActionKey)
     }
 
     fun getWebhookVerificationKey(keyId: String): WebhookVerificationKeyGetResponse {
