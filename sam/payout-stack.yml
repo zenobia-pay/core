@@ -270,8 +270,12 @@ Resources:
         - DynamoDBReadPolicy:
             TableName:
               Ref: UserTableName
-        - SESCrudPolicy:
-            IdentityName: !Ref SenderEmail
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: "*"
         - KMSDecryptPolicy:
             KeyId: !Ref UserKeyId
       Events:
