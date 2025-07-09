@@ -267,6 +267,11 @@ Resources:
               Resource: !GetAtt WebhookSignatureKey.Arn
         - SQSSendMessagePolicy:
             QueueName: !GetAtt TransferTableNotificationsHandlerDLQ.QueueName
+        - DynamoDBReadPolicy:
+            TableName:
+              Ref: UserTableName
+        - SESCrudPolicy:
+            IdentityName: !Ref SenderEmail
       Events:
         EventFromRedriveQueue:
           Type: SQS

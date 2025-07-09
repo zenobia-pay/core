@@ -74,21 +74,26 @@ class TransferTableEventLogic @Inject constructor(
             newItem.data?.customer!!.name,
         )
 
+        try {
+            val merchantItem = userDao.getUserItem(newItem.data?.merchant!!.id)
+            merchantItem?.data?.merchantData?.notificationEmail?.let {
+                logger.info { "Got notification email $it. Sending email" }
+                emailUtil.sendEmail(
+                    it,
+                    merchantItem.data!!.merchantData!!.displayName!!,
+                    newItem.data!!.customer!!.name!!,
+                    newItem.requestId,
+                    newItem.outboundStatus,
+                )
+            }
+        } catch (e: Exception) {
+            logger.warn { "Failed to send email. Skipping" }
+            metricsHelper.putMetric("EmailSendFailure", 1.0)
+        }
+
         if (!isWebhookStatusSuccessful) {
             metricsHelper.putMetric("WebhookSendFailure", 1.0)
             throw Exception("Failed to send webhook status.")
-        }
-
-        val merchantItem = userDao.getUserItem(newItem.data?.merchant!!.id)
-        merchantItem?.data?.merchantData?.notificationEmail?.let {
-            logger.info { "Got notification email $it. Sending email"}
-            emailUtil.sendEmail(
-                it,
-                merchantItem.data!!.merchantData!!.displayName!!,
-                newItem.data!!.customer!!.name!!,
-                newItem.requestId,
-                newItem.outboundStatus,
-            )
         }
     }
 
