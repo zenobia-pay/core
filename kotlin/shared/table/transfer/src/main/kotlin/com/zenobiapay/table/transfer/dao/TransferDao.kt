@@ -157,6 +157,7 @@ class TransferDao @Inject constructor(
         transferItem: TransferItem,
         fee: Int?,
         orumPayoutId: String?,
+        payoutTime: Instant,
         version: Int,
     ) {
         val updatedItem = transferItem.copy(
@@ -164,6 +165,7 @@ class TransferDao @Inject constructor(
             data = transferItem.data?.copy(
                 fee = fee,
                 orumPayoutId = orumPayoutId,
+                payoutTime = payoutTime.toString(),
             ),
             version = version,
             ttl = null,

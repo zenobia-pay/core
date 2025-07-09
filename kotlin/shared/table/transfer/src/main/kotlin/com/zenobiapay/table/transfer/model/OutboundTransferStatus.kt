@@ -15,10 +15,10 @@ enum class OutboundTransferStatus {
         return when (this) {
             NOT_STARTED -> ApiTransferStatus.NOT_STARTED
             FULFILL_LOCKED -> ApiTransferStatus.NOT_STARTED
-            IN_FLIGHT_WAITING -> ApiTransferStatus.IN_FLIGHT
-            IN_FLIGHT_APPROVED -> ApiTransferStatus.IN_FLIGHT
-            PAYOUT_LOCKED -> ApiTransferStatus.IN_FLIGHT
-            COMPLETED -> ApiTransferStatus.COMPLETED
+            IN_FLIGHT_WAITING -> ApiTransferStatus.PAID
+            IN_FLIGHT_APPROVED -> ApiTransferStatus.PAID
+            PAYOUT_LOCKED -> ApiTransferStatus.PAID
+            COMPLETED -> ApiTransferStatus.SETTLED
             FAILED -> ApiTransferStatus.FAILED
         }
     }

@@ -38,6 +38,7 @@ class GetMerchantConfigOperation @Inject constructor(
                 .latitude(merchantData?.location?.latitude?.toBigDecimal())
                 .longitude(merchantData?.location?.longitude?.toBigDecimal())
             )
+            .notificationEmail(merchantItem.data.merchantData?.notificationEmail)
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {

@@ -89,8 +89,8 @@ components:
       type: string
       enum:
         - NOT_STARTED
-        - IN_FLIGHT
-        - COMPLETED
+        - PAID
+        - SETTLED
         - FAILED
         - CANCELLED
     StatementItem:
@@ -685,6 +685,12 @@ paths:
                     type: string
                   customerName:
                     type: string
+                  fee:
+                    type: integer
+                  payoutTime:
+                    type: string
+                  creationTime:
+                    type: string
         "400":
           $ref: "#/components/responses/BadRequest"
         "403":
@@ -787,6 +793,12 @@ paths:
                           type: string
                         customerName:
                           type: string
+                        fee:
+                          type: integer
+                        payoutTime:
+                          type: string
+                        creationTime:
+                          type: string
         "400":
           $ref: "#/components/responses/BadRequest"
         "403":
@@ -871,6 +883,8 @@ paths:
                     type: string
                   merchantLocation:
                     $ref: "#/components/schemas/Location"
+                  notificationEmail:
+                    type: string
         "400":
           $ref: "#/components/responses/BadRequest"
         "403":
