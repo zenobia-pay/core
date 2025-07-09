@@ -118,6 +118,7 @@ jobs:
       PLAID_IP_ADDRESSES: ${{ vars.PLAID_IP_ADDRESSES }}
       PLAID_SLACK_WEBHOOK: ${{ vars.PLAID_SLACK_WEBHOOK }}
       RESALE_SERVICE_ENDPOINT: ${{ vars.RESALE_SERVICE_ENDPOINT }}
+      SENDER_EMAIL: ${{ vars.SENDER_EMAIL || 'notifications@zenobiapay.com' }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v3
@@ -173,4 +174,5 @@ jobs:
           ParameterKey=PlaidIpAddresses,ParameterValue=$PLAID_IP_ADDRESSES \
           ParameterKey=PlaidSlackWebhook,ParameterValue=$PLAID_SLACK_WEBHOOK \
           ParameterKey=UniqueIdentifier,ParameterValue='v1' \
-          ParameterKey=ResaleServiceEndpoint,ParameterValue=$RESALE_SERVICE_ENDPOINT
+          ParameterKey=ResaleServiceEndpoint,ParameterValue=$RESALE_SERVICE_ENDPOINT \
+          ParameterKey=SenderEmail,ParameterValue=$SENDER_EMAIL

@@ -14,17 +14,13 @@ import com.zenobiapay.orum.model.OrumCreateTransferRequest
 import com.zenobiapay.orum.model.OrumCreateTransferResponse
 import com.zenobiapay.orum.model.TransferParticipant
 import com.zenobiapay.api.model.exception.ResourceNotFoundException
-import com.zenobiapay.api.model.exception.TransferFailedException
 import com.zenobiapay.api.model.exception.TransferStatusException
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
-import com.zenobiapay.api.model.exception.ConcurrentModificationException
 import com.zenobiapay.api.model.exception.DeclinedException
 import com.zenobiapay.api.model.exception.InsufficientFundsException
 import com.zenobiapay.cryptography.util.isSignatureValid
-import com.zenobiapay.events.model.PutItemMetadataQueueRecord
 import com.zenobiapay.events.model.UpdateItemMetadataQueueRecord
-import com.zenobiapay.orum.util.WaiterFailedException
 import com.zenobiapay.orum.util.generateCustomerOrumId
 import com.zenobiapay.plaid.PlaidWrapper
 import com.zenobiapay.plaid.model.SignalResult
@@ -45,8 +41,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException
 import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneOffset
 import jakarta.inject.Inject
 import jakarta.inject.Named
 import software.amazon.awssdk.services.sqs.SqsClient
@@ -123,7 +117,7 @@ class FulfillTransferOperation @Inject constructor(
         )
         val fulfillRequestId = input.requestContext.requestId
 
-        val shouldPreApprove = shouldPreApprove(transferAmount, customerBankAccountItem.accessToken, bankAccountId, transferRequestId, userId)
+        assertShouldAcceptPayment(transferAmount, customerBankAccountItem.accessToken, bankAccountId, transferRequestId, userId)
 
         transferRequestItem = try {
             transferDao.updateTransferRequestLocked(transferRequestItem)
@@ -145,7 +139,7 @@ class FulfillTransferOperation @Inject constructor(
 
         val statementItems = transferRequestData.statementItems.map { it.toApiStatementItem() }
         transferDao.updateTransferRequestFulfilled(
-            preApproved = shouldPreApprove,
+            preApproved = false, // No preapproval, wait for funds
             transferItem = transferRequestItem,
             fulfillRequestId = fulfillRequestId,
             customerIdentity = creditorId,
@@ -209,7 +203,7 @@ class FulfillTransferOperation @Inject constructor(
         }
     }
 
-    private fun shouldPreApprove(transferAmount: Int, accessToken: String, bankAccountId: String, transferRequestId: String, sub: String): Boolean {
+    private fun assertShouldAcceptPayment(transferAmount: Int, accessToken: String, bankAccountId: String, transferRequestId: String, sub: String) {
         val signalResult = plaidWrapper.getRiskDecision(accessToken, bankAccountId, transferRequestId, transferAmount, sub)
         logger.info { "Got signal result $signalResult" }
         if (signalResult == SignalResult.DENY) throw DeclinedException()
@@ -230,7 +224,7 @@ class FulfillTransferOperation @Inject constructor(
             logger.info { "Failed to fetch available funds for $bankAccountId. Returning signal result $signalResult" }
             metricHelper.putMetric("PlaidBalanceGetTimeout", 1.0, mapOf("path" to "/fulfill-transfer"))
         }
-        return signalResult == SignalResult.ACCEPT
+        if (signalResult == SignalResult.WAIT) throw DeclinedException()
     }
 
     private fun transferFunds(

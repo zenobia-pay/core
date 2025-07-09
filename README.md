@@ -1,6 +1,6 @@
 # ZenobiaPay Backend
 
-A Kotlin-based serverless backend using AWS SAM and DynamoDB.
+A Kotlin-based serverless backend using AWS SAM, DynamoDB, and AWS SES for email notifications. This system handles payment processing, merchant onboarding, and customer notifications through a comprehensive event-driven architecture.
 
 ## Prerequisites
 
@@ -32,18 +32,61 @@ Make sure you have the following installed:
 
 cd `backend/` and run `gradle wrapper` to generate the gradle wrapper files.
 
+## System Architecture
+
+The ZenobiaPay backend is built on a serverless architecture using AWS services and follows event-driven design principles:
+
+### Core Components
+
+1. **Lambda Functions**: Kotlin-based serverless functions that handle specific business logic
+   - User handlers for customer onboarding
+   - Transfer event handlers for payment processing
+   - Notification handlers for email and webhook communications
+
+2. **DynamoDB**: NoSQL database for storing application data
+   - Transfer table with DynamoDB streams for event propagation
+   - User table for merchant and customer information
+
+3. **Event-Driven Processing**:
+   - DynamoDB streams capture table changes
+   - EventBridge pipes route events to appropriate Lambda functions
+   - SQS queues for asynchronous processing and retries
+
+4. **Notification System**:
+   - AWS SES for email notifications to merchants
+   - Webhook system for real-time status updates
+   - JWT signing for secure webhook payloads
+
+### Deployment Infrastructure
+
+- **AWS SAM**: Infrastructure as Code for AWS resources
+- **GitHub Actions**: CI/CD pipeline for automated deployments
+- **Terraform**: Additional infrastructure management for specific resources
+
 ## Project Structure
 
 ```
-backend/
-├── src/main/kotlin/com/zenobiapay/
-│   ├── handlers/           # Lambda function handlers
-│   └── model/             # Data models
-├── build.gradle.kts       # Gradle build configuration
-├── template.yaml          # SAM template
-├── docker-compose.yaml    # Local DynamoDB configuration
-├── build.sh              # Build and run script
-└── dev.sh               # Development script with auto-reload
+core/
+├── kotlin/                           # Kotlin source code
+│   ├── lambda/                       # Lambda function implementations
+│   │   ├── payout-handler/           # Payout processing logic
+│   │   ├── transfer-event-handler/   # Transfer event processing
+│   │   │   ├── src/main/kotlin/com/zenobiapay/transfertableevent/
+│   │   │   │   ├── di/               # Dependency injection modules
+│   │   │   │   ├── handlers/         # Lambda function handlers
+│   │   │   │   ├── logic/            # Business logic implementation
+│   │   │   │   └── util/             # Utility classes (including EmailUtil)
+│   │   │   └── build.gradle.kts      # Module-specific dependencies
+│   └── common/                       # Shared Kotlin code
+├── gradle/
+│   └── libs.versions.toml           # Centralized dependency version management
+├── sam/                              # SAM template files
+│   ├── lambda-stack.yml             # Lambda function definitions
+│   └── payout-stack.yml             # Payout infrastructure stack
+├── .github/workflows/               # GitHub Actions workflows
+│   └── deploy-infra.yml             # Deployment automation
+├── template.yml                     # Main SAM template
+└── build.gradle.kts                 # Root Gradle build file
 ```
 
 ## Getting Started
@@ -126,11 +169,58 @@ This will:
 
 ## Development Notes
 
-- The project uses Kotlin with AWS Lambda functions
-- DynamoDB is used for data storage
-- Local development uses DynamoDB Local for testing
-- Auto-reload is enabled during development
-- CORS is configured for all endpoints
+### Dependency Management
+
+The project uses Gradle with Kotlin DSL for build configuration and dependency management:
+
+- **libs.versions.toml**: Centralized version catalog located in `gradle/libs.versions.toml`
+  - Defines all dependency versions in a single place
+  - Provides version aliases that can be referenced in build.gradle.kts files
+  - Example: `aws-ses = { module = "software.amazon.awssdk:ses", version.ref = "aws" }`
+
+- **Module-specific build files**: Each Lambda module has its own build.gradle.kts
+  - References dependencies from the central catalog using the `libs` accessor
+  - Example: `implementation(libs.aws.ses)` to include AWS SES
+
+### CI/CD Pipeline
+
+The project uses GitHub Actions for continuous integration and deployment:
+
+- **deploy-infra.yml**: Main workflow file in `.github/workflows/`
+  - Triggered on pushes to `beta` and `prod` branches
+  - Builds Kotlin, Go, and Node.js artifacts
+  - Deploys infrastructure using AWS SAM
+  - Passes environment variables to deployed services
+
+- **Environment Variables**:
+  - Stored as GitHub repository variables and secrets
+  - Passed to SAM templates during deployment
+  - Example: `SENDER_EMAIL` for notification sender address
+
+### SAM Deployment Architecture
+
+- **template.yml**: Main SAM template that defines:
+  - Parameters that can be passed during deployment
+  - Nested stacks for different components
+  - Resource permissions and configurations
+
+- **Nested Stacks**:
+  - **payout-stack.yml**: Handles payout processing and notifications
+  - **lambda-stack.yml**: Defines API Gateway and Lambda functions
+
+### Email Notification System
+
+The system includes an email notification feature using AWS SES:
+
+- **EmailUtil.kt**: Utility class for sending formatted emails
+  - Uses AWS SES for email delivery
+  - Supports HTML-formatted emails with dynamic content
+  - Sends notifications for specific transfer status changes
+
+- **Configuration**:
+  - Sender email is configured via environment variable `SENDER_EMAIL`
+  - Email templates are defined in the code with status-specific formatting
+  - Integration with TransferTableEventLogic for automatic notifications
 
 ## Troubleshooting
 

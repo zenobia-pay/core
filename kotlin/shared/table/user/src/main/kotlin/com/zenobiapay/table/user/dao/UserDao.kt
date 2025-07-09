@@ -165,7 +165,8 @@ class UserDao @Inject constructor(
         merchantId: String,
         merchantDescription: String?,
         merchantLocation: ApiLocation?,
-        webhookUrl: String?
+        webhookUrl: String?,
+        notificationEmail: String?
     ) {
         val currentMerchantItem = getUserItem(merchantId) ?: throw InvalidRequestException("User has not submitted onboarding")
         val merchantData = currentMerchantItem.data.merchantData
@@ -181,7 +182,8 @@ class UserDao @Inject constructor(
                     description = merchantDescription ?: merchantData?.description,
                     location = location ?: merchantData?.location,
                     bankAccountId = merchantData?.bankAccountId,
-                    webhookUrl = webhookUrl ?: merchantData?.webhookUrl
+                    webhookUrl = webhookUrl ?: merchantData?.webhookUrl,
+                    notificationEmail = notificationEmail ?: merchantData?.notificationEmail
                 ),
             )
         )

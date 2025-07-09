@@ -29,6 +29,9 @@ Parameters:
   Stage:
     Type: String
     Description: Stage this code is being deployed to (dev, beta, gamma, prod)
+  SenderEmail:
+    Type: String
+    Description: Email address to use as the sender for notification emails
 
 Resources:
   TransferStreamPipe:
@@ -241,9 +244,11 @@ Resources:
       CodeUri: ../kotlin/lambda/transfer-event-handler/build/libs/lambda.jar
       Environment:
         Variables:
+          USER_TABLE_NAME: !Ref UserTableName
           WEBHOOK_KMS_ALIAS: !Ref WebhookSignatureKeyAlias
           WEBSOCKET_SERVICE_ENDPOINT: !Ref WebsocketServiceEndpoint
           STAGE: !Ref Stage
+          SENDER_EMAIL: !Ref SenderEmail
       Policies:
         - CloudWatchPutMetricPolicy: {}
         - AWSSecretsManagerGetSecretValuePolicy:
@@ -262,6 +267,17 @@ Resources:
               Resource: !GetAtt WebhookSignatureKey.Arn
         - SQSSendMessagePolicy:
             QueueName: !GetAtt TransferTableNotificationsHandlerDLQ.QueueName
+        - DynamoDBReadPolicy:
+            TableName:
+              Ref: UserTableName
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: "*"
+        - KMSDecryptPolicy:
+            KeyId: !Ref UserKeyId
       Events:
         EventFromRedriveQueue:
           Type: SQS

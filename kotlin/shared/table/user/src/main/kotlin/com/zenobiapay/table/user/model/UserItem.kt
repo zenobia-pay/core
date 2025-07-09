@@ -70,7 +70,8 @@ data class MerchantData(
     var description: String? = null,
     var location: Location? = null,
     var bankAccountId: String? = null,
-    var webhookUrl: String? = null
+    var webhookUrl: String? = null,
+    var notificationEmail: String? = null
 )
 
 @DynamoDbBean

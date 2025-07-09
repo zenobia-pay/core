@@ -10,11 +10,13 @@ import software.amazon.awssdk.services.cloudwatch.CloudWatchClient
 import software.amazon.awssdk.services.kms.KmsClient
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
 import jakarta.inject.Named
+import software.amazon.awssdk.services.ses.SesClient
 
 const val WEBHOOK_KMS_ALIAS = "WEBHOOK_KMS_ALIAS"
 const val TRANSFER_STATUS_NOTIFICATION_SECRET = "TRANSFER_STATUS_NOTIFICATION_SECRET"
 const val WEBSOCKET_SERVICE_ENDPOINT = "WEBSOCKET_SERVICE_ENDPOINT"
 const val IS_PROD = "IS_PROD"
+const val SENDER_EMAIL = "SENDER_EMAIL"
 
 private val logger = KotlinLogging.logger {}
 
@@ -68,5 +70,17 @@ class TransferTableEventModule {
     fun provideCloudwatchClient(): CloudWatchClient {
         return CloudWatchClient.builder()
             .build()
+    }
+
+    @Provides
+    fun provideSesClient(): SesClient {
+        return SesClient.builder()
+            .build()
+    }
+
+    @Provides
+    @Named(SENDER_EMAIL)
+    fun provideSenderEmail(): String {
+        return System.getenv("SENDER_EMAIL")
     }
 }

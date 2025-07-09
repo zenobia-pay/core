@@ -859,6 +859,8 @@ Resources:
                               $ref: "#/components/schemas/StatementItem"
                           statusMessage:
                             type: string
+                          customerName:
+                            type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -960,6 +962,8 @@ Resources:
                                 status:
                                   type: string
                                 transferRequestId:
+                                  type: string
+                                customerName:
                                   type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
@@ -1080,6 +1084,9 @@ Resources:
                           maxLength: 1000
                         merchantLocation:
                           $ref: "#/components/schemas/Location"
+                        notificationEmail:
+                          type: string
+                          maxLength: 1000
               responses:
                 "200":
                   description: "Successful response"

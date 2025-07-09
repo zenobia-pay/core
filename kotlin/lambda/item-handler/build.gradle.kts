@@ -36,14 +36,16 @@ dependencies {
     implementation(project(":kotlin:shared:table:rds"))
 
     api(libs.kotlin.stdlib)
+    api(libs.kotlin.reflect)
     api(libs.lambda.core)
     api(libs.lambda.events)
 
-    // Json processing
-    api(libs.jackson.databind)
-    implementation(libs.jackson.kotlin)
+    runtimeOnly(libs.jackson.core)
+    runtimeOnly(libs.jackson.databind)
+    runtimeOnly(libs.jackson.kotlin)
+    runtimeOnly(libs.postgresql)
 
-    // Injection
+    // Injection - Dagger needs to be api for generated code to work
     api(libs.dagger)
     ksp(libs.dagger.compiler)
     api(libs.jakarta.inject)
@@ -51,14 +53,15 @@ dependencies {
     // JSON
     implementation(libs.jackson.core)
 
+    // AWS
+    implementation(libs.aws.secretsmanager)
+    implementation(libs.aws.cloudwatch)
+    implementation(libs.aws.http.client)
+    api(libs.aws.s3)
+
     // Logging
     implementation(libs.kotlin.logging)
     implementation(libs.slf4j)
-
-    // AWS
-    api(libs.aws.secretsmanager)
-    api(libs.aws.cloudwatch)
-    api(libs.aws.s3)
 
     // Testing
     testImplementation(libs.kotlin.test)
@@ -85,14 +88,67 @@ tasks {
         archiveBaseName.set("lambda")
         archiveClassifier.set("")
         archiveVersion.set("")
+        
+        // Enable minimization to remove unused classes
+        minimize {
+            // Exclude AWS HTTP client classes from minimization
+            exclude(dependency("software.amazon.awssdk:apache-client:.*"))
+            // Exclude Kotlin reflection classes from minimization
+            exclude(dependency("org.jetbrains.kotlin:kotlin-reflect:.*"))
+            // Exclude Jackson Kotlin module classes from minimization
+            exclude(dependency("com.fasterxml.jackson.module:jackson-module-kotlin:.*"))
+            // Exclude DynamoDB enhanced client classes from minimization
+            exclude(dependency("software.amazon.awssdk:dynamodb-enhanced:.*"))
+            // Exclude PostgreSQL JDBC driver from minimization
+            exclude(dependency("org.postgresql:postgresql:.*"))
+            // Exclude Log4j and SLF4J classes from minimization
+            exclude(dependency("org.apache.logging.log4j:log4j-core:.*"))
+            exclude(dependency("org.apache.logging.log4j:log4j-slf4j2-impl:.*"))
+            exclude(dependency("org.slf4j:slf4j-api:.*"))
+        }
+        
+        // Merge service files to avoid duplication
+        mergeServiceFiles()
+        
+        // Preserve service provider configuration files
+        transform(com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer::class.java)
+        
+        // Exclude unnecessary files
+        exclude("META-INF/LICENSE")
+        exclude("META-INF/NOTICE")
+        exclude("META-INF/*.SF")
+        exclude("META-INF/*.DSA")
+        exclude("META-INF/*.RSA")
+        exclude("mozilla/public-suffix-list.txt")
+        
+        // Exclude development tools that should not be in runtime
+        exclude("org/openjdk/tools/**")
+        exclude("com/google/googlejavaformat/**")
+        
         manifest {
             attributes(mapOf("Main-Class" to "com.zenobiapay.user.handlers.UserHandler"))
         }
     }
+    
     jar {
         enabled = false
     }
+    
     build {
         dependsOn(shadowJar)
+    }
+    
+    // Add JAR analysis task
+    register("analyzeJar") {
+        dependsOn("shadowJar")
+        doLast {
+            val jarFile = shadowJar.get().archiveFile.get().asFile
+            println("JAR size: ${jarFile.length() / (1024 * 1024)} MB")
+            
+            // Print largest files in JAR
+            exec {
+                commandLine("sh", "-c", "unzip -l ${jarFile.absolutePath} | sort -k1,1nr | head -20")
+            }
+        }
     }
 }
