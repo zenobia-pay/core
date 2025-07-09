@@ -24,9 +24,9 @@ enum class InboundTransferStatus(val order: Int) {
     fun toApiTransferStatus(): ApiTransferStatus {
         return when (this) {
             NOT_STARTED -> ApiTransferStatus.NOT_STARTED
-            IN_FLIGHT -> ApiTransferStatus.IN_FLIGHT
-            COMPLETED -> ApiTransferStatus.IN_FLIGHT
-            SETTLED -> ApiTransferStatus.COMPLETED
+            IN_FLIGHT -> ApiTransferStatus.PAID
+            COMPLETED -> ApiTransferStatus.PAID
+            SETTLED -> ApiTransferStatus.SETTLED
             FAILED -> ApiTransferStatus.FAILED
         }
     }

@@ -36,7 +36,7 @@ class TransferTableEventLogicTest {
         )
 
         verify {
-            websocketUtil.sendWebsocketUpdate(any(), any(), TransferStatus.COMPLETED, any())
+            websocketUtil.sendWebsocketUpdate(any(), any(), TransferStatus.SETTLED, any())
         }
     }
 
@@ -52,7 +52,7 @@ class TransferTableEventLogicTest {
         )
 
         verify {
-            websocketUtil.sendWebsocketUpdate(any(), any(), TransferStatus.IN_FLIGHT, any())
+            websocketUtil.sendWebsocketUpdate(any(), any(), TransferStatus.PAID, any())
         }
     }
 

@@ -251,8 +251,8 @@ Resources:
               type: string
               enum:
                 - NOT_STARTED
-                - IN_FLIGHT
-                - COMPLETED
+                - PAID
+                - SETTLED
                 - FAILED
                 - CANCELLED
             StatementItem:

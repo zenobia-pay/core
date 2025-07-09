@@ -34,8 +34,8 @@ class EmailUtil @Inject constructor(
         status: ApiTransferStatus
     ) {
         // Only send emails for specific statuses
-        if (status != ApiTransferStatus.COMPLETED &&
-            status != ApiTransferStatus.IN_FLIGHT &&
+        if (status != ApiTransferStatus.SETTLED &&
+            status != ApiTransferStatus.PAID &&
             status != ApiTransferStatus.FAILED) {
             logger.info { "Skipping email for status $status as it's not configured for email notifications" }
             return
@@ -78,8 +78,8 @@ class EmailUtil @Inject constructor(
 
     private fun getSubjectLine(status: ApiTransferStatus): String? {
         return when (status) {
-            ApiTransferStatus.COMPLETED -> "Payment Settled"
-            ApiTransferStatus.IN_FLIGHT -> "New Payment Approved"
+            ApiTransferStatus.SETTLED -> "Payment Settled"
+            ApiTransferStatus.PAID -> "Payment Complete"
             ApiTransferStatus.FAILED -> "Payment Failed"
             else -> null
         }
@@ -87,8 +87,8 @@ class EmailUtil @Inject constructor(
     
     private fun getStatusText(status: ApiTransferStatus): String? {
         return when (status) {
-            ApiTransferStatus.COMPLETED -> "Completed"
-            ApiTransferStatus.IN_FLIGHT -> "In Flight"
+            ApiTransferStatus.SETTLED -> "Settled"
+            ApiTransferStatus.PAID -> "Paid"
             ApiTransferStatus.FAILED -> "Failed"
             else -> null
         }
@@ -102,16 +102,16 @@ class EmailUtil @Inject constructor(
         isProd: Boolean,
     ): String {
         val statusColor = when (status) {
-            ApiTransferStatus.COMPLETED -> "#28a745" // Green
-            ApiTransferStatus.IN_FLIGHT -> "#FFC107" // Yellow
+            ApiTransferStatus.SETTLED -> "#28a745" // Green
+            ApiTransferStatus.PAID -> "#FFC107" // Yellow
             ApiTransferStatus.FAILED -> "#dc3545" // Red
             else -> "#6c757d" // Gray (should not happen due to filtering)
         }
         
         val statusText = getStatusText(status)
         val statusMessage = when (status) {
-            ApiTransferStatus.COMPLETED -> "The payment has been completed and funds are available."
-            ApiTransferStatus.IN_FLIGHT -> "The payment is approved. Funds are in flight to your checking account."
+            ApiTransferStatus.SETTLED -> "The payment has been completed and funds are available."
+            ApiTransferStatus.PAID -> "The payment is approved. Funds are in flight to your checking account."
             ApiTransferStatus.FAILED -> "The payment has been rejected. Ensure the customer has enough funds and has a bank account in good standing."
             else -> "The payment status has been updated." // Should not happen due to filtering
         }
