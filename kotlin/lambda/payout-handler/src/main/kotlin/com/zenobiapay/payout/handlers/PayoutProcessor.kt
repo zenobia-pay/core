@@ -24,6 +24,7 @@ import com.zenobiapay.table.user.model.UserType
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.logging.log4j.ThreadContext
 import jakarta.inject.Inject
+import java.time.Instant
 
 private val logger = KotlinLogging.logger {}
 
@@ -126,6 +127,7 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
         val fee = getFee(amount)
         val merchantPayout = amount - fee
         val merchantId = transferItem.data?.merchant?.id!!
+        val payoutTime = Instant.now().also { "Paying out id ${transferItem.requestId} at $it" }
 
         val merchantData = userDao.getUserItem(merchantId)
         assert(merchantData?.userType == UserType.MERCHANT) {
@@ -149,8 +151,7 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
                     destination = TransferParticipant(
                         customerReferenceId = merchantData.data.orumReferenceId!!,
                         accountReferenceId = bankAccountId,
-                        // TODO: make more descriptive display name
-                        statementDisplayName = "Zenobia Pay"
+                        statementDisplayName = "Zenobia Pay: ${transferItem.requestId}"
                     )
                 )
             )
@@ -159,7 +160,13 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
             metricHelper.putMetric("SkipPayout", 1.0, mapOf())
         }
         logger.info { "Payout complete. Marking transfer as paid out." }
-        transferDao.updateTransferPaidOut(transferItem, fee, transferResponse?.transfer?.id, version = transferItem.version!! + 1)
+        transferDao.updateTransferPaidOut(
+            transferItem,
+            fee,
+            transferResponse?.transfer?.id,
+            payoutTime,
+            version = transferItem.version!! + 1
+        )
         metricHelper.putMetric("MerchantPayout", merchantPayout.toDouble(), mapOf())
         metricHelper.putMetric("FeeCollected", fee.toDouble(), mapOf())
         metricHelper.putMetric("TotalPayout", amount.toDouble(), mapOf())

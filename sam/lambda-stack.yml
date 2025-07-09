@@ -861,6 +861,12 @@ Resources:
                             type: string
                           customerName:
                             type: string
+                          fee:
+                            type: integer
+                          payoutTime:
+                            type: string
+                          creationTime:
+                            type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -964,6 +970,12 @@ Resources:
                                 transferRequestId:
                                   type: string
                                 customerName:
+                                  type: string
+                                fee:
+                                  type: integer
+                                payoutTime:
+                                  type: string
+                                creationTime:
                                   type: string
                 "400":
                   $ref: "#/components/responses/BadRequest"

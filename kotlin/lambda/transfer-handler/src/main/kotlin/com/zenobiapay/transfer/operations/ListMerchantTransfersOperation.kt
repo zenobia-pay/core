@@ -41,6 +41,9 @@ class ListMerchantTransfersOperation @Inject constructor(
                     .status(it.inboundStatus.toApiTransferStatus().name)
                     .transferRequestId(it.requestId)
                     .customerName(it.data?.customer?.name)
+                    .fee(it.data?.fee)
+                    .payoutTime(it.data?.payoutTime)
+                    .creationTime(it.data?.creationTime)
             })
             .continuationToken(continuationToken?.encodeToken(objectMapper, paginationSecret))
     }

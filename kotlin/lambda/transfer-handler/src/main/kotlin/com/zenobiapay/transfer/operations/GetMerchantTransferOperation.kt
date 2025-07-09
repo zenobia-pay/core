@@ -33,6 +33,9 @@ class GetMerchantTransferOperation @Inject constructor(
             .statementItems(transferItem.data?.statementItems?.map { it.toApiStatementItem() } ?: listOf())
             .statusMessage(transferItem.data?.statusMessage)
             .customerName(transferItem.data?.customer?.name)
+            .fee(transferItem.data?.fee)
+            .payoutTime(transferItem.data?.payoutTime)
+            .creationTime(transferItem.data?.creationTime)
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {

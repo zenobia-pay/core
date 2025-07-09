@@ -71,6 +71,8 @@ data class TransferData(
     var merchant: PaymentParticipantIdentity? = null,
     var fee: Int? = null,
     var orumPayoutId: String? = null,
+    var payoutTime: String? = null,
+    var statementDisplayName: String? = null,
     var customerBankAccount: BankAccount? = null,
     var statementItems: List<StatementItem> = listOf(),
     var statusMessage: String? = null,
@@ -95,7 +97,9 @@ data class TransferData(
                 customer = customerIdentity,
                 merchant = merchantIdentity,
                 statementItems = map["statementItems"]!!.l.map { StatementItem.fromAttributeValueMap(it.m) },
-                webhookUrl = map["webhookUrl"]?.s
+                webhookUrl = map["webhookUrl"]?.s,
+                payoutTime = map["payoutTime"]?.s,
+                statementDisplayName = map["statementDisplayName"]?.s,
             )
         }
     }
