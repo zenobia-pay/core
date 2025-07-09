@@ -87,7 +87,7 @@ class TransferTableEventLogic @Inject constructor(
                 )
             }
         } catch (e: Exception) {
-            logger.warn { "Failed to send email. Skipping" }
+            logger.error(e) { "Failed to send email. Skipping" }
             metricsHelper.putMetric("EmailSendFailure", 1.0)
         }
 
