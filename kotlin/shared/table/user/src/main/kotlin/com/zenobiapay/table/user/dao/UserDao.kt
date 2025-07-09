@@ -175,6 +175,13 @@ class UserDao @Inject constructor(
         } else {
             null
         }
+        val updatedNotificationEmail = if (notificationEmail == "") {
+            null
+        } else notificationEmail ?: merchantData?.notificationEmail
+        val updatedWebhookUrl = if (webhookUrl == "") {
+            null
+        } else webhookUrl ?: merchantData?.webhookUrl
+
         val updatedMerchantItem = currentMerchantItem.copy(
             data = currentMerchantItem.data.copy(
                 merchantData = MerchantData(
@@ -182,8 +189,8 @@ class UserDao @Inject constructor(
                     description = merchantDescription ?: merchantData?.description,
                     location = location ?: merchantData?.location,
                     bankAccountId = merchantData?.bankAccountId,
-                    webhookUrl = webhookUrl ?: merchantData?.webhookUrl,
-                    notificationEmail = notificationEmail ?: merchantData?.notificationEmail
+                    webhookUrl = updatedWebhookUrl,
+                    notificationEmail = updatedNotificationEmail
                 ),
             )
         )
