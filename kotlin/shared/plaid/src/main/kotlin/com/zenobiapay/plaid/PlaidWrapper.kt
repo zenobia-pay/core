@@ -171,11 +171,8 @@ class PlaidWrapper @Inject constructor(
         val response = getResponseOrThrowException("SignalEvaluate") {
             plaidApi.signalEvaluate(request).execute()
         }
-        logger.info { "Got response $response" }
-        logger.info { "ruleset: ${response.ruleset}" }
-        logger.info { "Triggered rule details: ${response.ruleset?.triggeredRuleDetails}" }
-        logger.info { "Result: ${response.ruleset?.triggeredRuleDetails?.result}" }
-        return SignalResult.getResult(response.ruleset?.triggeredRuleDetails?.result)
+        logger.info { "Got signal response $response" }
+        return SignalResult.getResult(response.ruleset?.triggeredRuleDetails?.customActionKey)
     }
 
     fun getWebhookVerificationKey(keyId: String): WebhookVerificationKeyGetResponse {
