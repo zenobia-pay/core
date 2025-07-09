@@ -41,6 +41,6 @@ class PlaidModule {
     @Provides
     @Named(IS_PLAID_SANDBOX)
     fun isPlaidSandbox(plaidCredentials: PlaidCredentials): Boolean {
-        return plaidCredentials.endpoint == "/production"
+        return plaidCredentials.endpoint != "/production"
     }
 }
