@@ -75,16 +75,18 @@ class TransferTableEventLogic @Inject constructor(
         )
 
         try {
-            val merchantItem = userDao.getUserItem(newItem.data?.merchant!!.id)
-            merchantItem?.data?.merchantData?.notificationEmail?.let {
-                logger.info { "Got notification email $it. Sending email" }
-                emailUtil.sendEmail(
-                    it,
-                    merchantItem.data!!.merchantData!!.displayName!!,
-                    newItem.data!!.customer!!.name!!,
-                    newItem.requestId,
-                    newItem.outboundStatus,
-                )
+            if (newItem.outboundStatus != oldItem.outboundStatus) {
+                val merchantItem = userDao.getUserItem(newItem.data?.merchant!!.id)
+                merchantItem?.data?.merchantData?.notificationEmail?.let {
+                    logger.info { "Got notification email $it. Sending email" }
+                    emailUtil.sendEmail(
+                        it,
+                        merchantItem.data!!.merchantData!!.displayName!!,
+                        newItem.data!!.customer!!.name!!,
+                        newItem.requestId,
+                        newItem.outboundStatus.toApiTransferStatus(),
+                    )
+                }
             }
         } catch (e: Exception) {
             logger.error(e) { "Failed to send email. Skipping" }

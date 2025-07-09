@@ -6,6 +6,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
 import jakarta.inject.Named
 import software.amazon.awssdk.services.ses.SesClient
+import com.zenobiapay.api.generated.model.TransferStatus as ApiTransferStatus
 import software.amazon.awssdk.services.ses.model.*
 import java.util.*
 
@@ -29,13 +30,12 @@ class EmailUtil @Inject constructor(
         merchantName: String,
         customerName: String,
         requestId: String,
-        status: OutboundTransferStatus
+        status: ApiTransferStatus
     ) {
         // Only send emails for specific statuses
-        if (status != OutboundTransferStatus.IN_FLIGHT_WAITING && 
-            status != OutboundTransferStatus.IN_FLIGHT_APPROVED && 
-            status != OutboundTransferStatus.COMPLETED &&
-            status != OutboundTransferStatus.FAILED) {
+        if (status != ApiTransferStatus.COMPLETED &&
+            status != ApiTransferStatus.IN_FLIGHT &&
+            status != ApiTransferStatus.FAILED) {
             logger.info { "Skipping email for status $status as it's not configured for email notifications" }
             return
         }
@@ -72,12 +72,11 @@ class EmailUtil @Inject constructor(
         }
     }
     
-    private fun getStatusText(status: OutboundTransferStatus): String? {
+    private fun getStatusText(status: ApiTransferStatus): String? {
         return when (status) {
-            OutboundTransferStatus.COMPLETED -> "Funds sent"
-            OutboundTransferStatus.IN_FLIGHT_WAITING -> "Approved"
-            OutboundTransferStatus.IN_FLIGHT_APPROVED -> "Approved"
-            OutboundTransferStatus.FAILED -> "Failed"
+            ApiTransferStatus.COMPLETED -> "Completed"
+            ApiTransferStatus.IN_FLIGHT -> "In Flight"
+            ApiTransferStatus.FAILED -> "Failed"
             else -> null
         }
     }
@@ -86,22 +85,20 @@ class EmailUtil @Inject constructor(
         merchantName: String,
         customerName: String,
         requestId: String,
-        status: OutboundTransferStatus
+        status: ApiTransferStatus
     ): String {
         val statusColor = when (status) {
-            OutboundTransferStatus.COMPLETED -> "#28a745" // Green
-            OutboundTransferStatus.IN_FLIGHT_WAITING -> "#28a745" // Green
-            OutboundTransferStatus.IN_FLIGHT_APPROVED -> "#28a745" // Green
-            OutboundTransferStatus.FAILED -> "#dc3545" // Red
+            ApiTransferStatus.COMPLETED -> "#28a745" // Green
+            ApiTransferStatus.IN_FLIGHT -> "#FFC107" // Yellow
+            ApiTransferStatus.FAILED -> "#dc3545" // Red
             else -> "#6c757d" // Gray (should not happen due to filtering)
         }
         
         val statusText = getStatusText(status)
         val statusMessage = when (status) {
-            OutboundTransferStatus.COMPLETED -> "The payment has been completed and funds are available."
-            OutboundTransferStatus.IN_FLIGHT_WAITING -> "The payment is approved."
-            OutboundTransferStatus.IN_FLIGHT_APPROVED -> "The payment is being processed. Please wait for confirmation before fulfilling the order."
-            OutboundTransferStatus.FAILED -> "The payment has been rejected. Ensure the customer has enough funds and has a bank account in good standing."
+            ApiTransferStatus.COMPLETED -> "The payment has been completed and funds are available."
+            ApiTransferStatus.IN_FLIGHT -> "The payment is approved. Funds are in flight to your checking account."
+            ApiTransferStatus.FAILED -> "The payment has been rejected. Ensure the customer has enough funds and has a bank account in good standing."
             else -> "The payment status has been updated." // Should not happen due to filtering
         }
         
@@ -150,6 +147,10 @@ class EmailUtil @Inject constructor(
                     </div>
                     
                     <p>You can view more details about this transaction in your Zenobia Pay dashboard.</p>
+                    
+                    <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
+                        <a href="https://dashboard.zenobiapay.com/?tab=transactions&subtab=details&transactionId=${requestId}" style="background-color: #000000; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">View Transfer</a>
+                    </div>
                 </div>
                 <div class="footer">
                     <p>This is an automated message from Zenobia Pay. Please do not reply to this email.</p>
