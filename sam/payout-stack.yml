@@ -272,6 +272,8 @@ Resources:
               Ref: UserTableName
         - SESCrudPolicy:
             IdentityName: !Ref SenderEmail
+        - KMSDecryptPolicy:
+            KeyId: !Ref UserKeyId
       Events:
         EventFromRedriveQueue:
           Type: SQS
