@@ -25,6 +25,7 @@ data class TransferItem(
     var riskScore: Int? = null,
     var transferFulfillId: String? = null,
     var deleted: Boolean = false,
+    var inDispute: Boolean = false,
     var ttl: Long? = null,
     var data: TransferData? = null,
     @get:DynamoDbVersionAttribute var version: Int? = null
@@ -56,6 +57,7 @@ data class TransferItem(
                 outboundStatus = OutboundTransferStatus.valueOf(map["outboundStatus"]!!.s),
                 riskScore = map["riskScore"]?.n?.toInt(),
                 transferFulfillId = map["transferFulfillId"]?.s,
+                inDispute = map["inDispute"]?.bool == true,
                 deleted = map["deleted"]!!.bool,
                 ttl = map["ttl"]?.n?.toLong(),
                 data = TransferData.fromAttributeValueMap(map["data"]!!.m),

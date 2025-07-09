@@ -78,17 +78,12 @@ class OrumWebhookLogic @Inject constructor(
     private fun handleTransferUpdated(data: String): String? {
         val event = objectMapper.readValue(data, TransferEventBody::class.java).transfer
         val status = event.status
-        if (status == "failed") {
-            return """
-                *Transfer Failed!* <@channel>
-                - `${event.transfer_reference_id}` failed:
-                - Source: `${event.source}`
-                - Destination: `${event.destination}`
-            """.trimIndent()
-        } else {
-            logger.info { "Got status $status, skipping publishing slack message" }
-            return null
-        }
+        return """
+            *Transfer Update ${status}* <@channel>
+            - `${event.transfer_reference_id}` failed:
+            - Source: `${event.source}`
+            - Destination: `${event.destination}`
+        """.trimIndent()
     }
 
     private fun handleBusinessUpdated(data: String, eventType: String): String {
