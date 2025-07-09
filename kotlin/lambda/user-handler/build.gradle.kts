@@ -107,6 +107,10 @@ tasks {
             exclude(dependency("com.fasterxml.jackson.module:jackson-module-kotlin:.*"))
             // Exclude DynamoDB enhanced client classes from minimization
             exclude(dependency("software.amazon.awssdk:dynamodb-enhanced:.*"))
+            // Exclude Log4j and SLF4J classes from minimization
+            exclude(dependency("org.apache.logging.log4j:log4j-core:.*"))
+            exclude(dependency("org.apache.logging.log4j:log4j-slf4j2-impl:.*"))
+            exclude(dependency("org.slf4j:slf4j-api:.*"))
         }
         
         // Merge service files to avoid duplication

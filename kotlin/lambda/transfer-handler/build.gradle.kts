@@ -118,6 +118,11 @@ tasks {
             // Keep only the specific Bouncy Castle classes we need
             // This ensures only the classes actually used by our code are included
             include(dependency("org.bouncycastle:.*:.*"))
+
+            // Exclude Log4j and SLF4J classes from minimization
+            exclude(dependency("org.apache.logging.log4j:log4j-core:.*"))
+            exclude(dependency("org.apache.logging.log4j:log4j-slf4j2-impl:.*"))
+            exclude(dependency("org.slf4j:slf4j-api:.*"))
         }
         
         // Merge service files to avoid duplication
