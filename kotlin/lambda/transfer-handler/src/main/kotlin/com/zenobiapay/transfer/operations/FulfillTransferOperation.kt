@@ -224,7 +224,6 @@ class FulfillTransferOperation @Inject constructor(
             logger.info { "Failed to fetch available funds for $bankAccountId. Returning signal result $signalResult" }
             metricHelper.putMetric("PlaidBalanceGetTimeout", 1.0, mapOf("path" to "/fulfill-transfer"))
         }
-        if (signalResult == SignalResult.WAIT) throw DeclinedException()
     }
 
     private fun transferFunds(
