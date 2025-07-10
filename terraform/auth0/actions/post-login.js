@@ -10,6 +10,13 @@ exports.onExecutePostLogin = async (event, api) => {
     api.accessToken.setCustomClaim("email", event.user.email)
     const userRole = event.user.app_metadata?.role;
     if (userRole) {
+      // Deny access if the role is ADMIN and this is not the admin client
+      if (userRole === "ADMIN" && event.client.name !== "admin.zenobiapay.com") {
+        console.log("Access denied: ADMIN users must use the admin client");
+        api.access.deny('ADMIN_REQUIRES_ADMIN_CLIENT');
+        return;
+      }
+      
       console.log(`Found user role ${userRole}, adding to claims`);
       api.idToken.setCustomClaim("role", userRole);
       api.accessToken.setCustomClaim("role", userRole);

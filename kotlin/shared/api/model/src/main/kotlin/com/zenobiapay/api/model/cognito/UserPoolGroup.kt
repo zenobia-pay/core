@@ -4,6 +4,7 @@ enum class UserPoolGroup(val value: String?) {
     MERCHANT("MERCHANT"),
     CUSTOMER("CUSTOMER"),
     MERCHANT_M2M("MERCHANT_M2M"),
+    ADMIN("ADMIN"),
     UNKNOWN(null);
 
     companion object {

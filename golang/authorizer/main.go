@@ -115,7 +115,7 @@ func handleProtectedEndpoint(ctx context.Context, event events.APIGatewayCustomA
 	}
 	if isValidPath(event.Path, validMerchantRoutes) {
 		println("Attempting to validate token as merchant/m2m user")
-		context, isValid := handleAuth0Tokens(ctx, token)
+		context, isValid := handleMerchantTokens(ctx, token)
 		if isValid {
 			paths, err := generateOperationArns(event.MethodArn, validMerchantRoutes)
 			if err != nil {
@@ -124,16 +124,41 @@ func handleProtectedEndpoint(ctx context.Context, event events.APIGatewayCustomA
 			putSuccessMetric(isValid)
 			return generatePolicyResponse(isValid, context, paths), nil
 		}
-
+	}
+	if isValidPath(event.Path, validAdminRoutes) {
+		context, isValid := handleAdminTokens(ctx, token)
+		if isValid {
+			if role, ok := context["role"]; ok {
+				if roleStr, ok := role.(string); ok && roleStr == "ADMIN" {
+					println("User has ADMIN role, allowing access")
+					paths, err := generateOperationArns(event.MethodArn, validAdminRoutes)
+					if err != nil {
+						panic("Could not generate admin arn paths")
+					}
+					putSuccessMetric(true)
+					return generatePolicyResponse(true, context, paths), nil
+				}
+				println("User does not have ADMIN role, denying access")
+			} else {
+				println("No role claim found in token, denying access")
+			}
+		}
 	}
 	putSuccessMetric(false)
 	return generatePolicy("user", "Deny", []string{"*"}, map[string]interface{}{}), nil
 }
 
-func handleAuth0Tokens(ctx context.Context, token string) (map[string]interface{}, bool) {
+func handleMerchantTokens(ctx context.Context, token string) (map[string]interface{}, bool) {
 	claims, err := GetValidatedUserClaims(ctx, token)
 	isValid := err == nil
 	println(fmt.Sprintf("Got isValidApiToken: %t\n", isValid))
+	return getUserContext(claims), isValid
+}
+
+func handleAdminTokens(ctx context.Context, token string) (map[string]interface{}, bool) {
+	claims, err := GetValidatedAdminClaims(ctx, token)
+	isValid := err == nil
+	println(fmt.Sprintf("Got isValidAdminToken: %t\n", isValid))
 	return getUserContext(claims), isValid
 }
 
