@@ -128,20 +128,12 @@ func handleProtectedEndpoint(ctx context.Context, event events.APIGatewayCustomA
 	if isValidPath(event.Path, validAdminRoutes) {
 		context, isValid := handleAdminTokens(ctx, token)
 		if isValid {
-			if role, ok := context["role"]; ok {
-				if roleStr, ok := role.(string); ok && roleStr == "ADMIN" {
-					println("User has ADMIN role, allowing access")
-					paths, err := generateOperationArns(event.MethodArn, validAdminRoutes)
-					if err != nil {
-						panic("Could not generate admin arn paths")
-					}
-					putSuccessMetric(true)
-					return generatePolicyResponse(true, context, paths), nil
-				}
-				println("User does not have ADMIN role, denying access")
-			} else {
-				println("No role claim found in token, denying access")
+			paths, err := generateOperationArns(event.MethodArn, validAdminRoutes)
+			if err != nil {
+				panic("Could not generate authenticated admin arn paths")
 			}
+			putSuccessMetric(isValid)
+			return generatePolicyResponse(isValid, context, paths), nil
 		}
 	}
 	putSuccessMetric(false)
@@ -158,6 +150,11 @@ func handleMerchantTokens(ctx context.Context, token string) (map[string]interfa
 func handleAdminTokens(ctx context.Context, token string) (map[string]interface{}, bool) {
 	claims, err := GetValidatedAdminClaims(ctx, token)
 	isValid := err == nil
+
+	if *claims.CustomClaims.(*UserCustomClaims).Role != "ADMIN" {
+		fmt.Printf("Did not get role admin, returning false")
+		return nil, false
+	}
 	println(fmt.Sprintf("Got isValidAdminToken: %t\n", isValid))
 	return getUserContext(claims), isValid
 }
@@ -201,8 +198,21 @@ func getUserContext(claims *validator.ValidatedClaims) map[string]interface{} {
 			"role":   userCustomClaims.Role,
 			"m2mSub": userCustomClaims.M2MSub,
 		}
-		print("Got context: ")
-		fmt.Println(context)
+
+		sub := claims.RegisteredClaims.Subject
+		email := ""
+		if userCustomClaims.Email != nil {
+			email = *userCustomClaims.Email
+		}
+		role := ""
+		if userCustomClaims.Role != nil {
+			role = *userCustomClaims.Role
+		}
+		m2mSub := ""
+		if userCustomClaims.M2MSub != nil {
+			m2mSub = *userCustomClaims.M2MSub
+		}
+		fmt.Printf("Got sub: %s, email: %s, role: %s, m2mSub: %s\n", sub, email, role, m2mSub)
 		return context
 	}
 	println("Could not cast user custom claims")

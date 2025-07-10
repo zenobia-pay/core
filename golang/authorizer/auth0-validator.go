@@ -51,8 +51,11 @@ func init() {
 	if audience == "" {
 		panic("Did not retrieve env var AUDIENCE")
 	}
+	if adminAudience == "" {
+		panic("Did not retrieve env var ADMIN_AUDIENCE")
+	}
 
-	println("Got domain " + domain + ", issuer " + issuer + ", audience " + audience)
+	println("Got domain " + domain + ", issuer " + issuer + ", audience " + audience + ", adminAudience " + adminAudience)
 
 	zenobiaIssuerUrl, err := url.Parse(issuer)
 	if err != nil {
