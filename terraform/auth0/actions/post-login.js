@@ -8,6 +8,24 @@ exports.onExecutePostLogin = async (event, api) => {
     console.log(`Setting email claim: ${event.user.email}`)
     api.idToken.setCustomClaim("email", event.user.email)
     api.accessToken.setCustomClaim("email", event.user.email)
+    
+    const roles = event.authorization?.roles || [];
+    console.log(`User has the following roles: ${JSON.stringify(roles)}`);
+    
+    let returnedRoles = roles;
+    if (roles.includes('Admin')) {
+      if (event.client.name !== "Zenobia Admin") {
+        console.log("Skipping admin role for non-admin client");
+        returnedRoles = roles.filter(role => role !== 'Admin');
+      }
+    }
+
+    console.log(`Setting roles claim: ${JSON.stringify(returnedRoles)}`);
+    
+    api.idToken.setCustomClaim("roles", returnedRoles);
+    api.accessToken.setCustomClaim("roles", returnedRoles);
+
+    // Setting for backwards compatibility
     const userRole = event.user.app_metadata?.role;
     if (userRole) {
       // Deny access if the role is ADMIN and this is not the admin client

@@ -212,6 +212,17 @@ resource "auth0_connection_clients" "google_oauth2_clients" {
   connection_id   = auth0_connection.google_oauth2[0].id
 }
 
+# Define Auth0 roles
+resource "auth0_role" "merchant_role" {
+  name        = "Merchant"
+  description = "Regular merchant user with standard permissions"
+}
+
+resource "auth0_role" "admin_role" {
+  name        = "Admin"
+  description = "Administrator with elevated permissions"
+}
+
 output "client_id" {
   value = auth0_client.zenobia_app.client_id
 }
