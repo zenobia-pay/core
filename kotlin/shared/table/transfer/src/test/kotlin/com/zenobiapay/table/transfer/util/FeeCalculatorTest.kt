@@ -18,4 +18,9 @@ class FeeCalculatorTest {
     fun `calculate fee with low amount`() {
         assertEquals(30, getFee(30))
     }
+
+    @Test
+    fun `calculate fee with less than fee amount`() {
+        assertEquals(29, getFee(29))
+    }
 }
