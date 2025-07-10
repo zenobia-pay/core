@@ -172,7 +172,6 @@ resource "auth0_client" "zenobia_admin_app" {
     infinite_idle_token_lifetime = false
   }
   # Require MFA
-  organization_usage = "require"
   oidc_conformant = true
 }
 
@@ -193,38 +192,6 @@ resource "auth0_resource_server" "zenobia_admin_api" {
   signing_alg          = "RS256"
   token_lifetime       = 36000
   skip_consent_for_verifiable_first_party_clients = true
-}
-
-resource "auth0_action" "admin_authorization" {
-  name    = "Admin-Authorization"
-  runtime = "node22"
-  deploy  = true
-  supported_triggers {
-    id      = "post-login"
-    version = "v3"
-  }
-  
-  code = file("${path.module}/auth0/actions/admin-authorization.js")
-  
-  dependencies {
-    name    = "auth0"
-    version = "2.44.0"
-  }
-}
-
-resource "auth0_trigger_actions" "bind_admin_authorization" {
-  trigger = "post-login"
-
-  actions {
-    id           = auth0_action.admin_authorization.id
-    display_name = auth0_action.admin_authorization.name
-  }
-  
-  # Keep the existing post-login action
-  actions {
-    id           = auth0_action.user_login_webhook.id
-    display_name = auth0_action.user_login_webhook.name
-  }
 }
 
 resource "auth0_connection" "google_oauth2" {

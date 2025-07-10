@@ -9,6 +9,14 @@ exports.onExecuteCredentialsExchange = async (event, api) => {
           api.access.deny('Admin role requires a zenobiapay.com email address');
           return;
         }
+      
+        // Check if MFA (2FA) was completed during this authentication
+        if (!event.authentication?.methods.some(method => method.name === "mfa")) {
+          console.log(`Admin access denied for user without MFA: ${email}, triggering challenge`);
+          // Trigger MFA challenge
+          api.multifactor.enable("any", { allowRememberBrowser: false });
+          return;
+        }
         console.log(`Admin access granted for zenobiapay.com email: ${email}`);
       }
       
