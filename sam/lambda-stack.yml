@@ -1574,6 +1574,7 @@ Resources:
         Variables:
           AUTH_DOMAIN: !Ref Auth0Domain
           AUDIENCE: https://dashboard.zenobiapay.com
+          ADMIN_AUDIENCE: https://admin.zenobiapay.com
           VALID_ORUM_IP_ADDRESSES: !Ref OrumIpAddresses
           VALID_PLAID_IP_ADDRESSES: !Ref PlaidIpAddresses
       Policies:
