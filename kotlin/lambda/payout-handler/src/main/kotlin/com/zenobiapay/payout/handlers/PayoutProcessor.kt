@@ -87,6 +87,11 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
                     newImage?.outboundStatus
                 )
             ) {
+                if (newImage?.inDispute == true) {
+                    logger.info { "Transfer is in dispute, skipping payout" }
+                    metricHelper.putMetric("SkipInDisputeTransfer", 1.0)
+                    return
+                }
                 logger.info { "Paying out merchant" }
                 val transferItem = transferDao.getTransfer(newImage!!.requestId)
                     ?: throw Error("Could not find transfer item ${newImage.requestId}")

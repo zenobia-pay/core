@@ -80,7 +80,13 @@ var validCustomerRoutes = []Route{
 	{"POST", "get-item"},
 	{"POST", "list-items"},
 	{"POST", "create-sell-job"},
-    {"POST", "complete-sell-job"},
+	{"POST", "complete-sell-job"},
+}
+
+// Admin routes for admin.zenobiapay.com endpoints
+var validAdminRoutes = []Route{
+	{"POST", "edit-transfer"},
+	{"POST", "mark-in-dispute"},
 }
 
 var validOrumRoutes = []Route{

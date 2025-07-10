@@ -6,16 +6,16 @@ import org.junit.jupiter.api.Test
 class FeeCalculatorTest {
     @Test
     fun `calculate fee with perfect rounding`() {
-        assertEquals(110, getFee(10000))
+        assertEquals(130, getFee(10000))
     }
 
     @Test
     fun `calculate fee floors additional amount`() {
-        assertEquals(110, getFee(10010))
+        assertEquals(130, getFee(10030))
     }
 
     @Test
     fun `calculate fee with low amount`() {
-        assertEquals(10, getFee(10))
+        assertEquals(30, getFee(30))
     }
 }

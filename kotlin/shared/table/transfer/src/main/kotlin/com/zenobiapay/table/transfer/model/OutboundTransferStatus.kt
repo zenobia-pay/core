@@ -9,7 +9,8 @@ enum class OutboundTransferStatus {
     IN_FLIGHT_APPROVED, // pre-approved go ahead!
     PAYOUT_LOCKED, // Lock before payout
     COMPLETED, // Payment to merchant complete
-    FAILED; // Failed to payout.
+    FAILED, // Failed to payout.
+    REFUNDED; // Refunded
 
     fun toApiTransferStatus(): ApiTransferStatus {
         return when (this) {
@@ -20,6 +21,7 @@ enum class OutboundTransferStatus {
             PAYOUT_LOCKED -> ApiTransferStatus.PAID
             COMPLETED -> ApiTransferStatus.SETTLED
             FAILED -> ApiTransferStatus.FAILED
+            REFUNDED -> ApiTransferStatus.REFUNDED
         }
     }
 }
