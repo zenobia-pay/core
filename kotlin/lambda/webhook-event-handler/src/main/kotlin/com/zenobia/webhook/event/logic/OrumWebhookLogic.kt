@@ -80,7 +80,7 @@ class OrumWebhookLogic @Inject constructor(
         val status = event.status
         return """
             *Transfer Update ${status}* <@channel>
-            - `${event.transfer_reference_id}` failed:
+            - Id: `${event.transfer_reference_id}`:
             - Source: `${event.source}`
             - Destination: `${event.destination}`
         """.trimIndent()
