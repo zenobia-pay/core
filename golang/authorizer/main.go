@@ -37,7 +37,7 @@ func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequest
 		return handlePlaidWebhookEndpoint(ctx, event)
 	} else if hasUnauthenticatedHeader && isValidPath(event.Path, validUnauthenticatedRoutes) {
 		return handleUnprotectedEndpoint(ctx, event)
-	} else if isValidPath(event.Path, validCustomerRoutes) || isValidPath(event.Path, validMerchantRoutes) {
+	} else if isValidPath(event.Path, validCustomerRoutes) || isValidPath(event.Path, validMerchantRoutes) || isValidPath(event.Path, validAdminRoutes) {
 		return handleProtectedEndpoint(ctx, event)
 	} else {
 		println("Could not find endpoint. Returning blanket deny.")
