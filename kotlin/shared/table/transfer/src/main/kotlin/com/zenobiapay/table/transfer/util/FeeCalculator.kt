@@ -16,7 +16,12 @@ fun getFee(intAmount: Int): Int {
 
     val amount = BigDecimal(intAmount)
     val percentFeeAmount = amount.times(percentFee).setScale(0, RoundingMode.FLOOR).intValueExact()
-    return (percentFeeAmount + fixedFee).also {
+    val feeCalculated = percentFeeAmount + fixedFee
+    if (feeCalculated > intAmount) {
+        logger.info { "Fee calculated $feeCalculated is greater than total amount $intAmount. Returning amount" }
+        return intAmount
+    }
+    return feeCalculated.also {
         logger.info { "Calculated fee $it from total amount $intAmount" }
     }
 }

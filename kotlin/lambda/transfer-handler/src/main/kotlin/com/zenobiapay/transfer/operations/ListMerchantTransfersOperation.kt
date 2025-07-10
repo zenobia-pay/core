@@ -10,6 +10,7 @@ import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.table.model.BadTokenException
 import com.zenobiapay.table.transfer.dao.TransferDao
+import com.zenobiapay.table.transfer.util.getFee
 import com.zenobiapay.transfer.di.PAGINATION_SECRET
 import com.zenobiapay.transfer.model.ListMerchantTransfersRequest
 import jakarta.inject.Inject
@@ -41,7 +42,7 @@ class ListMerchantTransfersOperation @Inject constructor(
                     .status(it.inboundStatus.toApiTransferStatus().name)
                     .transferRequestId(it.requestId)
                     .customerName(it.data?.customer?.name)
-                    .fee(it.data?.fee)
+                    .fee(it.data?.fee ?: it.amount?.let { getFee(it) })
                     .payoutTime(it.data?.payoutTime)
                     .creationTime(it.data?.creationTime)
             })

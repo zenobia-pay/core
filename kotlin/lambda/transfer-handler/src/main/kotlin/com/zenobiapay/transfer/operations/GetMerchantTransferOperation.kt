@@ -10,6 +10,7 @@ import com.zenobiapay.api.model.NoApiBody
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.table.transfer.dao.TransferDao
+import com.zenobiapay.table.transfer.util.getFee
 import jakarta.inject.Inject
 
 class GetMerchantTransferOperation @Inject constructor(
@@ -33,7 +34,7 @@ class GetMerchantTransferOperation @Inject constructor(
             .statementItems(transferItem.data?.statementItems?.map { it.toApiStatementItem() } ?: listOf())
             .statusMessage(transferItem.data?.statusMessage)
             .customerName(transferItem.data?.customer?.name)
-            .fee(transferItem.data?.fee)
+            .fee(transferItem.data?.fee ?: transferItem.amount?.let { getFee(it) })
             .payoutTime(transferItem.data?.payoutTime)
             .creationTime(transferItem.data?.creationTime)
     }
