@@ -9,7 +9,7 @@ import kotlin.times
 private val logger = KotlinLogging.logger {}
 
 private val percentFee = BigDecimal("0.01")
-private const val fixedFee = 10
+private const val fixedFee = 30
 
 fun getFee(intAmount: Int): Int {
     assert(intAmount >= 0) { "Payout amount must be greater than 0." }

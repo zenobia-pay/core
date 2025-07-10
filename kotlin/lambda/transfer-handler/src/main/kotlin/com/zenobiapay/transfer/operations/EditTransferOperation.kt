@@ -2,7 +2,7 @@ package com.zenobiapay.transfer.operations
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
-import com.zenobiapay.api.generated.model.RefundTransferRequest
+import com.zenobiapay.api.generated.model.EditTransferRequest
 import com.zenobiapay.api.model.EmptyApiResponse
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.model.exception.InvalidRequestException
@@ -31,11 +31,11 @@ private data class EditTransferDetails(
 class EditTransferOperation @Inject constructor(
     private val transferDao: TransferDao,
     private val orumWrapper: OrumWrapper,
-): Operation<RefundTransferRequest, EmptyApiResponse>() {
-    override val inputType = RefundTransferRequest::class.java
+): Operation<EditTransferRequest, EmptyApiResponse>() {
+    override val inputType = EditTransferRequest::class.java
     
     override fun run(
-        request: RefundTransferRequest,
+        request: EditTransferRequest,
         input: APIGatewayProxyRequestEvent,
         context: Context,
         userId: String?
