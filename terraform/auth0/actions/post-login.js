@@ -11,7 +11,7 @@ exports.onExecutePostLogin = async (event, api) => {
     const userRole = event.user.app_metadata?.role;
     if (userRole) {
       // Deny access if the role is ADMIN and this is not the admin client
-      if (userRole === "ADMIN" && event.client.name !== "admin.zenobiapay.com") {
+      if (userRole === "ADMIN" && event.client.name !== "Zenobia Admin") {
         console.log("Access denied: ADMIN users must use the admin client");
         api.access.deny('ADMIN_REQUIRES_ADMIN_CLIENT');
         return;
