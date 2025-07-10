@@ -44,7 +44,7 @@ class CreateTransferRequestOperation @Inject constructor(
         val userId = when (input.requestContext.getUserRole()) {
             UserPoolGroup.MERCHANT -> sub!!
             UserPoolGroup.MERCHANT_M2M -> input.requestContext.getSubForM2M()
-            UserPoolGroup.CUSTOMER, UserPoolGroup.UNKNOWN -> throw InvalidRequestException("Invalid role for transfer request")
+            UserPoolGroup.CUSTOMER, UserPoolGroup.UNKNOWN, UserPoolGroup.ADMIN -> throw InvalidRequestException("Invalid role for transfer request")
         }
         logger.info { "Using userId = $userId" }
 

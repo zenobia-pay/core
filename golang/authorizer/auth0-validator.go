@@ -36,13 +36,14 @@ func (c UserCustomClaims) Validate(ctx context.Context) error {
 }
 
 var basicJwtValidator *validator.Validator
-var auth0ActionJwtValidator *validator.Validator
+var adminJwtValidator *validator.Validator
 var provider *jwks.CachingProvider
 
 func init() {
 	domain := os.Getenv("AUTH_DOMAIN")
 	issuer := "https://" + domain + "/"
 	audience := os.Getenv("AUDIENCE")
+	adminAudience := os.Getenv("ADMIN_AUDIENCE")
 
 	if domain == "" {
 		panic("Did not retrieve env var AUTH_DOMAIN")
@@ -75,6 +76,20 @@ func init() {
 	if err != nil {
 		panic("Failed to set up the jwt validator " + err.Error())
 	}
+
+	adminJwtValidator, err = validator.New(
+		provider.KeyFunc,
+		validator.RS256,
+		zenobiaIssuerUrl.String(),
+		[]string{adminAudience},
+		validator.WithCustomClaims(
+			func() validator.CustomClaims {
+				return &UserCustomClaims{}
+			},
+		),
+		validator.WithAllowedClockSkew(time.Minute),
+	)
+
 	if err != nil {
 		panic("Failed to set up the jwt validator " + err.Error())
 	}
@@ -83,6 +98,16 @@ func init() {
 // GetValidatedUserClaims is a middleware that will check the validity of our JWT.
 func GetValidatedUserClaims(ctx context.Context, token string) (*validator.ValidatedClaims, error) {
 	claims, err := basicJwtValidator.ValidateToken(ctx, token)
+	if err != nil {
+		println("Validation threw err", err.Error())
+		return nil, err
+	}
+	return getCastClaims(claims)
+}
+
+// GetValidatedAdminClaims is a middleware that will check the validity of our JWT.
+func GetValidatedAdminClaims(ctx context.Context, token string) (*validator.ValidatedClaims, error) {
+	claims, err := adminJwtValidator.ValidateToken(ctx, token)
 	if err != nil {
 		println("Validation threw err", err.Error())
 		return nil, err

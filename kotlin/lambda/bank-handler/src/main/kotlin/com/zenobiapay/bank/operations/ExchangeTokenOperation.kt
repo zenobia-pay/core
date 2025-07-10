@@ -240,7 +240,7 @@ class ExchangeTokenOperation @Inject constructor(
         return when (userPoolGroup) {
             UserPoolGroup.MERCHANT -> CustomerResourceType.BUSINESS
             UserPoolGroup.CUSTOMER, UserPoolGroup.UNKNOWN -> CustomerResourceType.PERSON
-            UserPoolGroup.MERCHANT_M2M  -> throw Exception("Got invalid user pool group $userPoolGroup")
+            UserPoolGroup.MERCHANT_M2M, UserPoolGroup.ADMIN  -> throw Exception("Got invalid user pool group $userPoolGroup")
         }
     }
 
@@ -248,7 +248,7 @@ class ExchangeTokenOperation @Inject constructor(
         return when (userPoolGroup) {
             UserPoolGroup.MERCHANT -> generateMerchantOrumId(userId)
             UserPoolGroup.CUSTOMER, UserPoolGroup.UNKNOWN -> generateCustomerOrumId(userId)
-            UserPoolGroup.MERCHANT_M2M -> throw Exception("Got invalid user pool group $userPoolGroup")
+            UserPoolGroup.MERCHANT_M2M, UserPoolGroup.ADMIN -> throw Exception("Got invalid user pool group $userPoolGroup")
         }
     }
 

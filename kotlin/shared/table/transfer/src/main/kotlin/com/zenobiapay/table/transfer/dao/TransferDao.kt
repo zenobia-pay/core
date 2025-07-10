@@ -93,6 +93,20 @@ class TransferDao @Inject constructor(
         return transferTable.updateItem(request)
     }
 
+    fun updateTransferOutboundStatus(
+        transferItem: TransferItem,
+        outboundTransferStatus: OutboundTransferStatus
+    ): TransferItem {
+        val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
+            .item(transferItem.copy(
+                outboundStatus = outboundTransferStatus,
+                ttl = null,
+            ).also { logger.info { "Updated transfer outbound status: $it" } })
+            .build()
+
+        return transferTable.updateItem(request)
+    }
+
     fun updateTransferRequestLocked(
         transferItem: TransferItem
     ): TransferItem {
@@ -282,6 +296,35 @@ class TransferDao @Inject constructor(
             page.items() to page.lastEvaluatedKey()?.let { ContinuationToken(page.lastEvaluatedKey()) }
         }.also {
             logger.info { "Got ${it.first.size} items and continuation token ${it.second}" }
+        }
+    }
+    
+    fun updateTransferDisputeStatus(
+        transferRequestId: String,
+        inDispute: Boolean,
+    ): TransferItem? {
+        logger.info { "Updating dispute status for transfer $transferRequestId to $inDispute" }
+        
+        val transferItem = getTransfer(transferRequestId) ?: run {
+            logger.error { "Transfer $transferRequestId not found" }
+            return null
+        }
+        
+        val updatedItem = transferItem.copy(
+            inDispute = inDispute
+        )
+        
+        val request = UpdateItemEnhancedRequest.builder(TransferItem::class.java)
+            .item(updatedItem)
+            .build()
+            
+        return try {
+            transferTable.updateItem(request).also {
+                logger.info { "Successfully updated dispute status for transfer $transferRequestId" }
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to update dispute status for transfer $transferRequestId" }
+            null
         }
     }
 }

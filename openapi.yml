@@ -93,6 +93,7 @@ components:
         - SETTLED
         - FAILED
         - CANCELLED
+        - REFUNDED
     StatementItem:
       type: object
       properties:
@@ -811,6 +812,58 @@ paths:
         uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
         httpMethod: POST
         type: aws_proxy
+  /edit-transfer:
+    post:
+      summary: "Edits a transfer. Can retry and refund"
+      operationId: "EditTransfer"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - transferRequestId
+              properties:
+                transferRequestId:
+                  type: string
+                  maxLength: 255
+                debitCustomer:
+                  type: boolean
+                debitMerchant:
+                  type: boolean
+                creditCustomer:
+                  type: boolean
+                creditMerchant:
+                  type: boolean
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  amount:
+                    type: integer
+                  merchant:
+                    $ref: "#/components/schemas/PaymentParticipantIdentity"
+                  statementItems:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/StatementItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+        httpMethod: POST
+        type: aws_proxy
   /list-merchant-payouts:
     post:
       summary: "Lists all payouts for a merchant"
@@ -859,6 +912,31 @@ paths:
           $ref: "#/components/responses/InternalServerError"
       x-amazon-apigateway-integration:
         uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+        httpMethod: POST
+        type: aws_proxy
+  /mark-in-dispute:
+    post:
+      summary: "Mark a transfer in dispute"
+      operationId: "MarkInDispute"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transferRequestId:
+                  type: string
+      responses:
+        "200":
+          description: "Successful response"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
         httpMethod: POST
         type: aws_proxy
   /get-merchant-config:

@@ -7,7 +7,8 @@ enum class InboundTransferStatus(val order: Int) {
     IN_FLIGHT(1), // Request has been fulfilled. We've sent the request to Orum.
     COMPLETED(2), // Request has been sent to ACH.
     SETTLED(3), // Funds are available in our FBO
-    FAILED(4); // Something failed. Funds were not successfully sent to us.
+    FAILED(4), // Something failed. Funds were not successfully sent to us.
+    REFUNDED(5);
 
     companion object {
         fun fromOrumTransferStatus(orumTransferStatus: String): InboundTransferStatus {
@@ -28,6 +29,7 @@ enum class InboundTransferStatus(val order: Int) {
             COMPLETED -> ApiTransferStatus.PAID
             SETTLED -> ApiTransferStatus.SETTLED
             FAILED -> ApiTransferStatus.FAILED
+            REFUNDED -> ApiTransferStatus.REFUNDED
         }
     }
 }
