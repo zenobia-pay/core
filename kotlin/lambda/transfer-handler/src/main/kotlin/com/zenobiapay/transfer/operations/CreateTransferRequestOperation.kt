@@ -9,7 +9,7 @@ import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.util.getSubForM2M
-import com.zenobiapay.api.util.getUserRole
+import com.zenobiapay.api.util.getUserRoles
 import com.zenobiapay.events.model.PutItemMetadataQueueRecord
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.StatementItem
@@ -41,11 +41,14 @@ class CreateTransferRequestOperation @Inject constructor(
 
     override fun run(request: CreateTransferRequestRequest, input: APIGatewayProxyRequestEvent, context: Context, sub: String?): CreateTransferRequest200Response {
         val expiry = Instant.now().plus(request.expirySeconds?.toLong() ?: (15 * 60), ChronoUnit.SECONDS).epochSecond
-        val userId = when (input.requestContext.getUserRole()) {
-            UserPoolGroup.MERCHANT -> sub!!
-            UserPoolGroup.MERCHANT_M2M -> input.requestContext.getSubForM2M()
-            UserPoolGroup.CUSTOMER, UserPoolGroup.UNKNOWN, UserPoolGroup.ADMIN -> throw InvalidRequestException("Invalid role for transfer request")
+        val userId = if (UserPoolGroup.MERCHANT_M2M in input.requestContext.getUserRoles()) {
+            input.requestContext.getSubForM2M()
+        } else if (UserPoolGroup.MERCHANT in input.requestContext.getUserRoles()) {
+            sub
+        } else {
+            throw InvalidRequestException("Invalid role for transfer request")
         }
+
         logger.info { "Using userId = $userId" }
 
         val requestId = input.requestContext.requestId

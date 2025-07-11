@@ -37,9 +37,11 @@ class ResponseHandler @Inject constructor(
             val userId = input.requestContext.getUserId()
             setLoggingContext(input.requestContext.requestId, userId, input.path)
             logger.info { "Got operation ${operation.javaClass.simpleName}, userId $userId, body ${input.body}"}
-            val role = input.requestContext.getUserRole()
-            if (role !in operation.getUserPoolAllowList()) {
-                logger.error { "Role $role not allowed for operation ${operation.javaClass.name} with allowed list ${operation.getUserPoolAllowList()}"}
+            val roles = input.requestContext.getUserRoles()
+
+            val isRoleAllowed = roles.any { role -> role in operation.getUserPoolAllowList() }
+            if (!isRoleAllowed) {
+                logger.error { "Roles $roles not allowed for operation ${operation.javaClass.name} with allowed list ${operation.getUserPoolAllowList()}"}
                 throw UnauthorizedException()
             }
             // Read empty map if no body is provided. Should be cast to NoApiBody class
