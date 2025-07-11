@@ -17,7 +17,7 @@
     },
     "authorizer": {
       "principalId": "user123",
-      "roles": ["CUSTOMER"],
+      "roles": "CUSTOMER",
       "email": "user@example.com",
       "sub": "64d874c8-b011-70f9-efde-43a92ba4c98d"
     }

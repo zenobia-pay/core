@@ -10,7 +10,7 @@
     "authorizer": {
       "principalId": "user123",
       "email": "user@example.com",
-      "roles": ["MERCHANT"],
+      "roles": "MERCHANT",
       "sub": "auth0|67f0a8703cc36ca458f5cf7b"
     }
   },

@@ -19,7 +19,7 @@
       "principalId": "user123",
       "sub": "google-oauth2|101544010672980959360",
       "email": "user@example.com",
-      "roles": ["MERCHANT"]
+      "roles": "MERCHANT"
     }
   }
 }
