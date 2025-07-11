@@ -1,30 +1,9 @@
 exports.onExecuteCredentialsExchange = async (event, api) => {
   try {
-    const userRole = event.client.metadata?.role;
-    if (userRole) {
-      if (userRole === "ADMIN") {
-        const email = event.user?.email;
-        if (!email || !email.endsWith('@zenobiapay.com')) {
-          console.log(`Admin access denied for non-zenobiapay.com email: ${email}`);
-          api.access.deny('Admin role requires a zenobiapay.com email address');
-          return;
-        }
-      
-        // Check if MFA (2FA) was completed during this authentication
-        if (!event.authentication?.methods.some(method => method.name === "mfa")) {
-          console.log(`Admin access denied for user without MFA: ${email}, triggering challenge`);
-          // Trigger MFA challenge
-          api.multifactor.enable("any", { allowRememberBrowser: false });
-          return;
-        }
-        console.log(`Admin access granted for zenobiapay.com email: ${email}`);
-      }
-      
-      console.log(`Found user role ${userRole}, adding to claims`);
-      api.accessToken.setCustomClaim("role", userRole);
-    } else {
-      console.log("No user role found, skipping adding to claim");
-    }
+    const roles = event.client.metadata?.roles;
+    console.log(`Setting roles claim: ${roles}`);
+    const namespace = "https://zenobiapay.com/";
+    api.accessToken.setCustomClaim(`${namespace}roles`, roles);
 
     const m2mSub = event.client.metadata?.merchantSub;
     if (m2mSub) {
