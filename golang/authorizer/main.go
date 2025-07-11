@@ -187,10 +187,10 @@ func getCustomerContext(claims *jwt.CustomerClaims) map[string]interface{} {
 		return nil
 	}
 	context := map[string]interface{}{
-		"sub":  claims.Subject,
-		"role": claims.Role,
+		"sub":   claims.Subject,
+		"roles": claims.Roles,
 	}
-	fmt.Printf("Got sub: %s, role %s\n", claims.Subject, claims.Role)
+	fmt.Printf("Got sub: %s, roles %s\n", claims.Subject, claims.Roles)
 	return context
 }
 

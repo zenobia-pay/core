@@ -12,7 +12,7 @@ import (
 )
 
 type CustomerClaims struct {
-	Role string
+	Roles string
 	jwt.RegisteredClaims
 }
 
@@ -22,7 +22,7 @@ var ExpiryTimeSeconds int = 900
 func IssueJWT(ctx context.Context, sub string) (string, error) {
 	hmacSecret := secrets.GetJwtTokenHashingSecret(ctx)
 	claims := CustomerClaims{
-		Role: "CUSTOMER",
+		Roles: "CUSTOMER",
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   sub,
 			Issuer:    issuer,
