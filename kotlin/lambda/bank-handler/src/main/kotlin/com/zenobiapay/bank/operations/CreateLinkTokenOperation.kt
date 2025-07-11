@@ -47,6 +47,6 @@ class CreateLinkTokenOperation @Inject constructor(
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {
-        return listOf(UserPoolGroup.UNKNOWN, UserPoolGroup.CUSTOMER, UserPoolGroup.MERCHANT)
+        return listOf(UserPoolGroup.UNKNOWN, UserPoolGroup.CUSTOMER)
     }
 }

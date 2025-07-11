@@ -17,7 +17,7 @@ import com.zenobiapay.api.generated.model.ExchangeTokenRequest
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.api.model.exception.DetailsNeededException
-import com.zenobiapay.api.util.getUserRole
+import com.zenobiapay.api.util.getUserRoles
 import com.zenobiapay.bank.di.BANK_ACCOUNT_HASHING_SECRET
 import com.zenobiapay.cryptography.util.isCertificateValid
 import com.zenobiapay.orum.OrumWrapper
@@ -26,7 +26,6 @@ import com.zenobiapay.orum.model.CustomerResourceType
 import com.zenobiapay.orum.model.OrumCreateExternalAccountRequest
 import com.zenobiapay.orum.model.OrumCreatePersonRequest
 import com.zenobiapay.orum.util.generateCustomerOrumId
-import com.zenobiapay.orum.util.generateMerchantOrumId
 import com.zenobiapay.plaid.PlaidWrapper
 import com.zenobiapay.table.bank.model.DeviceCertificate
 import com.zenobiapay.table.credentials.dao.CredentialsDao
@@ -70,7 +69,7 @@ class ExchangeTokenOperation @Inject constructor(
 
         val identityResponse = plaidWrapper.getIdentity(exchangeResponse.accessToken)
         val owner = getOwner(identityResponse)
-        var refreshToken = if (input.requestContext.getUserRole() == UserPoolGroup.UNKNOWN) {
+        var refreshToken = if (input.requestContext.getUserRoles().contains(UserPoolGroup.UNKNOWN)) {
             if (sub == request.sub) { // New customer, need to create orum person
                 registerCustomer(owner, sub)
             }
@@ -86,7 +85,6 @@ class ExchangeTokenOperation @Inject constructor(
                 exchangeResponse = exchangeResponse,
                 sub = sub,
                 userFullName = owner.names.first(),
-                userPoolGroup = input.requestContext.getUserRole(),
                 account = account,
                 ach = ach
             )
@@ -189,7 +187,6 @@ class ExchangeTokenOperation @Inject constructor(
         exchangeResponse: ItemPublicTokenExchangeResponse,
         sub: String,
         userFullName: String,
-        userPoolGroup: UserPoolGroup,
         account: AccountBase,
         ach: NumbersACH?
     ) {
@@ -205,8 +202,8 @@ class ExchangeTokenOperation @Inject constructor(
         val orumId = orumWrapper.createExternalOrganization(
             OrumCreateExternalAccountRequest(
                 accountReferenceId = ach.accountId,
-                customerReferenceId = getOrumCustomerId(sub, userPoolGroup),
-                customerResourceType = getCustomerResourceType(userPoolGroup),
+                customerReferenceId = generateCustomerOrumId(sub),
+                customerResourceType = CustomerResourceType.PERSON,
                 accountType = account.subtype!!.value,
                 accountNumber = ach.account,
                 routingNumber = ach.routing,
@@ -236,23 +233,7 @@ class ExchangeTokenOperation @Inject constructor(
         logger.info { "Successfully wrote to ddb bank item ${account.accountId}, orum id $orumId" }
     }
 
-    private fun getCustomerResourceType(userPoolGroup: UserPoolGroup): CustomerResourceType {
-        return when (userPoolGroup) {
-            UserPoolGroup.MERCHANT -> CustomerResourceType.BUSINESS
-            UserPoolGroup.CUSTOMER, UserPoolGroup.UNKNOWN -> CustomerResourceType.PERSON
-            UserPoolGroup.MERCHANT_M2M, UserPoolGroup.ADMIN  -> throw Exception("Got invalid user pool group $userPoolGroup")
-        }
-    }
-
-    private fun getOrumCustomerId(userId: String, userPoolGroup: UserPoolGroup): String {
-        return when (userPoolGroup) {
-            UserPoolGroup.MERCHANT -> generateMerchantOrumId(userId)
-            UserPoolGroup.CUSTOMER, UserPoolGroup.UNKNOWN -> generateCustomerOrumId(userId)
-            UserPoolGroup.MERCHANT_M2M, UserPoolGroup.ADMIN -> throw Exception("Got invalid user pool group $userPoolGroup")
-        }
-    }
-
     override fun getUserPoolAllowList(): List<UserPoolGroup> {
-        return listOf(UserPoolGroup.UNKNOWN, UserPoolGroup.CUSTOMER, UserPoolGroup.MERCHANT)
+        return listOf(UserPoolGroup.UNKNOWN, UserPoolGroup.CUSTOMER)
     }
 }

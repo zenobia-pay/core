@@ -1009,12 +1009,16 @@ Resources:
                           maxLength: 255
                         debitCustomer:
                           type: boolean
+                          default: false
                         debitMerchant:
                           type: boolean
+                          default: false
                         creditCustomer:
                           type: boolean
+                          default: false
                         creditMerchant:
                           type: boolean
+                          default: false
               responses:
                 "200":
                   description: "Successful response"

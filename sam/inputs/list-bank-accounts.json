@@ -17,7 +17,7 @@
     },
     "authorizer": {
       "principalId": "user123",
-      "role": "CUSTOMER",
+      "roles": ["CUSTOMER"],
       "email": "user@example.com",
       "sub": "google-oauth2|101544010672980959360"
     }
