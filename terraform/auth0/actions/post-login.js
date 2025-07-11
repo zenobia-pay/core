@@ -10,37 +10,20 @@ exports.onExecutePostLogin = async (event, api) => {
     api.accessToken.setCustomClaim("email", event.user.email)
     
     const roles = event.user.app_metadata?.roles || [];
-    console.log(`User has the following roles: ${JSON.stringify(roles)}`);
+    console.log(`User has the following roles: ${roles}`);
     
-    let returnedRoles = roles;
+    let returnedRoles = roles.split(",");
     if (roles.includes('ADMIN')) {
       if (event.client.name !== "Zenobia Admin") {
         console.log("Skipping admin role for non-admin client");
-        returnedRoles = roles.filter(role => role !== 'ADMIN');
+        returnedRoles = roles.split(",").filter(role => role !== 'ADMIN');
       }
     }
 
-    console.log(`Setting roles claim: ${JSON.stringify(returnedRoles)}`);
+    console.log(`Setting roles claim: ${returnedRoles.join(",")}`);
     const namespace = "https://zenobiapay.com/";
-    api.idToken.setCustomClaim(`${namespace}roles`, returnedRoles);
-    api.accessToken.setCustomClaim(`${namespace}roles`, returnedRoles);
-
-    // Setting for backwards compatibility
-    const userRole = event.user.app_metadata?.role;
-    if (userRole) {
-      // Deny access if the role is ADMIN and this is not the admin client
-      if (userRole === "ADMIN" && event.client.name !== "Zenobia Admin") {
-        console.log("Access denied: ADMIN users must use the admin client");
-        api.access.deny('ADMIN_REQUIRES_ADMIN_CLIENT');
-        return;
-      }
-      
-      console.log(`Found user role ${userRole}, adding to claims`);
-      api.idToken.setCustomClaim("role", userRole);
-      api.accessToken.setCustomClaim("role", userRole);
-    } else {
-      console.log("No user role found, skipping adding to claim");
-    }
+    api.idToken.setCustomClaim(`${namespace}roles`, returnedRoles.join(","));
+    api.accessToken.setCustomClaim(`${namespace}roles`, returnedRoles.join(","));
   } catch (err) {
     console.log("Got err: " + err);
   }

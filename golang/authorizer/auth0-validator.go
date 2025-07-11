@@ -11,18 +11,6 @@ import (
 	"github.com/auth0/go-jwt-middleware/v2/validator"
 )
 
-// MachineCustomClaims contains custom data we want from the token.
-type MachineCustomClaims struct {
-	Scope string `json:"scope"`
-	Azp   string `json:"azp"`
-	Role  string `json:"role"`
-}
-
-// Validates that azp is auth0 app client
-func (c MachineCustomClaims) Validate(ctx context.Context) error {
-	return nil
-}
-
 // UserCustomClaims contains custom data we want from the token.
 type UserCustomClaims struct {
 	Email  *string `json:"email"`
