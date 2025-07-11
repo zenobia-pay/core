@@ -25,9 +25,9 @@ func (c MachineCustomClaims) Validate(ctx context.Context) error {
 
 // UserCustomClaims contains custom data we want from the token.
 type UserCustomClaims struct {
-	Email  *string   `json:"email"`
-	M2MSub *string   `json:"m2mSub"`
-	Roles  *[]string `json:"https://zenobiapay.com/roles"`
+	Email  *string `json:"email"`
+	M2MSub *string `json:"m2mSub"`
+	Roles  *string `json:"https://zenobiapay.com/roles"`
 }
 
 // Validates that azp is auth0 app client

@@ -20,7 +20,7 @@ class Auth0Wrapper @Inject constructor(
     private val secret: Auth0ManagementSecret,
 ) {
     companion object {
-        const val ROLE_KEY = "role"
+        const val ROLES_KEY = "roles"
         const val ZENOBIA_AUDIENCE = "https://dashboard.zenobiapay.com"
     }
     fun createClientCredentials(userId: String): Client {
@@ -29,7 +29,7 @@ class Auth0Wrapper @Inject constructor(
         client.appType = "non_interactive"
         client.clientMetadata = mapOf(
             "merchantSub" to userId,
-            ROLE_KEY to UserPoolGroup.MERCHANT_M2M.value
+            ROLES_KEY to UserPoolGroup.MERCHANT_M2M.value
         )
 
         val createClientResponse = getManagementApi().clients().create(client).execute()

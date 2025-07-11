@@ -157,7 +157,7 @@ func handleAdminTokens(ctx context.Context, token string) (map[string]interface{
 	fmt.Printf("Checking for Admin role\n")
 
 	roles := *claims.CustomClaims.(*UserCustomClaims).Roles
-	for _, role := range roles {
+	for _, role := range strings.Split(roles, ",") {
 		if role == "ADMIN" {
 			fmt.Printf("Got role ADMIN, returning true")
 			return getUserContext(claims), isValid
@@ -198,12 +198,11 @@ func getUserContext(claims *validator.ValidatedClaims) map[string]interface{} {
 	if claims == nil {
 		return nil
 	}
-	roles := strings.Join(*claims.CustomClaims.(*UserCustomClaims).Roles, ",")
 	if userCustomClaims, ok := claims.CustomClaims.(*UserCustomClaims); ok {
 		context := map[string]interface{}{
 			"sub":    claims.RegisteredClaims.Subject,
 			"email":  userCustomClaims.Email,
-			"roles":  roles,
+			"roles":  userCustomClaims.Roles,
 			"m2mSub": userCustomClaims.M2MSub,
 		}
 
@@ -216,7 +215,7 @@ func getUserContext(claims *validator.ValidatedClaims) map[string]interface{} {
 		if userCustomClaims.M2MSub != nil {
 			m2mSub = *userCustomClaims.M2MSub
 		}
-		fmt.Printf("Got sub: %s, email: %s, roles: %s, m2mSub: %s\n", sub, email, roles, m2mSub)
+		fmt.Printf("Got sub: %s, email: %s, roles: %s, m2mSub: %s\n", sub, email, userCustomClaims.Roles, m2mSub)
 		return context
 	}
 	println("Could not cast user custom claims")
