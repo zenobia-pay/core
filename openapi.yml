@@ -940,7 +940,49 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
       x-amazon-apigateway-integration:
-        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+        httpMethod: POST
+        type: aws_proxy
+  /get-transfer-statistics:
+    post:
+      summary: "Get aggregated transfer statistics"
+      operationId: "GetTransferStatistics"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                startTime:
+                  type: string
+                endTime:
+                  type: string
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  amountPaid:
+                    type: integer
+                  amountSettled:
+                    type: integer
+                  fee:
+                    type: integer
+                  transferCount:
+                    type: integer
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
         httpMethod: POST
         type: aws_proxy
   /get-merchant-config:

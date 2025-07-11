@@ -3,8 +3,6 @@ package com.zenobiapay.table.transfer.dao
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.table.MAX_LIST_ITEMS
 import com.zenobiapay.table.transfer.model.PaymentParticipantIdentity
-import com.zenobiapay.model.ddb.transfer.PayoutData
-import com.zenobiapay.model.ddb.transfer.PayoutId
 import com.zenobiapay.model.ddb.transfer.PayoutItem
 import com.zenobiapay.table.model.ContinuationToken
 import com.zenobiapay.table.transfer.model.StatementItem
@@ -24,17 +22,27 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException
-import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest
 import java.time.Instant
-import java.time.LocalDate
 import jakarta.inject.Inject
 import jakarta.inject.Named
+import software.amazon.awssdk.enhanced.dynamodb.Key
+import software.amazon.awssdk.enhanced.dynamodb.Expression
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 
 private val logger = KotlinLogging.logger {}
 
 const val PAYOUT_PREFIX = "PAYOUT"
+
+/**
+ * Data class representing aggregated transfer statistics
+ */
+data class TransferStatistics(
+    val amountPaid: Int = 0,
+    val amountSettled: Int = 0,
+    val fee: Int = 0,
+    val transferCount: Int = 0
+)
 
 class TransferDao @Inject constructor(
     private val client: DynamoDbEnhancedClient,
@@ -326,5 +334,72 @@ class TransferDao @Inject constructor(
             logger.error(e) { "Failed to update dispute status for transfer $transferRequestId" }
             null
         }
+    }
+    
+    /**
+     * Get aggregated transfer statistics for a specific merchant, optionally filtered by date range
+     * 
+     * @param merchantId The merchant ID to filter transfers by
+     * @param startDate Optional start date for filtering transfers
+     * @param endDate Optional end date for filtering transfers
+     * @return TransferStatistics object containing aggregated statistics
+     */
+    fun getTransferStatistics(merchantId: String, startTime: Instant? = null, endDate: Instant? = null): TransferStatistics {
+        logger.info { "Getting transfer statistics for merchant $merchantId from ${startTime ?: "beginning"} to ${endDate ?: "now"}" }
+        
+        // Query transfers by merchant ID using GSI_1
+        val pk = TransferItem.generateGsi1Pk(merchantId)
+        val startSk = startTime?.let { TransferItem.generateGsi1Sk("", it)}
+            ?: TransferItem.generateGsi1Sk("", Instant.MIN)
+        val endSk = endDate?.let { TransferItem.generateGsi1Sk("", it) }
+            ?: TransferItem.generateGsi1Sk("", Instant.MAX)
+        val queryConditional = QueryConditional.sortBetween(
+            Key.builder().partitionValue(pk).sortValue(startSk).build(),
+            Key.builder().partitionValue(pk).sortValue(endSk).build()
+        )
+
+        // Create a proper Expression object for the filter
+        val filterExpression = Expression.builder()
+            .expression("inboundStatus <> :status")
+            .putExpressionValue(":status", AttributeValue.builder().s(InboundTransferStatus.NOT_STARTED.name).build())
+            .build()
+
+        val queryRequest = QueryEnhancedRequest.builder()
+            .queryConditional(queryConditional)
+            .filterExpression(filterExpression)
+            .build()
+
+        // Calculate statistics
+        var amountPaid = 0
+        var amountSettled = 0
+        var fee = 0
+        var transferCount = 0
+
+        // Execute the query and process the results
+        val results = transferTable.index(GSI_1).query(queryRequest)
+        
+        for (page in results) {
+            for (item in page.items()) {
+                // Increment transfer count for each transfer
+                transferCount++
+
+                amountPaid += item.amount ?: 0
+                fee += item.data?.fee ?: 0
+
+                // Count settled amounts
+                if (item.outboundStatus == OutboundTransferStatus.COMPLETED) {
+                    amountSettled += item.amount ?: 0
+                }
+            }
+        }
+        
+        logger.info { "Found $transferCount transfers with $amountPaid paid and $amountSettled settled" }
+        
+        return TransferStatistics(
+            amountPaid = amountPaid,
+            amountSettled = amountSettled,
+            fee = fee,
+            transferCount = transferCount
+        )
     }
 }
