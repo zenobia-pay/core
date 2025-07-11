@@ -19,7 +19,7 @@
       "principalId": "user123",
       "sub": "auth0|67f0a8703cc36ca458f5cf7b",
       "email": "user@example.com",
-      "roles": ["UNKNOWN"]
+      "roles": "UNKNOWN"
     }
   }
 }

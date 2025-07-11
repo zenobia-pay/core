@@ -198,12 +198,12 @@ func getUserContext(claims *validator.ValidatedClaims) map[string]interface{} {
 	if claims == nil {
 		return nil
 	}
-
+	roles := strings.Join(*claims.CustomClaims.(*UserCustomClaims).Roles, ",")
 	if userCustomClaims, ok := claims.CustomClaims.(*UserCustomClaims); ok {
 		context := map[string]interface{}{
 			"sub":    claims.RegisteredClaims.Subject,
 			"email":  userCustomClaims.Email,
-			"roles":  userCustomClaims.Roles,
+			"roles":  roles,
 			"m2mSub": userCustomClaims.M2MSub,
 		}
 
@@ -212,15 +212,11 @@ func getUserContext(claims *validator.ValidatedClaims) map[string]interface{} {
 		if userCustomClaims.Email != nil {
 			email = *userCustomClaims.Email
 		}
-		role := ""
-		if userCustomClaims.Roles != nil {
-			role = strings.Join(*userCustomClaims.Roles, ",")
-		}
 		m2mSub := ""
 		if userCustomClaims.M2MSub != nil {
 			m2mSub = *userCustomClaims.M2MSub
 		}
-		fmt.Printf("Got sub: %s, email: %s, roles: %s, m2mSub: %s\n", sub, email, role, m2mSub)
+		fmt.Printf("Got sub: %s, email: %s, roles: %s, m2mSub: %s\n", sub, email, roles, m2mSub)
 		return context
 	}
 	println("Could not cast user custom claims")

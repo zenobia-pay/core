@@ -16,8 +16,8 @@ fun APIGatewayProxyRequestEvent.ProxyRequestContext.getEmail(): String? {
 }
 
 fun APIGatewayProxyRequestEvent.ProxyRequestContext.getUserRoles(): List<UserPoolGroup> {
-    val roles = this.authorizer["roles"] as List<String>?
-    return roles?.map { UserPoolGroup.fromString(it) } ?: listOf(UserPoolGroup.UNKNOWN)
+    val roles = this.authorizer["roles"] as String?
+    return roles?.split(",")?.map { UserPoolGroup.fromString(it) } ?: listOf(UserPoolGroup.UNKNOWN)
 }
 
 fun APIGatewayProxyRequestEvent.ProxyRequestContext.getSubForM2M(): String? {

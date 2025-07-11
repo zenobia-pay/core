@@ -8,12 +8,11 @@
   },
   "requestContext": {
     "authorizer": {
-      "claims": {
-        "sub": "merchant-123",
-        "cognito:groups": "MERCHANT",
-        "userId": "merchant-123"
-      }
+      "principalId": "user123",
+      "email": "user@example.com",
+      "roles": "MERCHANT",
+      "sub": "auth0|67f0a8703cc36ca458f5cf7b"
     }
   },
-  "body": "{\"startDate\":\"2025-01-01\",\"endDate\":\"2025-07-10\"}"
+  "body": "{\"startTime\":\"2025-04-27T00:00:00Z\",\"endTime\":\"2025-04-28T23:59:59Z\"}"
 }

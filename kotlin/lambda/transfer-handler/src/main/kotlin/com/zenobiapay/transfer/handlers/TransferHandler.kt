@@ -17,6 +17,7 @@ import com.zenobiapay.transfer.operations.ListMerchantPayoutsOperation
 import com.zenobiapay.transfer.operations.ListMerchantTransfersOperation
 import com.zenobiapay.transfer.operations.MarkInDisputeOperation
 import com.zenobiapay.transfer.operations.EditTransferOperation
+import com.zenobiapay.transfer.operations.GetTransferStatisticsOperation
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
 
@@ -56,6 +57,9 @@ class TransferHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayPr
     @Inject
     lateinit var markInDisputeOperation: MarkInDisputeOperation
 
+    @Inject
+    lateinit var getTransferStatisticsOperation: GetTransferStatisticsOperation
+
     init {
         DaggerAppComponent.create().inject(this)
     }
@@ -72,6 +76,7 @@ class TransferHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayPr
             "/list-merchant-payouts" -> listMerchantPayoutsOperation
             "/edit-transfer" -> editTransferOperation
             "/mark-in-dispute" -> markInDisputeOperation
+            "/get-transfer-statistics" -> getTransferStatisticsOperation
             else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
         }
         return responseHandler.returnApiGwResponse(operation, input, context!!)

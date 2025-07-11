@@ -20,7 +20,7 @@
       "principalId": "user123",
       "sub": "faa9c493-6ef3-4f3c-9346-409ec371bd3b",
       "email": "user@example.com",
-      "roles": ["CUSTOMER"]
+      "roles": "CUSTOMER"
     }
   }
 }
