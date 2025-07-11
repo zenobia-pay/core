@@ -9,21 +9,21 @@ exports.onExecutePostLogin = async (event, api) => {
     api.idToken.setCustomClaim("email", event.user.email)
     api.accessToken.setCustomClaim("email", event.user.email)
     
-    const roles = event.authorization?.roles || [];
+    const roles = event.user.app_metadata?.roles || [];
     console.log(`User has the following roles: ${JSON.stringify(roles)}`);
     
     let returnedRoles = roles;
-    if (roles.includes('Admin')) {
+    if (roles.includes('ADMIN')) {
       if (event.client.name !== "Zenobia Admin") {
         console.log("Skipping admin role for non-admin client");
-        returnedRoles = roles.filter(role => role !== 'Admin');
+        returnedRoles = roles.filter(role => role !== 'ADMIN');
       }
     }
 
     console.log(`Setting roles claim: ${JSON.stringify(returnedRoles)}`);
-    
-    api.idToken.setCustomClaim("roles", returnedRoles);
-    api.accessToken.setCustomClaim("roles", returnedRoles);
+    const namespace = "https://zenobiapay.com/";
+    api.idToken.setCustomClaim(`${namespace}roles`, returnedRoles);
+    api.accessToken.setCustomClaim(`${namespace}roles`, returnedRoles);
 
     // Setting for backwards compatibility
     const userRole = event.user.app_metadata?.role;
