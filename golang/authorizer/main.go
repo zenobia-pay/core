@@ -150,13 +150,21 @@ func handleMerchantTokens(ctx context.Context, token string) (map[string]interfa
 func handleAdminTokens(ctx context.Context, token string) (map[string]interface{}, bool) {
 	claims, err := GetValidatedAdminClaims(ctx, token)
 	isValid := err == nil
-
-	if *claims.CustomClaims.(*UserCustomClaims).Role != "ADMIN" {
-		fmt.Printf("Did not get role admin, returning false")
+	fmt.Printf("Got isValidAdminToken: %t\n", isValid)
+	if !isValid {
 		return nil, false
 	}
-	println(fmt.Sprintf("Got isValidAdminToken: %t\n", isValid))
-	return getUserContext(claims), isValid
+	fmt.Printf("Checking for Admin role\n")
+
+	roles := *claims.CustomClaims.(*UserCustomClaims).Roles
+	for _, role := range roles {
+		if role == "ADMIN" {
+			fmt.Printf("Got role ADMIN, returning true")
+			return getUserContext(claims), isValid
+		}
+	}
+	fmt.Printf("Did not get role ADMIN, returning false")
+	return nil, false
 }
 
 func handleCustomerJwtTokens(ctx context.Context, token string) (map[string]interface{}, bool) {
@@ -195,7 +203,7 @@ func getUserContext(claims *validator.ValidatedClaims) map[string]interface{} {
 		context := map[string]interface{}{
 			"sub":    claims.RegisteredClaims.Subject,
 			"email":  userCustomClaims.Email,
-			"role":   userCustomClaims.Role,
+			"roles":  userCustomClaims.Roles,
 			"m2mSub": userCustomClaims.M2MSub,
 		}
 
@@ -205,14 +213,14 @@ func getUserContext(claims *validator.ValidatedClaims) map[string]interface{} {
 			email = *userCustomClaims.Email
 		}
 		role := ""
-		if userCustomClaims.Role != nil {
-			role = *userCustomClaims.Role
+		if userCustomClaims.Roles != nil {
+			role = strings.Join(*userCustomClaims.Roles, ",")
 		}
 		m2mSub := ""
 		if userCustomClaims.M2MSub != nil {
 			m2mSub = *userCustomClaims.M2MSub
 		}
-		fmt.Printf("Got sub: %s, email: %s, role: %s, m2mSub: %s\n", sub, email, role, m2mSub)
+		fmt.Printf("Got sub: %s, email: %s, roles: %s, m2mSub: %s\n", sub, email, role, m2mSub)
 		return context
 	}
 	println("Could not cast user custom claims")
