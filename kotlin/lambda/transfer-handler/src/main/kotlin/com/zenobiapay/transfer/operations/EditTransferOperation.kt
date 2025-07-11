@@ -11,11 +11,14 @@ import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.orum.OrumWrapper
 import com.zenobiapay.orum.model.OrumCreateTransferRequest
 import com.zenobiapay.orum.model.TransferParticipant
+import com.zenobiapay.orum.util.generateCustomerOrumId
+import com.zenobiapay.orum.util.generateMerchantOrumId
 import com.zenobiapay.table.transfer.dao.PAYOUT_PREFIX
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.model.InboundTransferStatus
 import com.zenobiapay.table.transfer.model.OutboundTransferStatus
 import com.zenobiapay.table.transfer.util.getFee
+import com.zenobiapay.table.user.dao.UserDao
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
 
@@ -30,6 +33,7 @@ private data class EditTransferDetails(
 
 class EditTransferOperation @Inject constructor(
     private val transferDao: TransferDao,
+    private val userDao: UserDao,
     private val orumWrapper: OrumWrapper,
 ): Operation<EditTransferRequest, EmptyApiResponse>() {
     override val inputType = EditTransferRequest::class.java
@@ -73,12 +77,15 @@ class EditTransferOperation @Inject constructor(
 
         logger.info { "Initiating refund of $refundAmount cents from merchant ${merchantIdentity.id} to customer ${customerIdentity.id}" }
 
+        val customerReferenceId = generateCustomerOrumId(customerIdentity.id)
+        val merchantItem = userDao.getUserItem(merchantIdentity.id) ?: throw ResourceNotFoundException("MERCHANT")
+        val merchantReferenceId = merchantItem.data.orumReferenceId ?: throw ResourceNotFoundException("ORUM REFERENCE ID")
         val editTransferDetails = if (request.debitMerchant) {
             EditTransferDetails(
                 source = TransferParticipant(
-                    customerReferenceId = customerIdentity.id,
-                    statementDisplayName = "Refund: ${customerIdentity.name?.take(16) ?: "Customer"}",
-                    accountReferenceId = customerIdentity.bankAccountId
+                    customerReferenceId = merchantReferenceId,
+                    statementDisplayName = "Refund: ${customerIdentity.name ?: ""}",
+                    accountReferenceId = merchantIdentity.bankAccountId
                 ),
                 destination = null,
                 amount = merchantPayout,
@@ -92,7 +99,7 @@ class EditTransferOperation @Inject constructor(
             EditTransferDetails(
                 source = null,
                 destination = TransferParticipant(
-                    customerReferenceId = customerIdentity.id,
+                    customerReferenceId = customerReferenceId,
                     statementDisplayName = "Refund: ${merchantIdentity.name ?: "Zenobia Pay"}",
                     accountReferenceId = customerIdentity.bankAccountId
                 ),
@@ -107,7 +114,7 @@ class EditTransferOperation @Inject constructor(
             logger.info { "Retrying debiting customer purchase." }
             EditTransferDetails(
                 source = TransferParticipant(
-                    customerReferenceId = customerIdentity.id,
+                    customerReferenceId = customerReferenceId,
                     statementDisplayName = merchantIdentity.name?.take(16),
                     accountReferenceId = customerIdentity.bankAccountId
                 ),
@@ -131,8 +138,8 @@ class EditTransferOperation @Inject constructor(
             EditTransferDetails(
                 source = null,
                 destination = TransferParticipant(
-                    customerReferenceId = merchantIdentity.id,
-                    statementDisplayName = merchantIdentity.name?.take(16),
+                    customerReferenceId = merchantReferenceId,
+                    statementDisplayName = customerIdentity.name?.take(16),
                     accountReferenceId = customerIdentity.bankAccountId,
                 ),
                 amount = merchantPayout,

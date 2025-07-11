@@ -51,7 +51,7 @@ class TransferHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayPr
     lateinit var listMerchantPayoutsOperation: ListMerchantPayoutsOperation
 
     @Inject
-    lateinit var refundTransferOperation: EditTransferOperation
+    lateinit var editTransferOperation: EditTransferOperation
 
     @Inject
     lateinit var markInDisputeOperation: MarkInDisputeOperation
@@ -70,7 +70,7 @@ class TransferHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayPr
             "/list-customer-transfers" -> listCustomerTransfersOperation
             "/list-merchant-transfers" -> listMerchantTransfersOperation
             "/list-merchant-payouts" -> listMerchantPayoutsOperation
-            "/refund-transfer" -> refundTransferOperation
+            "/edit-transfer" -> editTransferOperation
             "/mark-in-dispute" -> markInDisputeOperation
             else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
         }
