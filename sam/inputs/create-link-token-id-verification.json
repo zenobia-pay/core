@@ -17,7 +17,7 @@
     },
     "authorizer": {
       "principalId": "user123",
-      "role": "UNKNOWN",
+      "roles": ["UNKNOWN"],
       "email": "user@example.com",
       "sub": "user-abc-123"
     }

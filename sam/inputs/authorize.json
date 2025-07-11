@@ -1,8 +1,8 @@
 {
     "type": "REQUEST",
     "headers": {
-        "authorization": "NONE"
+        "authorization": "Bearer .eyJlbWFpbCI6InRlZGR5QHplbm9iaWFwYXkuY29tIiwiaHR0cHM6Ly96ZW5vYmlhcGF5LmNvbS9yb2xlcyI6WyJNRVJDSEFOVCJdLCJyb2xlIjoiTUVSQ0hBTlQiLCJpc3MiOiJodHRwczovL2FjY291bnRzLnplbm9iaWFwYXkuY29tLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTA2MTM5NTc0NTA5MzEzNDY1NTMyIiwiYXVkIjpbImh0dHBzOi8vZGFzaGJvYXJkLnplbm9iaWFwYXkuY29tIiwiaHR0cHM6Ly96ZW5vYmlhLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3NTIyMDc5NzAsImV4cCI6MTc1MjI0Mzk3MCwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF6cCI6Imw5eVdCSWZ6U1ZXak1NSFAwMkJTNmlmNFZlWlZGVmlIIiwicGVybWlzc2lvbnMiOltdfQ.K5wNtjxr0iVga2JwsxB6dxta7c3AwgqnV6cvb8f4NIT5bxbdApJ7rIPk_CROH-kONKMrs6suwyLRMz7pX9zA_7U2Gy7BMWeryFBxsCGcUTPtk-ZgWfhKJJvolauE1L9A4m_HAio2O9OEau0fH8jmxTpvBtE0OpQzqLp3Ln2eTxR8HIMjAM6S7XujXlmdMFeyO5VvU2TdKxLrtXOxeXW75R9GjFpYZU5scbcUcUObGkAqwX3BQBBrslTv1BSGrvstG3F7Ulr9c0SfwM9J82eNL-Bd28RKdUkH-uxX4U3MBI7MNJKmmEMZNiLrR2swIok0uRZcQV2ahjyKb7AgwZCgHg"
     },
-    "methodArn": "arn:aws:execute-api:us-east-1:123456789012:example/prod/GET/get-customer-transfer?id=1234",
-    "path": "/get-customer-transfer"
+    "methodArn": "arn:aws:execute-api:us-east-1:123456789012:example/prod/POST/edit-transfer?id=1234",
+    "path": "/edit-transfer"
 }

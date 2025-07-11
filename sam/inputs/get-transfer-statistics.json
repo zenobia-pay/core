@@ -1,0 +1,19 @@
+{
+  "resource": "/get-transfer-statistics",
+  "path": "/get-transfer-statistics",
+  "httpMethod": "POST",
+  "headers": {
+    "Accept": "*/*",
+    "Content-Type": "application/json"
+  },
+  "requestContext": {
+    "authorizer": {
+      "claims": {
+        "sub": "merchant-123",
+        "cognito:groups": "MERCHANT",
+        "userId": "merchant-123"
+      }
+    }
+  },
+  "body": "{\"startDate\":\"2025-01-01\",\"endDate\":\"2025-07-10\"}"
+}
