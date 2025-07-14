@@ -2070,6 +2070,18 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /get-transfer-statistics
             Method: POST
+        ListAdminTransfers:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /list-admin-transfers
+            Method: POST
+        GetAdminTransfer:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /get-admin-transfer
+            Method: POST
 
   UserHandlerFunction:
     Type: AWS::Serverless::Function
