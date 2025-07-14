@@ -828,6 +828,64 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
+          /get-admin-transfer:
+            post:
+              summary: "Admin endpoint to fetch metadata associated with any merchant's transfer request"
+              operationId: "GetAdminTransfer"
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - id
+                      properties:
+                        id:
+                          type: string
+                          description: "The ID of the transfer to fetch"
+              responses:
+                "200":
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          transferRequestId:
+                            type: string
+                          amount:
+                            type: integer
+                          inboundStatus:
+                            type: string
+                          outboundStatus:
+                            type: string
+                          statementItems:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/StatementItem"
+                          statusMessage:
+                            type: string
+                          customerName:
+                            type: string
+                          fee:
+                            type: integer
+                          payoutTime:
+                            type: string
+                          creationTime:
+                            type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
           /get-merchant-transfer:
             get:
               summary: "Fetches metadata associated with a merchant's transfer request"
@@ -1044,6 +1102,67 @@ Resources:
                 "500":
                   $ref: "#/components/responses/InternalServerError"
 
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /list-admin-transfers:
+            post:
+              summary: "Admin endpoint to list all transfers for a specific merchant"
+              operationId: "ListAdminTransfers"
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - sub
+                      properties:
+                        sub:
+                          type: string
+                          description: "The Auth0 sub of the merchant to fetch transfers for"
+                        continuationToken:
+                          type: string
+                          minLength: 1
+                          maxLength: 512
+              responses:
+                "200":
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          continuationToken:
+                            type: string
+                          items:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                amount:
+                                  type: integer
+                                status:
+                                  type: string
+                                transferRequestId:
+                                  type: string
+                                customerName:
+                                  type: string
+                                fee:
+                                  type: integer
+                                payoutTime:
+                                  type: string
+                                creationTime:
+                                  type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
@@ -1417,6 +1536,41 @@ Resources:
                   $ref: "#/components/responses/Forbidden"
                 "404":
                   $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+          /list-merchants:
+            post:
+              summary: "List all merchants with their name, id, and approval status"
+              operationId: "ListMerchants"
+              responses:
+                "200":
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          merchants:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                name:
+                                  type: string
+                                approved:
+                                  type: boolean
+                                creationTime:
+                                  type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
                 "500":
                   $ref: "#/components/responses/InternalServerError"
               x-amazon-apigateway-integration:
@@ -1916,6 +2070,18 @@ Resources:
             RestApiId: !Ref ZenobiaApi
             Path: /get-transfer-statistics
             Method: POST
+        ListAdminTransfers:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /list-admin-transfers
+            Method: POST
+        GetAdminTransfer:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /get-admin-transfer
+            Method: POST
 
   UserHandlerFunction:
     Type: AWS::Serverless::Function
@@ -2007,6 +2173,12 @@ Resources:
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /delete-m2m-credentials
+            Method: POST
+        ListMerchants:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /list-merchants
             Method: POST
 
   ItemHandlerFunction:

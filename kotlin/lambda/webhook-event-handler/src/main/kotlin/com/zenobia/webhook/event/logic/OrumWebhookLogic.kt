@@ -79,8 +79,9 @@ class OrumWebhookLogic @Inject constructor(
         val event = objectMapper.readValue(data, TransferEventBody::class.java).transfer
         val status = event.status
         return """
-            *Transfer Update ${status}* <@channel>
+            *Transfer Update ${status}* <!channel>
             - Id: `${event.transfer_reference_id}`:
+            - Amount: `${event.amount}`
             - Source: `${event.source}`
             - Destination: `${event.destination}`
         """.trimIndent()

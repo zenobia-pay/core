@@ -3,35 +3,37 @@ package com.zenobiapay.transfer.operations
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.zenobiapay.api.generated.model.GetAdminTransfer200Response
-import com.zenobiapay.api.generated.model.GetMerchantTransfer200Response
 import com.zenobiapay.api.model.exception.ResourceNotFoundException
-import com.zenobiapay.api.model.transfer.GetMerchantTransferRequest
-import com.zenobiapay.api.model.NoApiBody
+import com.zenobiapay.api.generated.model.GetAdminTransfer200Response
+import com.zenobiapay.api.generated.model.GetAdminTransferRequest
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.table.transfer.dao.TransferDao
 import com.zenobiapay.table.transfer.util.getFee
 import jakarta.inject.Inject
 
-class GetMerchantTransferOperation @Inject constructor(
+class GetAdminTransferOperation @Inject constructor(
     private val objectMapper: ObjectMapper,
     private val transferDao: TransferDao
-): Operation<NoApiBody, GetMerchantTransfer200Response>() {
-    override val inputType = NoApiBody::class.java
-    override fun run(request: NoApiBody, input: APIGatewayProxyRequestEvent, context: Context, userId: String?): GetMerchantTransfer200Response {
-        val request = GetMerchantTransferRequest.from(input.queryStringParameters, objectMapper)
+): Operation<GetAdminTransferRequest, GetAdminTransfer200Response>() {
+    override val inputType = GetAdminTransferRequest::class.java
+    
+    override fun run(
+        request: GetAdminTransferRequest, 
+        input: APIGatewayProxyRequestEvent, 
+        context: Context, 
+        userId: String?
+    ): GetAdminTransfer200Response {
+        val transferId = input.queryStringParameters?.get("id")
+            ?: throw ResourceNotFoundException("Missing transfer ID")
+            
+        val transferItem = transferDao.getTransfer(transferId) ?: throw ResourceNotFoundException("TRANSFER")
 
-        val transferItem = transferDao.getTransfer(
-            transferRequestId = request.id
-        )
-        if (transferItem == null || transferItem.data?.merchant?.id != userId) {
-            throw ResourceNotFoundException("TRANSFER")
-        }
-        return GetMerchantTransfer200Response()
+        return GetAdminTransfer200Response()
             .amount(transferItem.amount)
-            .transferRequestId(request.id)
-            .status(transferItem.outboundStatus.toApiTransferStatus())
+            .transferRequestId(transferId)
+            .inboundStatus(transferItem.inboundStatus.name)
+            .outboundStatus(transferItem.outboundStatus.name)
             .statementItems(transferItem.data?.statementItems?.map { it.toApiStatementItem() } ?: listOf())
             .statusMessage(transferItem.data?.statusMessage)
             .customerName(transferItem.data?.customer?.name)
@@ -41,6 +43,6 @@ class GetMerchantTransferOperation @Inject constructor(
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {
-        return listOf(UserPoolGroup.MERCHANT)
+        return listOf(UserPoolGroup.ADMIN)
     }
 }
