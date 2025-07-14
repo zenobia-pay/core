@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.zenobiapay.api.generated.model.GetAdminTransfer200Response
+import com.zenobiapay.api.generated.model.GetMerchantTransfer200Response
 import com.zenobiapay.api.model.exception.ResourceNotFoundException
 import com.zenobiapay.api.model.transfer.GetMerchantTransferRequest
 import com.zenobiapay.api.model.NoApiBody
@@ -16,9 +17,9 @@ import jakarta.inject.Inject
 class GetMerchantTransferOperation @Inject constructor(
     private val objectMapper: ObjectMapper,
     private val transferDao: TransferDao
-): Operation<NoApiBody, GetAdminTransfer200Response>() {
+): Operation<NoApiBody, GetMerchantTransfer200Response>() {
     override val inputType = NoApiBody::class.java
-    override fun run(request: NoApiBody, input: APIGatewayProxyRequestEvent, context: Context, userId: String?): GetAdminTransfer200Response {
+    override fun run(request: NoApiBody, input: APIGatewayProxyRequestEvent, context: Context, userId: String?): GetMerchantTransfer200Response {
         val request = GetMerchantTransferRequest.from(input.queryStringParameters, objectMapper)
 
         val transferItem = transferDao.getTransfer(
@@ -27,7 +28,7 @@ class GetMerchantTransferOperation @Inject constructor(
         if (transferItem == null || transferItem.data?.merchant?.id != userId) {
             throw ResourceNotFoundException("TRANSFER")
         }
-        return GetAdminTransfer200Response()
+        return GetMerchantTransfer200Response()
             .amount(transferItem.amount)
             .transferRequestId(request.id)
             .status(transferItem.outboundStatus.toApiTransferStatus())

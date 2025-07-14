@@ -24,22 +24,16 @@ class GetAdminTransferOperation @Inject constructor(
         context: Context, 
         userId: String?
     ): GetAdminTransfer200Response {
-        val merchantId = request.sub
         val transferId = input.queryStringParameters?.get("id")
             ?: throw ResourceNotFoundException("Missing transfer ID")
             
-        val transferItem = transferDao.getTransfer(
-            transferRequestId = transferId
-        )
-        
-        if (transferItem == null || transferItem.data?.merchant?.id != merchantId) {
-            throw ResourceNotFoundException("TRANSFER")
-        }
-        
+        val transferItem = transferDao.getTransfer(transferId) ?: throw ResourceNotFoundException("TRANSFER")
+
         return GetAdminTransfer200Response()
             .amount(transferItem.amount)
             .transferRequestId(transferId)
-            .status(transferItem.outboundStatus.toApiTransferStatus())
+            .inboundStatus(transferItem.inboundStatus.name)
+            .outboundStatus(transferItem.outboundStatus.name)
             .statementItems(transferItem.data?.statementItems?.map { it.toApiStatementItem() } ?: listOf())
             .statusMessage(transferItem.data?.statusMessage)
             .customerName(transferItem.data?.customer?.name)

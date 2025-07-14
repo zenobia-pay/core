@@ -839,11 +839,10 @@ Resources:
                       type: object
                       required:
                         - id
-                        - sub
                       properties:
-                        sub:
+                        id:
                           type: string
-                          description: "The Auth0 sub of the merchant who owns the transfer"
+                          description: "The ID of the transfer to fetch"
               responses:
                 "200":
                   description: "Successful response"
@@ -856,8 +855,10 @@ Resources:
                             type: string
                           amount:
                             type: integer
-                          status:
-                            $ref: "#/components/schemas/TransferStatus"
+                          inboundStatus:
+                            type: string
+                          outboundStatus:
+                            type: string
                           statementItems:
                             type: array
                             items:
