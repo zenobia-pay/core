@@ -87,6 +87,7 @@ var validCustomerRoutes = []Route{
 var validAdminRoutes = []Route{
 	{"POST", "edit-transfer"},
 	{"POST", "mark-in-dispute"},
+	{"POST", "list-merchants"},
 }
 
 var validOrumRoutes = []Route{

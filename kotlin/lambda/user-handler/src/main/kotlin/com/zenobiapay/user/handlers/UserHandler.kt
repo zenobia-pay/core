@@ -13,6 +13,7 @@ import com.zenobiapay.user.operations.DeleteM2MCredentialsOperation
 import com.zenobiapay.user.operations.GetMerchantConfigOperation
 import com.zenobiapay.user.operations.GetUserProfileOperation
 import com.zenobiapay.user.operations.ListM2MCredentialsOperation
+import com.zenobiapay.user.operations.ListMerchantsOperation
 import com.zenobiapay.user.operations.SubmitTermsOperation
 import com.zenobiapay.user.operations.UpdateMerchantConfigOperation
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -46,6 +47,9 @@ class UserHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
     lateinit var deleteM2MCredentialsOperation: DeleteM2MCredentialsOperation
 
     @Inject
+    lateinit var listMerchantsOperation: ListMerchantsOperation
+
+    @Inject
     lateinit var objectMapper: ObjectMapper
 
     init {
@@ -62,6 +66,7 @@ class UserHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
             "/create-m2m-credentials" -> createM2MCredentialsOperation
             "/list-m2m-credentials" -> listM2MCredentialsOperation
             "/delete-m2m-credentials" -> deleteM2MCredentialsOperation
+            "/list-merchants" -> listMerchantsOperation
             else -> return responseHandler.generateApiGatewayErrorResponse(UnknownPathException())
         }
         return responseHandler.returnApiGwResponse(operation, input, context!!)

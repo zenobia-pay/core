@@ -1423,6 +1423,41 @@ Resources:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST
                 type: aws_proxy
+          /list-merchants:
+            post:
+              summary: "List all merchants with their name, id, and approval status"
+              operationId: "ListMerchants"
+              responses:
+                "200":
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          merchants:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                name:
+                                  type: string
+                                approved:
+                                  type: boolean
+                                creationTime:
+                                  type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
 
           /get-item:
             post:
@@ -2007,6 +2042,12 @@ Resources:
           Properties:
             RestApiId: !Ref ZenobiaApi
             Path: /delete-m2m-credentials
+            Method: POST
+        ListMerchants:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ZenobiaApi
+            Path: /list-merchants
             Method: POST
 
   ItemHandlerFunction:

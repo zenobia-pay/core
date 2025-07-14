@@ -197,6 +197,36 @@ The project uses GitHub Actions for continuous integration and deployment:
   - Passed to SAM templates during deployment
   - Example: `SENDER_EMAIL` for notification sender address
 
+### Creating New API Endpoints
+
+Follow these steps to create a new API endpoint in the system:
+
+1. **Define the endpoint in SAM template**:
+   - Add the API path and method to `sam/lambda-stack.yml` under the appropriate handler function
+   - Define request/response schemas in the OpenAPI section
+
+2. **Generate API models**:
+   - Run `make openapi && make kotlin-dev` to generate request/response types
+
+3. **Implement the operation in Kotlin**:
+   - Create a new operation class (e.g., `NewEndpointOperation.kt`) extending `Operation<RequestType, ResponseType>`
+   - Implement the `run()` method to process the request and return the response
+   - Add the required `getUserPoolAllowList()` method to specify authorization
+
+4. **Register the operation in the handler**:
+   - Inject the operation in the handler class constructor
+   - Add the path mapping in the `handleRequest` method
+
+5. **Configure authorization**:
+   - For admin endpoints, add the route to `validAdminRoutes` in `golang/authorizer/route.go`
+   - For regular endpoints, ensure proper user pool groups are specified in the operation
+
+6. **Create a sam-input file for testing**:
+   - Add a JSON file in `sam/inputs/` with sample request data
+
+7. **Test the endpoint**:
+   - Run `sam local invoke HandlerName -e sam/inputs/your-input.json`
+
 ### SAM Deployment Architecture
 
 - **template.yml**: Main SAM template that defines:

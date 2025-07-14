@@ -10,10 +10,22 @@ import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.user.model.Auth0Exception
 import com.zenobiapay.user.model.Auth0ManagementSecret
 import io.github.oshai.kotlinlogging.KotlinLogging
+import java.util.Date
 import java.util.UUID
 import jakarta.inject.Inject
+import java.time.Instant
 
 private val logger = KotlinLogging.logger {}
+
+/**
+ * Data class representing merchant information
+ */
+data class MerchantInfo(
+    val id: String,
+    val name: String,
+    val approved: Boolean,
+    val creationTime: Instant?
+)
 
 class Auth0Wrapper @Inject constructor(
     private val authAPI: AuthAPI,
@@ -66,6 +78,30 @@ class Auth0Wrapper @Inject constructor(
     private fun getUser(userId: String): User {
         val user = getBodyOrThrow(getManagementApi().users().get(userId, null).execute(), "Failed to get auth0 user")
         return user
+    }
+    
+    /**
+     * Lists all users (merchants) with their name, id, and approval status
+     * Approval is determined by the presence of the "roles" field in app_metadata
+     */
+    fun listMerchants(): List<MerchantInfo> {
+        val users = getBodyOrThrow(
+            getManagementApi().users().list(null).execute(),
+            "Failed to list auth0 users"
+        )
+        
+        return users.items.map { user ->
+            val appMetadata = user.appMetadata ?: mapOf<String, Any>()
+            val isApproved = appMetadata[ROLES_KEY]?.let { it as String }.orEmpty().contains(UserPoolGroup.MERCHANT.value.toString())
+            val createdAt = user.createdAt.toInstant()
+            
+            MerchantInfo(
+                id = user.id ?: "",
+                name = user.name ?: "",
+                approved = isApproved,
+                creationTime = createdAt
+            )
+        }
     }
 
     fun getManagementApi(): ManagementAPI {
