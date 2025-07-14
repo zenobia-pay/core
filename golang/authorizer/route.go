@@ -88,6 +88,8 @@ var validAdminRoutes = []Route{
 	{"POST", "edit-transfer"},
 	{"POST", "mark-in-dispute"},
 	{"POST", "list-merchants"},
+	{"POST", "list-admin-transfers"},
+	{"POST", "get-admin-transfer"},
 }
 
 var validOrumRoutes = []Route{

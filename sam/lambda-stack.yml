@@ -828,6 +828,63 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
 
+          /get-admin-transfer:
+            post:
+              summary: "Admin endpoint to fetch metadata associated with any merchant's transfer request"
+              operationId: "GetAdminTransfer"
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - id
+                        - sub
+                      properties:
+                        sub:
+                          type: string
+                          description: "The Auth0 sub of the merchant who owns the transfer"
+              responses:
+                "200":
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          transferRequestId:
+                            type: string
+                          amount:
+                            type: integer
+                          status:
+                            $ref: "#/components/schemas/TransferStatus"
+                          statementItems:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/StatementItem"
+                          statusMessage:
+                            type: string
+                          customerName:
+                            type: string
+                          fee:
+                            type: integer
+                          payoutTime:
+                            type: string
+                          creationTime:
+                            type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
           /get-merchant-transfer:
             get:
               summary: "Fetches metadata associated with a merchant's transfer request"
@@ -1044,6 +1101,67 @@ Resources:
                 "500":
                   $ref: "#/components/responses/InternalServerError"
 
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+          /list-admin-transfers:
+            post:
+              summary: "Admin endpoint to list all transfers for a specific merchant"
+              operationId: "ListAdminTransfers"
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - sub
+                      properties:
+                        sub:
+                          type: string
+                          description: "The Auth0 sub of the merchant to fetch transfers for"
+                        continuationToken:
+                          type: string
+                          minLength: 1
+                          maxLength: 512
+              responses:
+                "200":
+                  description: "Successful response"
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          continuationToken:
+                            type: string
+                          items:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                amount:
+                                  type: integer
+                                status:
+                                  type: string
+                                transferRequestId:
+                                  type: string
+                                customerName:
+                                  type: string
+                                fee:
+                                  type: integer
+                                payoutTime:
+                                  type: string
+                                creationTime:
+                                  type: string
+                "400":
+                  $ref: "#/components/responses/BadRequest"
+                "403":
+                  $ref: "#/components/responses/Forbidden"
+                "404":
+                  $ref: "#/components/responses/NotFound"
+                "500":
+                  $ref: "#/components/responses/InternalServerError"
               x-amazon-apigateway-integration:
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TransferHandlerFunction.Arn}:prod/invocations
                 httpMethod: POST

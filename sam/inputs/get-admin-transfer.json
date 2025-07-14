@@ -1,0 +1,31 @@
+{
+  "resource": "/get-admin-transfer",
+  "path": "/get-admin-transfer",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "multiValueHeaders": {},
+  "queryStringParameters": {
+    "id": "transfer-123456"
+  },
+  "multiValueQueryStringParameters": null,
+  "pathParameters": null,
+  "stageVariables": null,
+  "body": "{\"sub\":\"auth0|merchant-user-id\"}",
+  "isBase64Encoded": false,
+  "requestContext": {
+    "accountId": "123456789012",
+    "resourceId": "abc123",
+    "stage": "dev",
+    "requestId": "requestId1",
+    "identity": {
+      "sourceIp": "127.0.0.1"
+    },
+    "authorizer": {
+      "principalId": "admin123",
+      "sub": "auth0|admin-user-id",
+      "roles": "ADMIN"
+    }
+  }
+}
