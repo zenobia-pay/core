@@ -103,6 +103,11 @@ tasks {
             exclude(dependency("org.apache.logging.log4j:log4j-core:.*"))
             exclude(dependency("org.apache.logging.log4j:log4j-slf4j2-impl:.*"))
             exclude(dependency("org.slf4j:slf4j-api:.*"))
+            // Exclude AWS X-Ray classes from minimization
+            exclude(dependency("com.amazonaws:aws-xray-recorder-sdk-core:.*"))
+            exclude(dependency("com.amazonaws:aws-xray-recorder-sdk-aws-sdk-v2:.*"))
+            exclude(dependency("com.amazonaws:aws-xray-recorder-sdk-aws-sdk-v2-instrumentor:.*"))
+            exclude(dependency("com.amazonaws:aws-java-sdk-xray:.*"))
         }
         
         // Merge service files to avoid duplication
