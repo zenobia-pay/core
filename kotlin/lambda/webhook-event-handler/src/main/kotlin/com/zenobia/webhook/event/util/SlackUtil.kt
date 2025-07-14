@@ -22,7 +22,11 @@ class SlackUtil @Inject constructor(
     private val objectMapper: ObjectMapper
 ) {
     fun sendMessage(message: String, slackChannel: SlackChannel) {
-        val json = objectMapper.writeValueAsString(mapOf("text" to message))
+        val json = objectMapper.writeValueAsString(mapOf(
+            "text" to message,
+            "link_names" to 1,
+            "parse" to "full"
+        ))
         val requestBody = json.toRequestBody("application/json".toMediaTypeOrNull())
 
         val request = Request.Builder()
