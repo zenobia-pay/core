@@ -50,7 +50,6 @@ var validUnauthenticatedRoutes = []Route{
 	{"GET", "get-customer-transfer"},
 }
 
-// TODO: use valid merchant and customer routes
 var validMerchantRoutes = []Route{
 	{"POST", "create-transfer-request"},
 	{"GET", "get-merchant-transfer"},
@@ -65,6 +64,7 @@ var validMerchantRoutes = []Route{
 	{"POST", "delete-bank-account"},
 	{"POST", "list-bank-accounts"},
 	{"POST", "submit-terms"},
+	{"POST", "get-transfer-statistics"},
 }
 var validCustomerRoutes = []Route{
 	{"POST", "create-link-token"},
