@@ -1259,6 +1259,9 @@ Resources:
                           type: string
                         endTime:
                           type: string
+                      required:
+                        - startTime
+                        - endTime
               responses:
                 "200":
                   description: "Successful response"
