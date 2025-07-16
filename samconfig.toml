@@ -33,7 +33,8 @@ parameter_overrides = [
     "ZenobiaApiEndpoint=https://4sdynx1kod.execute-api.us-east-1.amazonaws.com/Prod/",
     "PlaidIpAddresses=52.21.26.131,52.21.47.157,52.41.247.19,52.88.82.239",
     "PlaidSlackWebhook=https://hooks.slack.com/services/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",
-    "ResaleServiceEndpoint=https://google.com"
+    "ResaleServiceEndpoint=https://google.com",
+    "PagerDutyEndpoint=https://events.pagerduty.com/integration/4b5618ebfcd34509c0760509c8c8a909/enqueue"
 ]
 
 [default.package.parameters]

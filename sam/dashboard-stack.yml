@@ -2,7 +2,267 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Dashboard stack.
 
+Parameters:
+  PagerDutyEndpoint:
+    Type: String
+    Description: PagerDuty HTTPS endpoint URL for SNS integration
+    NoEcho: true  # Secure parameter that won't be displayed in console
+  TransferMetadataDeadLetterQueueName:
+    Type: String
+    Description: Name of the Transfer Metadata Dead Letter Queue
+    Default: TransferMetadataDeadLetterQueue
+  PayoutProcessorDLQName:
+    Type: String
+    Description: Name of the Payout Processor Dead Letter Queue
+    Default: PayoutProcessorDLQ
+  TransferTableNotificationsHandlerDLQName:
+    Type: String
+    Description: Name of the Transfer Table Notifications Handler Dead Letter Queue
+    Default: TransferTableNotificationsHandlerDLQ
+  WebhookEventQueueDLQName:
+    Type: String
+    Description: Name of the Webhook Event Queue Dead Letter Queue
+    Default: WebhookEventQueueDLQ
+  WebhookEventFunctionDLQName:
+    Type: String
+    Description: Name of the Webhook Event Function Dead Letter Queue
+    Default: WebhookEventFunctionDLQ
+  ItemMetadataQueueDLQName:
+    Type: String
+    Description: Name of the Item Metadata Queue Dead Letter Queue
+    Default: ItemMetadataQueueDLQ
+  ItemMetadataRecorderDLQName:
+    Type: String
+    Description: Name of the Item Metadata Recorder Dead Letter Queue
+    Default: ItemMetadataRecorderDLQ
+
 Resources:
+  # SNS Topic for PagerDuty integration
+  PagerDutySNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: ZenobiaPagerDuty
+      TopicName: zenobia-pagerduty-alerts
+
+  # HTTPS Subscription to PagerDuty
+  PagerDutySubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: https
+      Endpoint: !Ref PagerDutyEndpoint
+      TopicArn: !Ref PagerDutySNSTopic
+      RawMessageDelivery: false
+
+  ApiGateway5xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: zenobia-api-5xx-error
+      AlarmDescription: 'Sev2: API Gateway 5xx errors detected'
+      AlarmActions: 
+        - !Ref PagerDutySNSTopic
+      OKActions:
+        - !Ref PagerDutySNSTopic
+      MetricName: 5XXError
+      Namespace: AWS/ApiGateway
+      Dimensions:
+        - Name: ApiName
+          Value: Zenobia API
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
+      TreatMissingData: notBreaching
+      
+  TransferMetadataDLQAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: zenobia-transfer-metadata-dlq-messages
+      AlarmDescription: 'Sev2: Transfer Metadata DLQ messages detected'
+      AlarmActions: 
+        - !Ref PagerDutySNSTopic
+      OKActions:
+        - !Ref PagerDutySNSTopic
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Dimensions:
+        - Name: QueueName
+          Value: !Ref TransferMetadataDeadLetterQueueName
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Period: 60
+      Statistic: Average
+      Threshold: 0
+      TreatMissingData: notBreaching
+      
+  PayoutProcessorDLQAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: zenobia-payout-processor-dlq-messages
+      AlarmDescription: 'Sev2: Payout Processor DLQ messages detected'
+      AlarmActions: 
+        - !Ref PagerDutySNSTopic
+      OKActions:
+        - !Ref PagerDutySNSTopic
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Dimensions:
+        - Name: QueueName
+          Value: !Ref PayoutProcessorDLQName
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Period: 60
+      Statistic: Average
+      Threshold: 0
+      TreatMissingData: notBreaching
+      
+  TransferTableNotificationsDLQAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: zenobia-transfer-notifications-dlq-messages
+      AlarmDescription: 'Sev2: Transfer Table Notifications Handler DLQ messages detected'
+      AlarmActions: 
+        - !Ref PagerDutySNSTopic
+      OKActions:
+        - !Ref PagerDutySNSTopic
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Dimensions:
+        - Name: QueueName
+          Value: !Ref TransferTableNotificationsHandlerDLQName
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Period: 60
+      Statistic: Average
+      Threshold: 0
+      TreatMissingData: notBreaching
+      
+  WebhookEventQueueDLQAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: zenobia-webhook-event-queue-dlq-messages
+      AlarmDescription: 'Sev2: Webhook Event Queue DLQ messages detected'
+      AlarmActions: 
+        - !Ref PagerDutySNSTopic
+      OKActions:
+        - !Ref PagerDutySNSTopic
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Dimensions:
+        - Name: QueueName
+          Value: !Ref WebhookEventQueueDLQName
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Period: 60
+      Statistic: Average
+      Threshold: 0
+      TreatMissingData: notBreaching
+      
+  WebhookEventFunctionDLQAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: zenobia-webhook-event-function-dlq-messages
+      AlarmDescription: 'Sev2: Webhook Event Function DLQ messages detected'
+      AlarmActions: 
+        - !Ref PagerDutySNSTopic
+      OKActions:
+        - !Ref PagerDutySNSTopic
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Dimensions:
+        - Name: QueueName
+          Value: !Ref WebhookEventFunctionDLQName
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Period: 60
+      Statistic: Average
+      Threshold: 0
+      TreatMissingData: notBreaching
+      
+  ItemMetadataQueueDLQAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: zenobia-item-metadata-queue-dlq-messages
+      AlarmDescription: 'Sev2: Item Metadata Queue DLQ messages detected'
+      AlarmActions: 
+        - !Ref PagerDutySNSTopic
+      OKActions:
+        - !Ref PagerDutySNSTopic
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Dimensions:
+        - Name: QueueName
+          Value: !Ref ItemMetadataQueueDLQName
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Period: 60
+      Statistic: Average
+      Threshold: 0
+      TreatMissingData: notBreaching
+      
+  ItemMetadataRecorderDLQAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: zenobia-item-metadata-recorder-dlq-messages
+      AlarmDescription: 'Sev2: Item Metadata Recorder DLQ messages detected'
+      AlarmActions: 
+        - !Ref PagerDutySNSTopic
+      OKActions:
+        - !Ref PagerDutySNSTopic
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Dimensions:
+        - Name: QueueName
+          Value: !Ref ItemMetadataRecorderDLQName
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Period: 60
+      Statistic: Average
+      Threshold: 0
+      TreatMissingData: notBreaching
+      
+  ApiGateway4xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: zenobia-api-4xx-error
+      AlarmDescription: 'Sev3: API Gateway 4xx errors detected'
+      AlarmActions: 
+        - !Ref PagerDutySNSTopic
+      OKActions:
+        - !Ref PagerDutySNSTopic
+      MetricName: 4XXError
+      Namespace: AWS/ApiGateway
+      Dimensions:
+        - Name: ApiName
+          Value: Zenobia API
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Period: 300
+      Statistic: Sum
+      Threshold: 10  # Adjust threshold as needed
+      TreatMissingData: notBreaching
+      
+  PlaidSignalDeclinedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: zenobia-plaid-signal-declined
+      AlarmDescription: 'Sev2: Plaid Signal declined transfers detected'
+      AlarmActions: 
+        - !Ref PagerDutySNSTopic
+      OKActions:
+        - !Ref PagerDutySNSTopic
+      MetricName: PlaidSignalDeclined
+      Namespace: TransferHandler
+      Dimensions:
+        - Name: path
+          Value: /fulfill-transfer
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Period: 300  # 5 minutes
+      Statistic: Sum
+      Threshold: 0  # Alert on any declined transfers
+      TreatMissingData: notBreaching
+      
   ZenobiaDashboard:
     Type: AWS::CloudWatch::Dashboard
     Properties:
@@ -131,6 +391,142 @@ Resources:
                         "type": "text",
                         "properties": {
                             "markdown": "# API Service Metrics"
+                        }
+                    },
+                    {
+                        "height": 1,
+                        "width": 23,
+                        "y": 16,
+                        "x": 0,
+                        "type": "text",
+                        "properties": {
+                            "markdown": "# Payout Metrics"
+                        }
+                    },
+                    {
+                        "height": 6,
+                        "width": 12,
+                        "y": 17,
+                        "x": 0,
+                        "type": "metric",
+                        "properties": {
+                            "metrics": [
+                                [ { "expression": "m1", "label": "Skipped in Dispute", "id": "e1" } ],
+                                [ { "expression": "m2", "label": "Skipped Payouts", "id": "e2" } ],
+                                [ { "expression": "m3", "label": "Merchant Payouts", "id": "e3" } ],
+                                [ "PayoutProcessor", "SkipInDisputeTransfer", { "id": "m1", "visible": false } ],
+                                [ ".", "SkipPayout", { "id": "m2", "visible": false } ],
+                                [ ".", "MerchantPayout", { "id": "m3", "visible": false } ]
+                            ],
+                            "view": "singleValue",
+                            "region": "us-east-1",
+                            "stat": "Sum",
+                            "period": 300,
+                            "title": "Payout Processor Metrics"
+                        }
+                    },
+                    {
+                        "height": 1,
+                        "width": 23,
+                        "y": 23,
+                        "x": 0,
+                        "type": "text",
+                        "properties": {
+                            "markdown": "# Transfer Handler Metrics"
+                        }
+                    },
+                    {
+                        "height": 6,
+                        "width": 12,
+                        "y": 24,
+                        "x": 0,
+                        "type": "metric",
+                        "properties": {
+                            "metrics": [
+                                [ { "expression": "m1", "label": "Transaction Amount", "id": "e1" } ],
+                                [ { "expression": "m2", "label": "Plaid Timeouts", "id": "e2" } ],
+                                [ { "expression": "m3", "label": "Plaid Declines", "id": "e3" } ],
+                                [ "TransferHandler", "TransactionAmount", { "id": "m1", "visible": false } ],
+                                [ ".", "PlaidBalanceGetTimeout", { "id": "m2", "visible": false } ],
+                                [ ".", "PlaidSignalDeclined", { "id": "m3", "visible": false } ]
+                            ],
+                            "view": "timeSeries",
+                            "stacked": false,
+                            "region": "us-east-1",
+                            "stat": "Sum",
+                            "period": 300,
+                            "title": "Transfer Handler Metrics"
+                        }
+                    },
+                    {
+                        "height": 1,
+                        "width": 23,
+                        "y": 30,
+                        "x": 0,
+                        "type": "text",
+                        "properties": {
+                            "markdown": "# Webhook Metrics"
+                        }
+                    },
+                    {
+                        "height": 6,
+                        "width": 12,
+                        "y": 31,
+                        "x": 0,
+                        "type": "metric",
+                        "properties": {
+                            "metrics": [
+                                [ { "expression": "m1", "label": "Orum Success", "id": "e1" } ],
+                                [ { "expression": "m2", "label": "Plaid Success", "id": "e2" } ],
+                                [ { "expression": "m3", "label": "Queue Failures", "id": "e3" } ],
+                                [ { "expression": "m4", "label": "Invalid Signatures", "id": "e4" } ],
+                                [ "WebhookEventHandler", "OrumWebhookSuccess", { "id": "m1", "visible": false } ],
+                                [ ".", "PlaidWebhookSuccess", { "id": "m2", "visible": false } ],
+                                [ "TransferTableNotificationHandler", "WebhookSendFailure", { "id": "m3", "visible": false } ],
+                                [ "WebhookHandler", "InvalidOrumSignature", { "id": "m4", "visible": false } ],
+                                [ ".", "InvalidPlaidSignature", { "id": "m4", "visible": false } ]
+                            ],
+                            "view": "timeSeries",
+                            "stacked": false,
+                            "region": "us-east-1",
+                            "stat": "Sum",
+                            "period": 300,
+                            "title": "Webhook Metrics"
+                        }
+                    },
+                    {
+                        "height": 1,
+                        "width": 23,
+                        "y": 37,
+                        "x": 0,
+                        "type": "text",
+                        "properties": {
+                            "markdown": "# Authentication Metrics"
+                        }
+                    },
+                    {
+                        "height": 6,
+                        "width": 12,
+                        "y": 38,
+                        "x": 0,
+                        "type": "metric",
+                        "properties": {
+                            "metrics": [
+                                [ { "expression": "m1", "label": "JWT Issues", "id": "e1" } ],
+                                [ { "expression": "m2", "label": "JWT Failures", "id": "e2" } ],
+                                [ { "expression": "m3", "label": "Auth Success", "id": "e3" } ],
+                                [ { "expression": "m4", "label": "Unknown Endpoints", "id": "e4" } ],
+                                [ "JwtIssuer", "Success", { "id": "m1", "visible": false } ],
+                                [ "JwtIssuer", "JwtIssueFailure", { "id": "m2", "visible": false } ],
+                                [ "Authorizer", "Success", { "id": "m3", "visible": false } ],
+                                [ ".", "UnknownEndpoint", { "id": "m4", "visible": false } ]
+                            ],
+                            "view": "timeSeries",
+                            "stacked": false,
+                            "region": "us-east-1",
+                            "stat": "Sum",
+                            "period": 300,
+                            "title": "Authentication Metrics"
                         }
                     }
                 ]
