@@ -182,3 +182,15 @@ Outputs:
   ItemMetadataHandlerFunctionArn:
     Description: "ARN of the Transfer Metadata Handler Lambda function"
     Value: !GetAtt ItemMetadataHandlerFunction.Arn
+    
+  ItemMetadataQueueDLQName:
+    Description: "Name of the Item Metadata Queue Dead Letter Queue"
+    Value: !GetAtt ItemMetadataQueueDLQ.QueueName
+    
+  ItemMetadataRecorderDLQName:
+    Description: "Name of the Item Metadata Recorder Dead Letter Queue"
+    Value: !GetAtt ItemMetadataRecorderDLQ.QueueName
+    
+  TransferMetadataDeadLetterQueueName:
+    Description: "Name of the Transfer Metadata Dead Letter Queue (alias for ItemMetadataQueueDLQ)"
+    Value: !GetAtt ItemMetadataQueueDLQ.QueueName

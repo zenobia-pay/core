@@ -20,6 +20,10 @@ class ItemSchemaTransformer @Inject constructor(
 ) {
     fun transform(metadata: Map<String, Any>): List<ItemMetadata> {
         try {
+            if (metadata.isEmpty()) {
+                logger.info { "Metadata is empty, skipping transformation" }
+                return emptyList()
+            }
             val metadataJson = objectMapper.writeValueAsString(metadata)
             val invokeRequest = InvokeRequest.builder()
                 .functionName(metadataTransformerLambdaName)

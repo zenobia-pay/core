@@ -50,6 +50,10 @@ Parameters:
     Type: String
     Description: Email address to use as the sender for notification emails
     Default: "notifications@zenobiapay.com"
+  PagerDutyEndpoint:
+    Type: String
+    Description: PagerDuty HTTPS endpoint URL for SNS integration
+    NoEcho: true 
 
 Resources:
   VpcStack:
@@ -137,6 +141,15 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: ./sam/dashboard-stack.yml
+      Parameters:
+        TransferMetadataDeadLetterQueueName: !GetAtt ItemMetadataStack.Outputs.TransferMetadataDeadLetterQueueName
+        PayoutProcessorDLQName: !GetAtt PayoutStack.Outputs.PayoutProcessorDLQName
+        TransferTableNotificationsHandlerDLQName: !GetAtt PayoutStack.Outputs.TransferTableNotificationsHandlerDLQName
+        WebhookEventQueueDLQName: !GetAtt LambdaStack.Outputs.WebhookEventQueueDLQName
+        WebhookEventFunctionDLQName: !GetAtt LambdaStack.Outputs.WebhookEventFunctionDLQName
+        ItemMetadataQueueDLQName: !GetAtt ItemMetadataStack.Outputs.ItemMetadataQueueDLQName
+        ItemMetadataRecorderDLQName: !GetAtt ItemMetadataStack.Outputs.ItemMetadataRecorderDLQName
+        PagerDutyEndpoint: !Ref PagerDutyEndpoint
 
   ItemMetadataStack:
     Type: AWS::CloudFormation::Stack

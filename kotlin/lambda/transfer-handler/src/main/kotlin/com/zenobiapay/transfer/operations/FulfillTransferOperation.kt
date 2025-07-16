@@ -206,7 +206,10 @@ class FulfillTransferOperation @Inject constructor(
     private fun assertShouldAcceptPayment(transferAmount: Int, accessToken: String, bankAccountId: String, transferRequestId: String, sub: String) {
         val signalResult = plaidWrapper.getRiskDecision(accessToken, bankAccountId, transferRequestId, transferAmount, sub)
         logger.info { "Got signal result $signalResult" }
-        if (signalResult == SignalResult.DENY) throw DeclinedException()
+        if (signalResult == SignalResult.DENY) {
+            metricHelper.putMetric("PlaidSignalDeclined", 1.0, mapOf("path" to "/fulfill-transfer"))
+            throw DeclinedException()
+        }
 
         try {
             runBlocking {

@@ -1259,6 +1259,9 @@ Resources:
                           type: string
                         endTime:
                           type: string
+                      required:
+                        - startTime
+                        - endTime
               responses:
                 "200":
                   description: "Successful response"
@@ -2403,3 +2406,9 @@ Outputs:
   WebEndpoint:
     Description: "API Gateway endpoint URL"
     Value: !Sub "https://${ZenobiaApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  WebhookEventQueueDLQName:
+    Description: Name of the Webhook Event Queue Dead Letter Queue
+    Value: !GetAtt WebhookEventQueueDLQ.QueueName
+  WebhookEventFunctionDLQName:
+    Description: Name of the Webhook Event Function Dead Letter Queue
+    Value: !GetAtt WebhookEventFunctionDLQ.QueueName

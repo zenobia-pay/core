@@ -339,3 +339,11 @@ Resources:
     Properties:
       AliasName: alias/webhook-signature-key
       TargetKeyId: !Ref WebhookSignatureKey
+
+Outputs:
+  PayoutProcessorDLQName:
+    Description: Name of the Payout Processor Dead Letter Queue
+    Value: !GetAtt PayoutProcessorDLQ.QueueName
+  TransferTableNotificationsHandlerDLQName:
+    Description: Name of the Transfer Table Notifications Handler Dead Letter Queue
+    Value: !GetAtt TransferTableNotificationsHandlerDLQ.QueueName
