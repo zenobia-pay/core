@@ -31,6 +31,7 @@ func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequest
 	} else if authorization, ok := event.Headers["Authorization"]; ok {
 		hasUnauthenticatedHeader = authorization == "NONE" // Explicitly set by app if no auth is provided
 	}
+	println("Has unauthenticated header: ", hasUnauthenticatedHeader)
 	if isValidPath(event.Path, validOrumRoutes) {
 		return handleOrumWebhookEndpoint(ctx, event)
 	} else if isValidPath(event.Path, validPlaidRoutes) {
