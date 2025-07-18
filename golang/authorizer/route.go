@@ -48,6 +48,7 @@ var validUnauthenticatedRoutes = []Route{
 	{"POST", "exchange-token"},
 	{"POST", "issue-jwt"},
 	{"GET", "get-customer-transfer"},
+	{"POST", "get-item"},
 }
 
 var validMerchantRoutes = []Route{
@@ -77,7 +78,6 @@ var validCustomerRoutes = []Route{
 	{"GET", "get-user-profile"},
 	{"POST", "submit-terms"},
 	{"POST", "delete-refresh-token"},
-	{"POST", "get-item"},
 	{"POST", "list-items"},
 	{"POST", "create-sell-job"},
 	{"POST", "complete-sell-job"},

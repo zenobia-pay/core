@@ -37,6 +37,6 @@ class GetItemOperation @Inject constructor(
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {
-        return listOf(UserPoolGroup.CUSTOMER)
+        return listOf(UserPoolGroup.UNKNOWN)
     }
 }
