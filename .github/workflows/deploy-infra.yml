@@ -178,3 +178,26 @@ jobs:
           ParameterKey=ResaleServiceEndpoint,ParameterValue=$RESALE_SERVICE_ENDPOINT \
           ParameterKey=SenderEmail,ParameterValue=$SENDER_EMAIL \
           ParameterKey=PagerDutyEndpoint,ParameterValue=$PAGERDUTY_ENDPOINT
+
+  integration-tests:
+    needs: deploy-aws
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v3
+    - name: Run Integration Tests
+      run: |
+        cd tests/integration
+        pip install -r requirements.txt
+        python -m pytest test_transfer_flow.py -v
+      env:
+        API_ENDPOINT: ${{ vars.ZENOBIA_API_ENDPOINT }}
+        AUTH0_DOMAIN: ${{ vars.AUTH0_DOMAIN }}
+        AUTH0_M2M_MERCHANT_CLIENT_ID: ${{ secrets.AUTH0_M2M_MERCHANT_CLIENT_ID }}
+        AUTH0_M2M_MERCHANT_CLIENT_SECRET: ${{ secrets.AUTH0_M2M_MERCHANT_CLIENT_SECRET }}
+        CUSTOMER_SUB: ${{ secrets.CUSTOMER_SUB }}
+        CUSTOMER_REFRESH_TOKEN: ${{ secrets.CUSTOMER_REFRESH_TOKEN }}
+        CUSTOMER_PRIVATE_KEY: ${{ secrets.CUSTOMER_PRIVATE_KEY }}
+        CUSTOMER_DEVICE_ID: ${{ secrets.CUSTOMER_DEVICE_ID }}

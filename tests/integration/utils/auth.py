@@ -5,9 +5,9 @@ import json
 def get_merchant_token():
     """Get an M2M token for merchant API access"""
     auth0_domain = os.environ.get('AUTH0_DOMAIN')
-    client_id = os.environ.get('AUTH0_M2M_CLIENT_ID')
-    client_secret = os.environ.get('AUTH0_M2M_CLIENT_SECRET')
-    audience = os.environ.get('AUTH0_AUDIENCE')
+    client_id = os.environ.get('AUTH0_M2M_MERCHANT_CLIENT_ID')
+    client_secret = os.environ.get('AUTH0_M2M_MERCHANT_CLIENT_SECRET')
+    audience = "https://dashboard.zenobiapay.com"
     
     response = requests.post(
         f"https://{auth0_domain}/oauth/token",
@@ -25,11 +25,11 @@ def get_customer_token():
     """Get a token for customer API access using the issue-jwt endpoint"""
     # Get environment variables
     api_endpoint = os.environ.get('API_ENDPOINT')
-    client_id = os.environ.get('CUSTOMER_CLIENT_ID')
+    sub = os.environ.get('CUSTOMER_SUB')
     refresh_token = os.environ.get('CUSTOMER_REFRESH_TOKEN')
     
     # Check if we have the required variables
-    if not (api_endpoint and client_id and refresh_token):
+    if not (api_endpoint and sub and refresh_token):
         print("Warning: Missing required environment variables for customer authentication.")
         print("Using merchant token as fallback. This may cause test failures.")
     
@@ -43,7 +43,7 @@ def get_customer_token():
             },
             json={
                 "refreshToken": refresh_token,
-                "sub": client_id
+                "sub": sub
             }
         )
         

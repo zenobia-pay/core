@@ -39,7 +39,7 @@ class MerchantApi:
 class CustomerApi:
     def __init__(self):
         self.base_url = os.environ.get('API_ENDPOINT')
-        self.device_id = os.environ.get('DEVICE_ID')
+        self.device_id = os.environ.get('CUSTOMER_DEVICE_ID')
         self.token = get_customer_token()
         
     def list_bank_accounts(self):
@@ -128,7 +128,6 @@ class CustomerApi:
         try:
             # Decode the base64 encoded private key
             decoded_private_key = base64.b64decode(encoded_private_key)
-            print("Decoded key: ", decoded_private_key)
             
             # Parse the private key using ecdsa
             private_key = ecdsa.SigningKey.from_string(decoded_private_key, curve=ecdsa.NIST256p)
@@ -146,12 +145,8 @@ class CustomerApi:
             s_int = int.from_bytes(raw_signature[32:], byteorder='big')
             der_signature = DSASignature({'r': r_int, 's': s_int}).dump()
             
-            print("Raw signature bytes: ", raw_signature)
-            print("DER encoded signature bytes: ", der_signature)
-            
             # Convert signature to base64
             sig_b64 = base64.b64encode(der_signature).decode('utf-8')
-            print("Sig b64: ", sig_b64)
             
             # Create signature object
             signature = {
