@@ -873,6 +873,8 @@ Resources:
                             type: string
                           creationTime:
                             type: string
+                          inDispute:
+                            type: boolean
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":
@@ -1155,6 +1157,8 @@ Resources:
                                   type: string
                                 creationTime:
                                   type: string
+                                inDispute:
+                                  type: boolean
                 "400":
                   $ref: "#/components/responses/BadRequest"
                 "403":

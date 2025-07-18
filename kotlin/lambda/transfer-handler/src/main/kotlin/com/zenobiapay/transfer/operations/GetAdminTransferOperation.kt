@@ -39,6 +39,7 @@ class GetAdminTransferOperation @Inject constructor(
             .fee(transferItem.data?.fee ?: transferItem.amount?.let { getFee(it) })
             .payoutTime(transferItem.data?.payoutTime)
             .creationTime(transferItem.data?.creationTime)
+            .inDispute(transferItem.inDispute)
     }
 
     override fun getUserPoolAllowList(): List<UserPoolGroup> {
