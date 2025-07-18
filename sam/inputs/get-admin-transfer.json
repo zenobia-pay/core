@@ -6,13 +6,11 @@
     "Content-Type": "application/json"
   },
   "multiValueHeaders": {},
-  "queryStringParameters": {
-    "id": "transfer-123456"
-  },
+  "queryStringParameters": null,
   "multiValueQueryStringParameters": null,
   "pathParameters": null,
   "stageVariables": null,
-  "body": "{\"sub\":\"auth0|merchant-user-id\"}",
+  "body": "{\"id\":\"transfer-123456\"}",
   "isBase64Encoded": false,
   "requestContext": {
     "accountId": "123456789012",
