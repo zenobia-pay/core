@@ -180,7 +180,7 @@ jobs:
           ParameterKey=PagerDutyEndpoint,ParameterValue=$PAGERDUTY_ENDPOINT
 
   integration-tests:
-    # needs: deploy-aws
+    needs: deploy-aws
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name }}
