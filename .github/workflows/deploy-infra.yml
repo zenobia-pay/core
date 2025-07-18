@@ -180,7 +180,7 @@ jobs:
           ParameterKey=PagerDutyEndpoint,ParameterValue=$PAGERDUTY_ENDPOINT
 
   integration-tests:
-    needs: deploy-aws
+    # needs: deploy-aws
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name }}
@@ -197,7 +197,7 @@ jobs:
         AUTH0_DOMAIN: ${{ vars.AUTH0_DOMAIN }}
         AUTH0_M2M_MERCHANT_CLIENT_ID: ${{ secrets.AUTH0_M2M_MERCHANT_CLIENT_ID }}
         AUTH0_M2M_MERCHANT_CLIENT_SECRET: ${{ secrets.AUTH0_M2M_MERCHANT_CLIENT_SECRET }}
-        CUSTOMER_SUB: ${{ secrets.CUSTOMER_SUB }}
+        CUSTOMER_SUB: ${{ vars.CUSTOMER_SUB }}
         CUSTOMER_REFRESH_TOKEN: ${{ secrets.CUSTOMER_REFRESH_TOKEN }}
         CUSTOMER_PRIVATE_KEY: ${{ secrets.CUSTOMER_PRIVATE_KEY }}
         CUSTOMER_DEVICE_ID: ${{ secrets.CUSTOMER_DEVICE_ID }}
