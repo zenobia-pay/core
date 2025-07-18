@@ -180,7 +180,7 @@ jobs:
           ParameterKey=PagerDutyEndpoint,ParameterValue=$PAGERDUTY_ENDPOINT
 
   integration-tests:
-    needs: deploy-aws
+    # needs: deploy-aws
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name }}
@@ -188,6 +188,8 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v3
     - name: Run Integration Tests
+      id: run_tests
+      continue-on-error: true
       run: |
         cd tests/integration
         pip install -r requirements.txt
@@ -201,3 +203,34 @@ jobs:
         CUSTOMER_REFRESH_TOKEN: ${{ secrets.CUSTOMER_REFRESH_TOKEN }}
         CUSTOMER_PRIVATE_KEY: ${{ secrets.CUSTOMER_PRIVATE_KEY }}
         CUSTOMER_DEVICE_ID: ${{ secrets.CUSTOMER_DEVICE_ID }}
+        
+    - name: Create PagerDuty Alert Payload
+      if: steps.run_tests.outcome == 'failure'
+      run: |
+        cat > pd_payload.json << EOF
+        {
+          "payload": {
+            "summary": "Integration Test Failure in ${{ github.workflow }} workflow",
+            "source": "GitHub Actions",
+            "severity": "critical"
+          },
+          "event_type": "trigger",
+          "client": "GitHub Actions",
+          "client_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+          "details": {
+            "branch": "${{ github.ref_name }}",
+            "commit": "${{ github.sha }}",
+            "environment": "${{ github.ref_name }}"
+          }
+        }
+        EOF
+        
+    - name: Trigger PagerDuty Alert
+      if: steps.run_tests.outcome == 'failure'
+      run: |
+        curl -X POST ${{ secrets.PAGERDUTY_ENDPOINT }} \
+          -H "Content-Type: application/json" \
+          --data @pd_payload.json
+    - name: Check Test Status
+      if: steps.run_tests.outcome == 'failure'
+      run: exit 1
