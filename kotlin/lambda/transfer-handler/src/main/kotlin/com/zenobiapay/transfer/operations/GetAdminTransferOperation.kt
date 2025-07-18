@@ -24,8 +24,7 @@ class GetAdminTransferOperation @Inject constructor(
         context: Context, 
         userId: String?
     ): GetAdminTransfer200Response {
-        val transferId = input.queryStringParameters?.get("id")
-            ?: throw ResourceNotFoundException("Missing transfer ID")
+        val transferId = request.id ?: throw ResourceNotFoundException("Missing transfer ID")
             
         val transferItem = transferDao.getTransfer(transferId) ?: throw ResourceNotFoundException("TRANSFER")
 

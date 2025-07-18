@@ -29,6 +29,7 @@ import com.zenobiapay.table.user.dao.UserDao
 import com.zenobiapay.table.user.model.MerchantData
 import com.zenobiapay.table.user.model.UserItem
 import com.zenobiapay.table.user.model.UserItemData
+import com.zenobiapay.transfer.model.FulfillTransferRequestMixin
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -138,6 +139,22 @@ class FulfillTransferOperationTest {
         assertThrows<TransferStatusException> {
             operation.run(createRequest(), createMockGatewayEvent(), context, USER_ID)
         }
+    }
+
+    @Test
+    fun testSignatureOrdering() {
+        val mixin = objectMapper.copy()
+            .addMixIn(FulfillTransferRequest::class.java, FulfillTransferRequestMixin::class.java)
+
+        val request = FulfillTransferRequest()
+            .transferRequestId("4a573cdf-8e70-4e38-8c93-02f98439db88")
+            .bankAccountId("BjKzqRAad9TLKWE6D7DEFMjrDBDLa4S4xPAzo")
+            .deviceId("AFB81FDD-DC90-4BD0-857D-9C21BA5BD65B")
+            .signature(FulfillTransferRequestSignature()
+                .signatureType(SIGNATURE_TYPE)
+                .signatureValue(SIGNATURE))
+        val json = mixin.writeValueAsString(request)
+        println(json)
     }
 
     private fun createMockGatewayEvent(): APIGatewayProxyRequestEvent {

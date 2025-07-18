@@ -36,4 +36,17 @@ class CryptographyUtilTest {
         val data = "testDifferent".toByteArray()
         assertFalse(isSignatureValid(data, certificate, signature, SignatureType.SHA256_WITH_ECDSA))
     }
+
+    @Test
+    fun `test validate ECDSA signature`() {
+        val certificate = """
+            -----BEGIN PUBLIC KEY-----
+            MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEI/qy0tBJI3Z8C5b153BY1RqIcKNv
+            tsoMpCPC3z7do4/SPTZkasVgbjszeLLEzi+UbhyFE4BIqRGeotBHRqUAmw==
+            -----END PUBLIC KEY-----
+            """.trimIndent()
+        val data = "test".toByteArray()
+        val signature = "MEUCIQDYVVIar9JxpJnXn7nqRn8NoYLbGXivAJXiOnZi9hQ7bgIgU5O3vXEe84WfKSF2NWdJiwDlae4b9+dXp9SIv7W/cac="
+        assertTrue(isSignatureValid(data, certificate, signature, SignatureType.SHA256_WITH_ECDSA))
+    }
 }
