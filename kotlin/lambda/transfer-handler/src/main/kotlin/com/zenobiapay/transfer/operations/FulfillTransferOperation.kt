@@ -93,6 +93,9 @@ class FulfillTransferOperation @Inject constructor(
         } catch (e: software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException) {
             logger.info { "Could not find bank id $bankAccountId" }
             throw ResourceNotFoundException("BANK_ACCOUNT")
+        } catch (e: NullPointerException) {
+            logger.info { "Bank account not found for userId $userId, bankAccountId $bankAccountId, deviceId ${request.deviceId}" }
+            throw ResourceNotFoundException("BANK_ACCOUNT")
         }
 
         if (customerBankAccountItem.data.bankPermissions != BankPermissions.SEND_ONLY) {
