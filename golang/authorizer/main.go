@@ -56,7 +56,8 @@ func handleOrumWebhookEndpoint(ctx context.Context, event events.APIGatewayCusto
 	if !ok {
 		panic("failed to fetch valid orum ip addresses")
 	}
-	return handleIpRestrictedEndpoint(ctx, event.RequestContext.Identity.SourceIP, orum_ip_addresses, event.MethodArn)
+	return generatePolicy("user", "Allow", []string{event.MethodArn}, map[string]interface{}{}), nil
+	// return handleIpRestrictedEndpoint(ctx, event.RequestContext.Identity.SourceIP, orum_ip_addresses, event.MethodArn)
 }
 
 func handlePlaidWebhookEndpoint(ctx context.Context, event events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
