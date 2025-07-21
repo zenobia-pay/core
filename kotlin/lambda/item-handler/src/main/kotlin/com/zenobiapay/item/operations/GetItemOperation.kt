@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.zenobiapay.api.generated.model.GetItemRequest
 import com.zenobiapay.api.generated.model.Item
 import com.zenobiapay.api.model.cognito.UserPoolGroup
+import com.zenobiapay.api.model.exception.InvalidRequestException
 import com.zenobiapay.api.model.exception.ResourceNotFoundException
 import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.item.util.S3UrlGenerator
@@ -23,7 +24,12 @@ class GetItemOperation @Inject constructor(
         context: Context,
         userId: String?
     ): Item {
-        val item = rdsWrapper.getItem(UUID.fromString(request.itemId)) ?: throw ResourceNotFoundException("ITEM")
+        val uuidItem = try { 
+            UUID.fromString(request.itemId)
+        } catch (e: IllegalArgumentException) {
+            throw InvalidRequestException("Invalid item ID format")
+        }
+        val item = rdsWrapper.getItem(uuidItem) ?: throw ResourceNotFoundException("ITEM")
 
         return Item()
             .itemId(item.itemId.toString())
