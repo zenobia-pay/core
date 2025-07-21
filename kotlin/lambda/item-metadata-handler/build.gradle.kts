@@ -95,6 +95,8 @@ tasks {
             exclude(dependency("org.jetbrains.kotlin:kotlin-reflect:.*"))
             // Exclude Jackson Kotlin module classes from minimization
             exclude(dependency("com.fasterxml.jackson.module:jackson-module-kotlin:.*"))
+            // Exclude Jackson Nullable module classes from minimization
+            exclude(dependency("org.openapitools:jackson-databind-nullable:.*"))
             // Exclude DynamoDB enhanced client classes from minimization
             exclude(dependency("software.amazon.awssdk:dynamodb-enhanced:.*"))
             // Exclude PostgreSQL JDBC driver from minimization
