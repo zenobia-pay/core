@@ -463,6 +463,13 @@ Resources:
                           type: string
                           enum:
                             - AUTH
+                        isRefresh: # Fields below only needed if isRefresh is true
+                          type: boolean
+                          default: false
+                        bankAccountId:
+                          type: string
+                        deviceId:
+                          type: string
               responses:
                 "200":
                   description: "Successful response"

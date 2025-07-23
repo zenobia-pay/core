@@ -16,15 +16,12 @@ import com.zenobiapay.api.generated.model.ErrorResponse
 import com.zenobiapay.api.model.exception.DeclinedException
 import com.zenobiapay.api.model.exception.InsufficientFundsException
 import com.zenobiapay.api.model.exception.InvalidRequestException
+import com.zenobiapay.api.model.exception.PlaidRefreshRequiredException
 import com.zenobiapay.api.model.exception.TransferStatusException
 import com.zenobiapay.api.operation.Operation
 import io.github.oshai.kotlinlogging.KotlinLogging
-import jakarta.validation.Validation
-import jakarta.validation.Validator
 import org.apache.logging.log4j.ThreadContext
 import jakarta.inject.Inject
-import java.time.Instant
-import kotlin.time.Duration
 
 private val logger = KotlinLogging.logger {}
 
@@ -84,6 +81,7 @@ class ResponseHandler @Inject constructor(
 
     fun generateApiGatewayErrorResponse(error: Exception, path: String? = null): APIGatewayProxyResponseEvent {
         val (errorCode, status) = when (error) {
+            is PlaidRefreshRequiredException-> 400 to "Plaid refresh required"
             is ResourceNotFoundException, is UnknownPathException -> 404 to error.message
             is UnauthorizedException -> 403 to error.message
             is ServiceQuotaExceededException -> 429 to error.message

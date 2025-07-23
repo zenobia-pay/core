@@ -9,6 +9,7 @@ import com.zenobiapay.api.operation.Operation
 import com.zenobiapay.api.model.cognito.UserPoolGroup
 import com.zenobiapay.bank.di.API_GATEWAY_ENDPOINT
 import com.zenobiapay.plaid.PlaidWrapper
+import com.zenobiapay.table.bank.dao.BankDao
 import com.zenobiapay.table.user.dao.UserDao
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.UUID
@@ -20,6 +21,7 @@ private val logger = KotlinLogging.logger {}
 class CreateLinkTokenOperation @Inject constructor(
     private val plaidWrapper: PlaidWrapper,
     private val userDao: UserDao,
+    private val bankDao: BankDao,
     @Named(API_GATEWAY_ENDPOINT) private val apiGatewayEndpoint: String,
 ): Operation<CreateLinkTokenRequest, CreateLinkToken200Response>() {
 
@@ -34,7 +36,12 @@ class CreateLinkTokenOperation @Inject constructor(
             }
         val plaidWebhook = apiGatewayEndpoint + "plaid-webhook"
         logger.info { "Using plaid webhook $plaidWebhook" }
-        val response = plaidWrapper.createLinkToken(sub, plaidWebhook, getPlaidProducts(request.product))
+
+        val userToken = if (request.isRefresh && userId != null && request.bankAccountId != null && request.deviceId != null) {
+            bankDao.getBankAccount(bankAccountId = request.bankAccountId, userId = userId, deviceId = request.deviceId).accessToken
+        } else null
+
+        val response = plaidWrapper.createLinkToken(sub, plaidWebhook, getPlaidProducts(request.product), userToken)
         return CreateLinkToken200Response()
             .linkToken(response.linkToken)
             .sub(sub)
