@@ -73,7 +73,7 @@ class TransferHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayPr
     }
 
     override fun handleRequest(input: APIGatewayProxyRequestEvent?, context: Context?): APIGatewayProxyResponseEvent {
-        logger.info { "Got input $input" }
+        logger.info { "Got input ${input?.body}" }
         val operation = when (input?.path) {
             "/create-transfer-request"  -> createTransferRequestOperation
             "/fulfill-transfer" -> fulfillTransferOperation
