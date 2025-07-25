@@ -45,7 +45,7 @@ class BankHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyR
     }
 
     override fun handleRequest(input: APIGatewayProxyRequestEvent?, context: Context?): APIGatewayProxyResponseEvent {
-        logger.info { "Got input $input" }
+        logger.info { "Got input ${input?.body}" }
         val operation = when (input?.path) {
             "/create-link-token" -> createLinkTokenOperation
             "/exchange-token" -> exchangeTokenOperation

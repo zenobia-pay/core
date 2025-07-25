@@ -26,6 +26,7 @@ repositories {
 }
 
 dependencies {
+    api(project(":kotlin:shared:api:model"))
     api(project(":kotlin:shared:metrics"))
 
     api(libs.kotlin.stdlib)

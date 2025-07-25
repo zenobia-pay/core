@@ -133,12 +133,12 @@ class FulfillTransferOperation @Inject constructor(
 
         logger.info { "Successfully set request to FULFILL_LOCKED" }
         val fulfillTimestamp = Instant.now()
-        transferFunds(
-            transferRequestId,
-            transferAmount,
-            creditorId,
-            merchantItem.data.merchantData?.displayName
-        )
+//        transferFunds(
+//            transferRequestId,
+//            transferAmount,
+//            creditorId,
+//            merchantItem.data.merchantData?.displayName
+//        )
 
         val statementItems = transferRequestData.statementItems.map { it.toApiStatementItem() }
         transferDao.updateTransferRequestFulfilled(

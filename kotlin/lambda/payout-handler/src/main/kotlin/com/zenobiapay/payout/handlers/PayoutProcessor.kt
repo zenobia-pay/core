@@ -167,6 +167,7 @@ class PayoutProcessor : RequestHandler<Map<String, Any>, Unit> {
         logger.info { "Payout complete. Marking transfer as paid out." }
         transferDao.updateTransferPaidOut(
             transferItem,
+            bankAccountId,
             fee,
             transferResponse?.transfer?.id,
             payoutTime,

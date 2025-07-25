@@ -75,8 +75,6 @@ class EditTransferOperation @Inject constructor(
         val merchantPayout = transfer.amount!! - getFee(transfer.amount!!)
         logger.info { "Calculated merchant payout as $merchantPayout" }
 
-        logger.info { "Initiating refund of $refundAmount cents from merchant ${merchantIdentity.id} to customer ${customerIdentity.id}" }
-
         val customerReferenceId = generateCustomerOrumId(customerIdentity.id)
         val merchantItem = userDao.getUserItem(merchantIdentity.id) ?: throw ResourceNotFoundException("MERCHANT")
         val merchantReferenceId = merchantItem.data.orumReferenceId ?: throw ResourceNotFoundException("ORUM REFERENCE ID")

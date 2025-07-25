@@ -30,6 +30,7 @@ import com.plaid.client.model.WebhookVerificationKeyGetRequest
 import com.plaid.client.model.WebhookVerificationKeyGetResponse
 import com.plaid.client.request.PlaidApi
 import com.zenobia.metric.MetricHelper
+import com.zenobiapay.api.model.exception.PlaidRefreshRequiredException
 import com.zenobiapay.plaid.di.IS_PLAID_SANDBOX
 import com.zenobiapay.plaid.model.SignalResult
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -48,7 +49,7 @@ class PlaidWrapper @Inject constructor(
     @Named(IS_PLAID_SANDBOX)
     private val isPlaidSandbox: Boolean,
 ) {
-    fun createLinkToken(userId: String, webhookUrl: String, product: List<Products>): LinkTokenCreateResponse {
+    fun createLinkToken(userId: String, webhookUrl: String, product: List<Products>, userToken: String?): LinkTokenCreateResponse {
         val user = LinkTokenCreateRequestUser()
             .clientUserId(userId)
 
@@ -64,6 +65,7 @@ class PlaidWrapper @Inject constructor(
             .language("en")
             .accountFilters(accountFilters)
             .webhook(webhookUrl)
+            .userToken(userToken)
             .redirectUri("https://zenobiapay.com/plaid")
 
         return getResponseOrThrowException("CreateLinkToken") {
@@ -188,6 +190,12 @@ class PlaidWrapper @Inject constructor(
             val response = block()
             if (response.isSuccessful) {
                 return@withXray response.body()!!
+            }
+            if (response.code() == 400) {
+                val errorBody = response.errorBody()?.string()
+                if (errorBody?.contains("ITEM_LOGIN_REQUIRED") == true) {
+                    throw PlaidRefreshRequiredException()
+                }
             }
             throw PlaidException("Failed to call $operationName. Error code ${response.code()}, body ${response.errorBody()?.string()}")
         }

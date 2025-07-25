@@ -177,6 +177,7 @@ class TransferDao @Inject constructor(
 
     fun updateTransferPaidOut(
         transferItem: TransferItem,
+        merchantBankAccountId: String,
         fee: Int?,
         orumPayoutId: String?,
         payoutTime: Instant,
@@ -188,6 +189,9 @@ class TransferDao @Inject constructor(
                 fee = fee,
                 orumPayoutId = orumPayoutId,
                 payoutTime = payoutTime.toString(),
+                merchant = transferItem.data?.merchant?.copy(
+                    bankAccountId = merchantBankAccountId
+                )
             ),
             version = version,
             ttl = null,
